@@ -1,0 +1,28 @@
+# Sensible Daten / Backups niemals committen
+*Backup*.json
+*backup*.json
+Svencycles_*.csv
+*.bak
+*.tmp
+
+# Editor-Junk
+.vscode/
+.idea/
+*.swp
+*~
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Google Drive Internals
+*.tmp.driveupload
+*.gdoc
+*.gsheet
+*.gslides
+.driveupload/
+
+# Falls künftig Backend dazu kommt
+node_modules/
+.env
+.env.local
+*.log

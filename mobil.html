@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="theme-color" content="#0e0e0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Svencycles Mobile</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0e0e0e;--bg2:#1a1a1a;--bg3:#252525;--orange:#f07000;--text:#e0e0e0;--text2:#999;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#a855f7;--yellow:#eab308}
+html,body{font-family:'Space Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%}
+h1,h2,h3,h4{font-family:'Barlow Condensed',sans-serif;font-weight:600}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;min-height:48px}
+input,select,textarea{font-family:'Space Mono',monospace;background:var(--bg);border:1px solid #444;border-radius:8px;padding:12px;color:var(--text);font-size:15px;width:100%;min-height:48px}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange)}
+textarea{resize:vertical;min-height:80px}
+.btn-primary{background:var(--orange);color:#fff}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid #444}
+.btn-danger{background:var(--red);color:#fff}
+.btn-success{background:var(--green);color:#fff}
+.btn-purple{background:var(--purple);color:#fff}
+.btn-block{width:100%;margin-bottom:8px}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.badge-offen{background:#f07000;color:#fff}.badge-in-arbeit{background:#3b82f6;color:#fff}
+.badge-fertig{background:#22c55e;color:#fff}.badge-abgerechnet{background:#666;color:#fff}
+.badge-aufnahme{background:#a855f7;color:#fff}.badge-offeriert{background:#eab308;color:#000}
+
+#app{min-height:100vh;display:flex;flex-direction:column}
+.header{background:var(--bg2);padding:10px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #333;position:sticky;top:0;z-index:50}
+.header .logo{font-family:'Barlow Condensed';color:var(--orange);font-weight:700;font-size:18px;flex:1}
+.header .user{font-size:11px;color:var(--text2);text-align:right}
+.content{padding:14px;flex:1;padding-bottom:90px}
+
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid #333;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.tabbar a{flex:1;padding:10px 4px;text-align:center;color:var(--text2);text-decoration:none;font-size:10px;border-top:3px solid transparent}
+.tabbar a.active{color:var(--orange);border-top-color:var(--orange)}
+.tabbar a .ic{font-size:22px;display:block;margin-bottom:2px}
+
+.card{background:var(--bg2);border:1px solid #333;border-radius:12px;padding:14px;margin-bottom:10px}
+.card.tap{cursor:pointer}
+.card.tap:active{background:var(--bg3)}
+
+#login{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;z-index:9999}
+#login h1{color:var(--orange);font-size:32px;margin-bottom:8px}
+#login p{color:var(--text2);font-size:13px;margin-bottom:24px}
+#login .box{background:var(--bg2);border:1px solid #333;border-radius:14px;padding:24px;width:100%;max-width:340px}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--bg2);border-top-left-radius:18px;border-top-right-radius:18px;padding:20px;width:100%;max-height:90vh;overflow-y:auto}
+
+.timer-card{border-radius:14px;padding:20px;margin-bottom:14px;text-align:center;transition:background .3s}
+.timer-card.work{background:linear-gradient(135deg,#22c55e22,#22c55e11);border:2px solid #22c55e}
+.timer-card.pause{background:linear-gradient(135deg,#a855f7,#7e22ce)}
+.timer-card.idle{background:var(--bg2);border:1px solid #333}
+.timer-display{font-size:52px;font-family:'Barlow Condensed';font-weight:700;line-height:1.1;color:#fff}
+.timer-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;opacity:.8}
+
+.foto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.foto-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:#333}
+.foto-add{aspect-ratio:1;background:var(--bg3);border:2px dashed #555;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text2);font-size:32px}
+
+#qr-reader{width:100%;max-width:400px;margin:0 auto;border-radius:12px;overflow:hidden}
+#qr-reader__dashboard_section_csr button{background:var(--orange)!important;color:#fff!important;border:none!important;border-radius:6px!important;padding:8px 12px!important}
+
+.mat-row{display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg);border:1px solid #333;border-radius:8px;margin-bottom:6px}
+.mat-row .name{flex:1}
+.mat-row .stock{font-size:11px;color:var(--text2)}
+.mat-row .price{font-weight:700;color:var(--orange);min-width:80px;text-align:right}
+
+.check-item{display:flex;align-items:center;padding:10px;background:var(--bg);border:1px solid #333;border-radius:8px;margin-bottom:6px;cursor:pointer}
+.check-item input{width:auto;margin-right:10px}
+.check-item.on{border-color:var(--red);background:#3a0000}
+
+.speech-btn{background:var(--purple);color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:10px;width:100%;margin-bottom:8px;font-size:15px}
+.speech-btn.rec{background:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+.flag-red{color:var(--red);font-weight:700}
+.muted{color:var(--text2);font-size:12px}
+hr.sep{border:none;border-top:1px solid #333;margin:14px 0}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <h1>SVENCYCLES</h1>
+  <p>Werkstatt Mobile</p>
+  <div class="box">
+    <label class="muted">Benutzername</label>
+    <input id="lg-user" autocomplete="username" style="margin-bottom:12px">
+    <label class="muted">Passwort</label>
+    <input id="lg-pw" type="password" autocomplete="current-password" style="margin-bottom:14px" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn-primary btn-block" onclick="doLogin()">Anmelden</button>
+    <div id="lg-err" style="color:var(--red);font-size:12px;text-align:center;min-height:16px"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <div class="header">
+    <div class="logo">SVENCYCLES</div>
+    <div class="user"><strong id="hdr-name"></strong><br><span id="hdr-role"></span></div>
+    <button class="btn-secondary" style="padding:6px 10px;font-size:11px;min-height:0" onclick="logout()">Logout</button>
+  </div>
+  <div class="content" id="content"></div>
+  <div class="tabbar" id="tabbar"></div>
+</div>
+
+<script>
+let D=null;
+function loadData(){const s=localStorage.getItem('svc_data');if(s){try{D=JSON.parse(s)}catch(e){D=null}}if(!D){alert('Keine Daten gefunden. Bitte zuerst index.html oeffnen damit Demo-Daten geladen werden.')}}
+function saveData(){localStorage.setItem('svc_data',JSON.stringify(D))}
+loadData();
+
+async function sha256(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}
+function fmt(n){return new Intl.NumberFormat('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n||0)}
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+function gv(id){return document.getElementById(id)?.value||''}
+function el(id){return document.getElementById(id)}
+function getCustomer(id){return D.customers.find(c=>c.id===id)}
+function getOrder(id){return D.orders.find(o=>o.id===id)}
+function getPart(id){return D.parts.find(p=>p.id===id)}
+function getPartByEan(ean){return D.parts.find(p=>p.ean===ean||p.sku===ean)}
+function statusBadge(s){return `<span class="badge badge-${s}">${s}</span>`}
+function roleLabel(r){return {admin:'Admin',chef:'Chef-Mech',mechaniker:'Mechaniker',disponent:'Disponent',buchhaltung:'Buchhaltung'}[r]||r}
+function can(k){return !!(currentUser&&currentUser.perm&&currentUser.perm[k])}
+
+let currentUser=null;
+let currentTab='aufnahme';
+
+async function doLogin(){
+  if(!D){loadData();if(!D)return}
+  const user=gv('lg-user').toLowerCase().trim();
+  const pw=gv('lg-pw');
+  const err=el('lg-err');
+  if(!user||!pw){err.textContent='Benutzer & Passwort eingeben';return}
+  const s=D.staff.find(x=>(x.user||'').toLowerCase()===user);
+  if(!s){err.textContent='Benutzer unbekannt';return}
+  const h=await sha256(pw);
+  if(h!==s.pw){err.textContent='Falsches Passwort';return}
+  currentUser=s;
+  el('login').style.display='none';
+  el('app').style.display='flex';
+  el('hdr-name').textContent=s.name;
+  el('hdr-role').textContent=roleLabel(s.role);
+  buildTabs();
+  setTab(firstAllowedTab());
+}
+function logout(){
+  currentUser=null;
+  if(activeTimer){clearInterval(activeTimer);activeTimer=null}
+  el('app').style.display='none';
+  el('login').style.display='flex';
+  el('lg-pw').value='';
+}
+function firstAllowedTab(){if(can('aufnahme'))return 'aufnahme';return 'auftraege'}
+function buildTabs(){
+  const tabs=[
+    {k:'aufnahme',ic:'📷',l:'Aufnahme',perm:'aufnahme'},
+    {k:'auftraege',ic:'🔧',l:'Aufträge',perm:null},
+    {k:'lager',ic:'📦',l:'Lager',perm:'lager'},
+    {k:'mehr',ic:'⋯',l:'Mehr',perm:null}
+  ];
+  const tb=el('tabbar');
+  tb.innerHTML=tabs.filter(t=>!t.perm||can(t.perm)).map(t=>`<a href="#" data-tab="${t.k}" onclick="event.preventDefault();setTab('${t.k}')"><span class="ic">${t.ic}</span>${t.l}</a>`).join('');
+}
+function setTab(k){
+  currentTab=k;
+  document.querySelectorAll('.tabbar a').forEach(a=>a.classList.toggle('active',a.dataset.tab===k));
+  if(k==='aufnahme')renderAufnahme();
+  else if(k==='auftraege')renderAuftraege();
+  else if(k==='lager')renderLager();
+  else if(k==='mehr')renderMehr();
+}
+
+// =========================== AUFNAHME ===========================
+let currentRapport=null;
+function renderAufnahme(){
+  if(currentRapport){renderRapportEditor();return}
+  const offene=(D.rapports||[]).filter(r=>r.status==='offen'||r.status==='offeriert');
+  el('content').innerHTML=`
+    <h2 style="color:var(--orange);margin-bottom:10px">📷 Bike-Aufnahme</h2>
+    <button class="btn-primary btn-block" style="font-size:18px;padding:18px" onclick="newRapport()">+ NEUE AUFNAHME</button>
+    <hr class="sep">
+    <h3 style="margin-bottom:8px;font-size:16px">Offene Aufnahmen (${offene.length})</h3>
+    ${offene.length===0?'<p class="muted">Keine offenen Aufnahmen</p>':offene.map(r=>{
+      const c=getCustomer(r.cid);
+      return `<div class="card tap" onclick="openRapport('${r.id}')">
+        <div style="display:flex;justify-content:space-between"><strong>${r.id}</strong><span class="badge badge-${r.status==='offen'?'aufnahme':'offeriert'}">${r.status}</span></div>
+        <div style="font-size:13px;margin-top:4px">${r.kontrollschild||'-'} · ${c?c.name:r.custName||'-'}</div>
+        <div class="muted">${r.bikeModel||'-'} · ${r.date}</div>
+      </div>`;
+    }).join('')}
+  `;
+}
+function newRapport(){
+  D.counters.rapport=(D.counters.rapport||0)+1;
+  const id='RAP'+String(D.counters.rapport).padStart(4,'0');
+  currentRapport={id,date:new Date().toISOString().slice(0,10),aufgenommenVon:currentUser.id,kontrollschild:'',cid:'',custName:'',custTel:'',bikeModel:'',km:'',beschrieb:'',schaeden:[],fotos:[],status:'offen'};
+  renderRapportEditor();
+}
+function openRapport(rid){const r=(D.rapports||[]).find(x=>x.id===rid);if(r){currentRapport={...r};renderRapportEditor()}}
+function renderRapportEditor(){
+  const r=currentRapport;
+  const PRESETS=['Kratzer Tank','Kratzer Verkleidung','Beule','Auspuff verbeult','Spiegel beschädigt','Lenkergriff verschlissen','Sitz verschlissen','Reifenprofil tief'];
+  el('content').innerHTML=`
+    <button class="btn-secondary" onclick="if(confirm('Aufnahme verlassen? Ungespeichertes geht verloren'))cancelRapport()" style="margin-bottom:10px">← Zurück</button>
+    <h2 style="color:var(--orange)">${r.id} — Bike-Aufnahme</h2>
+    <p class="muted" style="margin-bottom:14px">Aufgenommen von ${currentUser.name} am ${r.date}</p>
+
+    <div class="card">
+      <h3 style="color:var(--orange);font-size:14px;margin-bottom:8px">1. Kontrollschild</h3>
+      <input id="rp-kz" placeholder="z.B. ZH 12345" value="${r.kontrollschild}" style="text-transform:uppercase;font-size:18px;letter-spacing:2px" oninput="r_searchByKz(this.value)">
+      <div id="kz-result" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="color:var(--orange);font-size:14px;margin-bottom:8px">2. Kunde & Bike</h3>
+      <label class="muted">Kundenname</label>
+      <input id="rp-cust" value="${r.custName||(r.cid?(getCustomer(r.cid)?.name||''):'')}" style="margin-bottom:8px">
+      <label class="muted">Telefon</label>
+      <input id="rp-tel" value="${r.custTel||(r.cid?(getCustomer(r.cid)?.tel||''):'')}" type="tel" style="margin-bottom:8px">
+      <label class="muted">Bike (Modell + Jahr)</label>
+      <input id="rp-bike" value="${r.bikeModel||''}" placeholder="z.B. HD Sportster 2020" style="margin-bottom:8px">
+      <label class="muted">KM-Stand</label>
+      <input id="rp-km" type="number" value="${r.km||''}" placeholder="km">
+    </div>
+
+    <div class="card">
+      <h3 style="color:var(--orange);font-size:14px;margin-bottom:8px">3. Vorhandene Schäden bei Annahme</h3>
+      <p class="muted" style="margin-bottom:8px">Wichtig: Schäden VOR Reparatur dokumentieren!</p>
+      <div id="schaden-list">
+        ${PRESETS.map(s=>`<div class="check-item ${(r.schaeden||[]).includes(s)?'on':''}" onclick="toggleSchaden('${s.replace(/'/g,"\\'")}',this)"><input type="checkbox" ${(r.schaeden||[]).includes(s)?'checked':''}> ${s}</div>`).join('')}
+      </div>
+      <input id="rp-schaden-custom" placeholder="Anderer Schaden — Enter zum Hinzufügen" onkeydown="if(event.key==='Enter'){addCustomSchaden();event.preventDefault()}" style="margin-top:8px">
+    </div>
+
+    <div class="card">
+      <h3 style="color:var(--orange);font-size:14px;margin-bottom:8px">4. Fotos (Gesamt, Schäden, KM)</h3>
+      <div class="foto-grid" id="foto-grid">
+        ${(r.fotos||[]).map((f,i)=>`<img src="${f}" onclick="if(confirm('Foto löschen?'))removeFoto(${i})">`).join('')}
+        <label class="foto-add">📷<input type="file" accept="image/*" capture="environment" multiple style="display:none" onchange="addFotos(event)"></label>
+      </div>
+      <p class="muted" style="margin-top:6px">Tippen = Foto machen · auf Bild tippen = löschen</p>
+    </div>
+
+    <div class="card">
+      <h3 style="color:var(--orange);font-size:14px;margin-bottom:8px">5. Was ist los? (vom Kunden)</h3>
+      <button class="speech-btn" id="speech-btn" onclick="toggleSpeech()">🎙️ Sprache aufnehmen</button>
+      <textarea id="rp-beschrieb" placeholder="z.B. Kunde hört Klacken im Motor bei kaltem Start..." style="min-height:100px">${r.beschrieb||''}</textarea>
+      <p class="muted" style="margin-top:4px">Mikrofon: nur über HTTPS oder localhost!</p>
+    </div>
+
+    <hr class="sep">
+    <button class="btn-success btn-block" style="padding:18px;font-size:16px" onclick="saveRapport()">💾 Aufnahme speichern</button>
+    ${(D.rapports||[]).find(x=>x.id===r.id)?`<button class="btn-danger btn-block" onclick="deleteRapport()">🗑 Aufnahme löschen</button>`:''}
+  `;
+}
+function r_searchByKz(kz){
+  const div=el('kz-result');if(!div)return;
+  const k=kz.trim().toUpperCase().replace(/\s/g,'');
+  if(k.length<5){div.innerHTML='';return}
+  for(const c of D.customers){
+    for(const b of (c.bikes||[])){
+      if((b.kz||'').toUpperCase().replace(/\s/g,'')===k){
+        div.innerHTML=`<div style="background:#22c55e22;border:1px solid var(--green);border-radius:8px;padding:8px;font-size:13px">✓ <strong>${c.name}</strong><br>${b.model} · ${b.km} km<br><button class="btn-success" style="margin-top:6px;padding:6px 10px;font-size:12px;min-height:0" onclick="useKzMatch('${c.id}','${b.model.replace(/'/g,"\\'")}',${b.km})">Übernehmen</button></div>`;
+        return;
+      }
+    }
+  }
+  div.innerHTML=`<div class="muted">Neukunde — bitte unten ausfüllen</div>`;
+}
+function useKzMatch(cid,model,km){
+  currentRapport.cid=cid;
+  el('rp-cust').value=getCustomer(cid).name;
+  el('rp-tel').value=getCustomer(cid).tel;
+  el('rp-bike').value=model;
+  el('rp-km').value=km;
+}
+function toggleSchaden(s,e2){
+  if(!currentRapport.schaeden)currentRapport.schaeden=[];
+  const i=currentRapport.schaeden.indexOf(s);
+  if(i>=0){currentRapport.schaeden.splice(i,1);e2.classList.remove('on');e2.querySelector('input').checked=false}
+  else{currentRapport.schaeden.push(s);e2.classList.add('on');e2.querySelector('input').checked=true}
+}
+function addCustomSchaden(){
+  const v=gv('rp-schaden-custom').trim();if(!v)return;
+  if(!currentRapport.schaeden)currentRapport.schaeden=[];
+  currentRapport.schaeden.push(v);
+  el('schaden-list').insertAdjacentHTML('beforeend',`<div class="check-item on"><input type="checkbox" checked> ${v}</div>`);
+  el('rp-schaden-custom').value='';
+}
+function addFotos(ev){
+  const files=Array.from(ev.target.files);
+  let pending=files.length;
+  if(!currentRapport.fotos)currentRapport.fotos=[];
+  files.forEach(f=>{
+    const img=new Image();const url=URL.createObjectURL(f);
+    img.onload=()=>{
+      const max=1280;let w=img.width,h=img.height;
+      if(w>h&&w>max){h*=max/w;w=max}else if(h>max){w*=max/h;h=max}
+      const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+      cv.getContext('2d').drawImage(img,0,0,w,h);
+      currentRapport.fotos.push(cv.toDataURL('image/jpeg',0.7));
+      URL.revokeObjectURL(url);
+      if(--pending===0)renderRapportEditor();
+    };
+    img.src=url;
+  });
+}
+function removeFoto(i){currentRapport.fotos.splice(i,1);renderRapportEditor()}
+
+let speechRec=null,speechActive=false;
+function toggleSpeech(){
+  const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!Rec){alert('Spracherkennung nicht verfügbar (Chrome/Edge nötig, HTTPS oder localhost)');return}
+  if(speechActive){speechRec?.stop();return}
+  speechRec=new Rec();
+  speechRec.lang='de-CH';speechRec.interimResults=true;speechRec.continuous=true;
+  let final=el('rp-beschrieb').value;if(final&&!final.endsWith(' '))final+=' ';
+  speechRec.onresult=ev=>{
+    let interim='';
+    for(let i=ev.resultIndex;i<ev.results.length;i++){
+      if(ev.results[i].isFinal)final+=ev.results[i][0].transcript+' ';
+      else interim+=ev.results[i][0].transcript;
+    }
+    el('rp-beschrieb').value=final+interim;
+  };
+  speechRec.onend=()=>{speechActive=false;el('speech-btn').classList.remove('rec');el('speech-btn').textContent='🎙️ Sprache aufnehmen'};
+  speechRec.onerror=e=>{speechActive=false;el('speech-btn').classList.remove('rec');el('speech-btn').textContent='🎙️ Sprache aufnehmen';alert('Fehler: '+e.error)};
+  speechRec.start();
+  speechActive=true;
+  el('speech-btn').classList.add('rec');
+  el('speech-btn').textContent='⏹ Aufnahme stoppen';
+}
+function saveRapport(){
+  currentRapport.kontrollschild=gv('rp-kz').toUpperCase();
+  currentRapport.custName=gv('rp-cust');
+  currentRapport.custTel=gv('rp-tel');
+  currentRapport.bikeModel=gv('rp-bike');
+  currentRapport.km=parseInt(gv('rp-km'))||0;
+  currentRapport.beschrieb=gv('rp-beschrieb');
+  if(!currentRapport.cid&&currentRapport.custName){
+    D.counters.customer++;
+    const cid='K'+String(D.counters.customer).padStart(3,'0');
+    D.customers.push({id:cid,name:currentRapport.custName,tel:currentRapport.custTel,email:'',strasse:'',plz:'',ort:'',bikes:[{model:currentRapport.bikeModel,kz:currentRapport.kontrollschild,vin:'',km:currentRapport.km,col:''}]});
+    currentRapport.cid=cid;
+  }
+  if(!D.rapports)D.rapports=[];
+  const idx=D.rapports.findIndex(x=>x.id===currentRapport.id);
+  if(idx>=0)D.rapports[idx]=currentRapport;else D.rapports.push(currentRapport);
+  saveData();
+  alert('Aufnahme '+currentRapport.id+' gespeichert. Cornel kann jetzt Offerte erstellen.');
+  currentRapport=null;
+  renderAufnahme();
+}
+function cancelRapport(){currentRapport=null;renderAufnahme()}
+function deleteRapport(){
+  if(!confirm('Aufnahme wirklich löschen?'))return;
+  D.rapports=D.rapports.filter(x=>x.id!==currentRapport.id);
+  saveData();currentRapport=null;renderAufnahme();
+}
+
+// =========================== AUFTRÄGE ===========================
+let currentOrderId=null;
+let activeTimer=null,timerSec=0;
+let pauseStart=null,pauseReason=null;
+let pauseHistory=[];
+const PAUSE_REASONS=[{k:'kunde',l:'👤 Kundengespräch'},{k:'tel',l:'📞 Telefon'},{k:'teile',l:'📦 Teile holen'},{k:'wc',l:'🚻 WC'},{k:'mittag',l:'🍴 Mittag'},{k:'sonst',l:'❓ Anderes'}];
+
+function renderAuftraege(){
+  if(currentOrderId){renderAuftragDetail();return}
+  const my=D.orders.filter(o=>o.mech===currentUser.id&&o.status!=='abgerechnet');
+  el('content').innerHTML=`
+    <h2 style="color:var(--orange);margin-bottom:10px">🔧 Meine Aufträge</h2>
+    ${my.length===0?'<p class="muted">Keine Aufträge zugewiesen</p>':my.map(o=>{
+      const c=getCustomer(o.cid);
+      const prio=o.prio==='hoch'?'<span class="flag-red">⚡ EXPRESS</span> ':'';
+      return `<div class="card tap" onclick="openOrder('${o.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center"><strong>${o.id}</strong>${statusBadge(o.status)}</div>
+        <div style="margin-top:4px">${prio}${c?c.name:'-'}</div>
+        <div class="muted">${o.desc}</div>
+        ${o.parts.length?`<div class="muted">📦 ${o.parts.length} Teile · ⏱ ${o.time.reduce((s,t)=>s+t.h,0)}h</div>`:''}
+      </div>`;
+    }).join('')}
+  `;
+}
+function openOrder(oid){currentOrderId=oid;renderAuftragDetail()}
+function backToOrders(){
+  if(activeTimer||pauseStart){if(!confirm('Timer/Pause läuft — wirklich zurück?'))return;if(activeTimer){clearInterval(activeTimer);activeTimer=null}if(pauseStart){pauseStart=null;pauseReason=null}}
+  currentOrderId=null;renderAuftraege();
+}
+function renderAuftragDetail(){
+  const o=getOrder(currentOrderId);if(!o){currentOrderId=null;renderAuftraege();return}
+  const c=getCustomer(o.cid);
+  const isPause=pauseStart!==null;
+  const isWork=activeTimer!==null&&!isPause;
+  const myParts=o.parts.map((p,i)=>{const pp=getPart(p.pid);return `<div class="mat-row"><div class="name">${pp?pp.name:p.pid}<div class="stock">x${p.qty}</div></div>${can('viewPrices')?`<div class="price">CHF ${fmt(p.qty*p.prc)}</div>`:''}<button class="btn-danger" style="padding:6px 10px;min-height:0" onclick="rmPart('${currentOrderId}',${i})">×</button></div>`}).join('')||'<p class="muted">Noch keine Teile verbaut</p>';
+  const myPauses=pauseHistory.filter(p=>p.oid===currentOrderId);
+  const pauseTotal=myPauses.reduce((s,p)=>s+p.sec,0);
+
+  el('content').innerHTML=`
+    <button class="btn-secondary" onclick="backToOrders()" style="margin-bottom:10px">← Aufträge</button>
+    <h2 style="color:var(--orange)">${o.id}</h2>
+    <p style="font-size:14px">${c?c.name:'-'} · ${o.desc}</p>
+    ${o.notes?`<p class="muted" style="margin-top:6px">📝 ${o.notes}</p>`:''}
+    <hr class="sep">
+
+    <div class="timer-card ${isPause?'pause':isWork?'work':'idle'}">
+      <div class="timer-label">${isPause?('PAUSE — '+(PAUSE_REASONS.find(p=>p.k===pauseReason)?.l||'')):isWork?'⚙ ARBEITSZEIT':'BEREIT'}</div>
+      <div class="timer-display" id="t-disp">${isPause?fmtTime(Math.floor((Date.now()-pauseStart)/1000)):fmtTime(timerSec)}</div>
+      ${pauseTotal>0?`<div class="muted" style="color:#fff;opacity:.6">Pausen heute: ${fmtTime(pauseTotal)}</div>`:''}
+    </div>
+
+    ${isPause?`
+      <button class="btn-success btn-block" style="padding:18px;font-size:16px" onclick="endPause()">▶ Pause beenden — weiterarbeiten</button>
+    `:`
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="${activeTimer?'btn-danger':'btn-success'}" style="flex:1;padding:14px;font-size:15px" onclick="toggleTimer()">${activeTimer?'⏹ Stop':'▶ Start'}</button>
+        ${activeTimer?`<button class="btn-purple" style="flex:1;padding:14px;font-size:15px" onclick="showPauseMenu()">⏸ Pause</button>`:''}
+      </div>
+    `}
+
+    <hr class="sep">
+    <h3 style="color:var(--orange);font-size:15px;margin-bottom:8px">📦 Verbautes Material</h3>
+    ${myParts}
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn-primary" style="flex:1" onclick="showMatPicker()">+ Material wählen</button>
+      <button class="btn-purple" style="flex:1" onclick="startQrScan()">📷 QR scannen</button>
+    </div>
+
+    <hr class="sep">
+    <h3 style="color:var(--orange);font-size:15px;margin-bottom:8px">⏱ Zeitbuchung</h3>
+    <input id="bk-h" type="number" step="0.25" value="${(timerSec/3600).toFixed(2)}" placeholder="Stunden" style="margin-bottom:6px">
+    <textarea id="bk-desc" placeholder="Was wurde gemacht? (z.B. Ölwechsel + Filter)" style="margin-bottom:6px"></textarea>
+    <button class="btn-success btn-block" onclick="bookTime()">✓ Zeit buchen</button>
+
+    ${myPauses.length?`<hr class="sep"><h3 style="color:var(--purple);font-size:14px;margin-bottom:6px">Pausen-Protokoll heute</h3>${myPauses.map(p=>{const r=PAUSE_REASONS.find(x=>x.k===p.reason);return `<div style="font-size:12px;padding:6px;background:var(--bg);border-radius:6px;margin-bottom:4px">${r?r.l:p.reason} — ${fmtTime(p.sec)}</div>`}).join('')}`:''}
+
+    <hr class="sep">
+    <h3 style="color:var(--orange);font-size:15px;margin-bottom:8px">Status</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+      <button class="btn-primary" onclick="setStatus('in-arbeit')">▶ In Arbeit</button>
+      <button class="btn-success" onclick="finishOrder()">✓ Fertig</button>
+    </div>
+  `;
+  if(isPause){
+    if(window._pauseTick)clearInterval(window._pauseTick);
+    window._pauseTick=setInterval(()=>{const d=el('t-disp');if(d&&pauseStart)d.textContent=fmtTime(Math.floor((Date.now()-pauseStart)/1000))},1000);
+  }
+}
+function toggleTimer(){
+  if(activeTimer){clearInterval(activeTimer);activeTimer=null}
+  else{activeTimer=setInterval(()=>{if(pauseStart)return;timerSec++;const d=el('t-disp');if(d)d.textContent=fmtTime(timerSec)},1000)}
+  renderAuftragDetail();
+}
+function showPauseMenu(){
+  if(!activeTimer){alert('Bitte zuerst Timer starten');return}
+  showModal(`<h3 style="color:var(--orange);margin-bottom:12px">Pause-Grund?</h3>
+    ${PAUSE_REASONS.map(r=>`<button class="btn-purple btn-block" style="padding:14px;font-size:15px" onclick="closeModal();startPause('${r.k}')">${r.l}</button>`).join('')}
+    <button class="btn-secondary btn-block" onclick="closeModal()">Abbrechen</button>`);
+}
+function startPause(reason){pauseStart=Date.now();pauseReason=reason;renderAuftragDetail()}
+function endPause(){
+  const sec=Math.floor((Date.now()-pauseStart)/1000);
+  pauseHistory.push({oid:currentOrderId,reason:pauseReason,sec,date:new Date().toISOString().slice(0,10),mech:currentUser.id,start:new Date(pauseStart).toISOString()});
+  if(!D.pauses)D.pauses=[];
+  D.pauses.push(pauseHistory[pauseHistory.length-1]);
+  saveData();
+  pauseStart=null;pauseReason=null;
+  if(window._pauseTick){clearInterval(window._pauseTick);window._pauseTick=null}
+  renderAuftragDetail();
+}
+function bookTime(){
+  const o=getOrder(currentOrderId);if(!o)return;
+  const h=parseFloat(gv('bk-h'));
+  if(!h||h<=0){alert('Stunden eintragen');return}
+  o.time.push({date:new Date().toISOString().slice(0,10),h:Math.round(h*4)/4,desc:gv('bk-desc'),mech:currentUser.id});
+  timerSec=0;
+  if(activeTimer){clearInterval(activeTimer);activeTimer=null}
+  saveData();renderAuftragDetail();
+}
+function setStatus(s){const o=getOrder(currentOrderId);if(o){o.status=s;saveData();renderAuftragDetail()}}
+function finishOrder(){
+  showModal(`<h3 style="color:var(--orange);margin-bottom:12px">✓ Übergabe-Checkliste</h3>
+    <p class="muted" style="margin-bottom:10px">Vor Abgabe an Kunde prüfen:</p>
+    <label class="check-item"><input type="checkbox" id="ck1"> Probefahrt durchgeführt, alles OK</label>
+    <label class="check-item"><input type="checkbox" id="ck2"> Werkzeug aufgeräumt, kein Teil vergessen</label>
+    <label class="check-item"><input type="checkbox" id="ck3"> Bike sauber, geputzt</label>
+    <label class="check-item"><input type="checkbox" id="ck4"> Kunde informiert (Telefon/SMS)</label>
+    <label class="check-item"><input type="checkbox" id="ck5"> Schlüssel + Papiere bereitgelegt</label>
+    <label class="check-item"><input type="checkbox" id="ck6"> Foto NACH Reparatur gemacht</label>
+    <textarea id="hand-notes" placeholder="Zusätzliche Notizen..." style="margin-top:10px"></textarea>
+    <button class="btn-success btn-block" style="margin-top:10px;padding:14px" onclick="confirmFinish()">✓ Auftrag als fertig markieren</button>
+    <button class="btn-secondary btn-block" onclick="closeModal()">Abbrechen</button>`);
+}
+function confirmFinish(){
+  const o=getOrder(currentOrderId);if(!o)return;
+  const checks=['ck1','ck2','ck3','ck4','ck5','ck6'];
+  const done=checks.filter(c=>el(c)?.checked);
+  if(done.length<4){if(!confirm('Nur '+done.length+' von 6 Punkten erledigt — wirklich fertig?'))return}
+  o.status='fertig';
+  o.handover={date:new Date().toISOString(),checks:done,notes:gv('hand-notes'),by:currentUser.id};
+  saveData();closeModal();renderAuftragDetail();
+}
+function rmPart(oid,idx){
+  const o=getOrder(oid);const p=o.parts[idx];
+  const part=getPart(p.pid);if(part)part.stock+=p.qty;
+  o.parts.splice(idx,1);saveData();renderAuftragDetail();
+}
+function showMatPicker(){
+  showModal(`<h3 style="color:var(--orange);margin-bottom:10px">📦 Material wählen</h3>
+    <input id="mp-q" placeholder="Suche nach Name/SKU..." oninput="filterMat()" autofocus style="margin-bottom:10px">
+    <div id="mp-list" style="max-height:55vh;overflow-y:auto"></div>
+    <button class="btn-secondary btn-block" onclick="closeModal()">Abbrechen</button>`);
+  filterMat();
+}
+function filterMat(){
+  const q=(gv('mp-q')||'').toLowerCase();
+  const list=el('mp-list');if(!list)return;
+  list.innerHTML=D.parts.filter(p=>p.stock>0&&(p.name+p.sku+p.cat).toLowerCase().includes(q)).slice(0,30).map(p=>`
+    <div class="mat-row" style="cursor:pointer" onclick="addMat('${p.id}')">
+      <div class="name">${p.name}<div class="stock">${p.cat} · Bestand: ${p.stock}</div></div>
+      ${can('viewPrices')?`<div class="price">CHF ${fmt(p.sell)}</div>`:''}
+    </div>`).join('')||'<p class="muted">Nichts gefunden</p>';
+}
+function addMat(pid){
+  const o=getOrder(currentOrderId);const p=getPart(pid);if(!o||!p)return;
+  if(p.stock<=0){alert('Nicht an Lager!');return}
+  const ex=o.parts.find(x=>x.pid===pid);
+  if(ex){ex.qty+=1}else{o.parts.push({pid,qty:1,prc:p.sell})}
+  p.stock-=1;
+  saveData();closeModal();renderAuftragDetail();
+}
+
+let qrScanner=null;
+function startQrScan(){
+  showModal(`<h3 style="color:var(--orange);margin-bottom:10px">📷 QR-Code scannen</h3>
+    <p class="muted" style="margin-bottom:8px">QR-Etikett vom Lager-Regal vor die Kamera halten</p>
+    <div id="qr-reader"></div>
+    <div id="qr-info" style="margin-top:10px"></div>
+    <button class="btn-secondary btn-block" onclick="stopQrScan()" style="margin-top:10px">Schliessen</button>`);
+  setTimeout(()=>{
+    qrScanner=new Html5Qrcode('qr-reader');
+    qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250}},onQrScanned,()=>{}).catch(err=>{
+      el('qr-info').innerHTML=`<p style="color:var(--red)">Kamera-Fehler: ${err}<br>Funktioniert nur über HTTPS oder localhost!</p>`;
+    });
+  },100);
+}
+function stopQrScan(){
+  if(qrScanner){qrScanner.stop().catch(()=>{}).finally(()=>{qrScanner.clear();qrScanner=null})}
+  closeModal();
+}
+function onQrScanned(text){
+  let pid=text.replace(/^SVC:/,'').trim();
+  let p=getPart(pid)||getPartByEan(text);
+  if(!p){
+    el('qr-info').innerHTML=`<p style="color:var(--yellow)">Code "${text}" unbekannt</p>
+    <button class="btn-primary btn-block" style="margin-top:6px" onclick="newPartFromCode('${text.replace(/'/g,"\\'")}')">+ Neuen Artikel anlegen</button>`;
+    return;
+  }
+  stopQrScan();
+  setTimeout(()=>{
+    if(p.stock<=0){alert(p.name+' nicht an Lager!');return}
+    const o=getOrder(currentOrderId);
+    const ex=o.parts.find(x=>x.pid===p.id);
+    if(ex){ex.qty+=1}else{o.parts.push({pid:p.id,qty:1,prc:p.sell})}
+    p.stock-=1;
+    saveData();renderAuftragDetail();
+    showToast('✓ '+p.name+' verbaut');
+  },300);
+}
+function newPartFromCode(code){
+  stopQrScan();
+  setTimeout(()=>{
+    const name=prompt('Bezeichnung:');if(!name)return;
+    const buy=parseFloat(prompt('EK-Preis CHF:','0'))||0;
+    const sell=parseFloat(prompt('VK-Preis CHF:',(buy*1.6).toFixed(2)))||0;
+    D.counters.part++;
+    const id='P'+String(D.counters.part).padStart(3,'0');
+    D.parts.push({id,name,sku:code,ean:code,cat:'Verbrauch',stock:1,min:1,buy,sell,sup:''});
+    const o=getOrder(currentOrderId);
+    o.parts.push({pid:id,qty:1,prc:sell});
+    D.parts.find(p=>p.id===id).stock=0;
+    saveData();renderAuftragDetail();
+  },300);
+}
+function showToast(msg){
+  const t=document.createElement('div');t.textContent=msg;
+  t.style.cssText='position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 18px;border-radius:24px;z-index:9999;font-size:14px;box-shadow:0 4px 12px rgba(0,0,0,.5)';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2500);
+}
+
+// =========================== LAGER ===========================
+function renderLager(){
+  el('content').innerHTML=`
+    <h2 style="color:var(--orange);margin-bottom:10px">📦 Lager</h2>
+    <input id="lag-q" placeholder="Suche..." oninput="filterLag()" style="margin-bottom:8px">
+    <button class="btn-purple btn-block" onclick="lagerScan()">📷 Wareneingang scannen</button>
+    <hr class="sep">
+    <div id="lag-list"></div>
+  `;
+  filterLag();
+}
+function filterLag(){
+  const q=(gv('lag-q')||'').toLowerCase();
+  el('lag-list').innerHTML=D.parts.filter(p=>(p.name+p.sku+p.cat).toLowerCase().includes(q)).slice(0,40).map(p=>{
+    const lvl=p.stock<=p.min?'var(--red)':p.stock<=p.min*2?'var(--yellow)':'var(--green)';
+    return `<div class="mat-row">
+      <div class="name">${p.name}<div class="stock">${p.sku} · ${p.cat}</div></div>
+      <div style="text-align:right"><strong style="color:${lvl}">${p.stock}</strong> Stk${can('viewPrices')?`<div class="muted">CHF ${fmt(p.sell)}</div>`:''}</div>
+    </div>`;
+  }).join('');
+}
+function lagerScan(){
+  showModal(`<h3 style="color:var(--orange);margin-bottom:10px">📷 Wareneingang</h3>
+    <div id="qr-reader"></div>
+    <div id="qr-info" style="margin-top:10px"></div>
+    <button class="btn-secondary btn-block" onclick="stopQrScan()" style="margin-top:10px">Schliessen</button>`);
+  setTimeout(()=>{
+    qrScanner=new Html5Qrcode('qr-reader');
+    qrScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250}},onLagerScan,()=>{}).catch(err=>{
+      el('qr-info').innerHTML=`<p style="color:var(--red)">Kamera-Fehler: ${err}</p>`;
+    });
+  },100);
+}
+function onLagerScan(text){
+  let p=getPart(text.replace(/^SVC:/,''))||getPartByEan(text);
+  stopQrScan();
+  setTimeout(()=>{
+    if(!p){
+      if(confirm('Code "'+text+'" unbekannt. Neuen Artikel anlegen?'))newPartFromCodeLager(text);
+      return;
+    }
+    const action=prompt(`${p.name}\nAktueller Bestand: ${p.stock}\n\n+N für Wareneingang (z.B. +5)\n-N für Abgang (z.B. -1)`,'+1');
+    if(!action)return;
+    const n=parseInt(action);
+    if(isNaN(n)){alert('Ungültig');return}
+    p.stock=Math.max(0,p.stock+n);
+    saveData();renderLager();
+    showToast('✓ '+p.name+': Bestand jetzt '+p.stock);
+  },300);
+}
+function newPartFromCodeLager(code){
+  const name=prompt('Bezeichnung:');if(!name)return;
+  const buy=parseFloat(prompt('EK-Preis CHF:','0'))||0;
+  const sell=parseFloat(prompt('VK-Preis CHF:',(buy*1.6).toFixed(2)))||0;
+  const stock=parseInt(prompt('Initialer Bestand:','1'))||1;
+  D.counters.part++;
+  const id='P'+String(D.counters.part).padStart(3,'0');
+  D.parts.push({id,name,sku:code,ean:code,cat:'Verbrauch',stock,min:1,buy,sell,sup:''});
+  saveData();renderLager();
+  showToast('✓ '+name+' angelegt');
+}
+
+// =========================== MEHR ===========================
+function renderMehr(){
+  el('content').innerHTML=`
+    <h2 style="color:var(--orange);margin-bottom:10px">⋯ Mehr</h2>
+    <div class="card">
+      <strong>${currentUser.name}</strong><br>
+      <span class="muted">${roleLabel(currentUser.role)} · ${currentUser.email}</span>
+    </div>
+    <button class="btn-secondary btn-block" onclick="showMyStats()">📊 Meine Statistik</button>
+    <button class="btn-secondary btn-block" onclick="showMyPauses()">⏸ Meine Pausen heute</button>
+    <button class="btn-secondary btn-block" onclick="alert('Speicher: ca. '+(JSON.stringify(D).length/1024).toFixed(1)+' KB')">💾 Speicher-Info</button>
+    <hr class="sep">
+    <button class="btn-danger btn-block" onclick="logout()">🚪 Abmelden</button>
+  `;
+}
+function showMyStats(){
+  const myOrders=D.orders.filter(o=>o.mech===currentUser.id);
+  const myHours=myOrders.reduce((s,o)=>s+o.time.filter(t=>t.mech===currentUser.id).reduce((h,t)=>h+t.h,0),0);
+  const today=new Date().toISOString().slice(0,10);
+  const todayHours=myOrders.reduce((s,o)=>s+o.time.filter(t=>t.mech===currentUser.id&&t.date===today).reduce((h,t)=>h+t.h,0),0);
+  showModal(`<h3 style="color:var(--orange);margin-bottom:10px">📊 Meine Statistik</h3>
+    <p>Aufträge total: <strong>${myOrders.length}</strong></p>
+    <p>Stunden total: <strong>${myHours.toFixed(2)}h</strong></p>
+    <p>Stunden heute: <strong>${todayHours.toFixed(2)}h</strong></p>
+    ${currentUser.rate>0?`<p>Heute verdient: <strong style="color:var(--green)">CHF ${fmt(todayHours*currentUser.rate)}</strong></p>`:''}
+    <button class="btn-secondary btn-block" style="margin-top:10px" onclick="closeModal()">OK</button>`);
+}
+function showMyPauses(){
+  const today=new Date().toISOString().slice(0,10);
+  const my=(D.pauses||[]).filter(p=>p.mech===currentUser.id&&p.date===today);
+  const total=my.reduce((s,p)=>s+p.sec,0);
+  const byReason={};my.forEach(p=>{byReason[p.reason]=(byReason[p.reason]||0)+p.sec});
+  showModal(`<h3 style="color:var(--orange);margin-bottom:10px">⏸ Pausen heute</h3>
+    ${my.length===0?'<p class="muted">Keine Pausen heute</p>':`
+      <p>Total: <strong>${fmtTime(total)}</strong></p><hr class="sep">
+      ${Object.keys(byReason).map(k=>{const r=PAUSE_REASONS.find(x=>x.k===k);return `<p>${r?r.l:k}: ${fmtTime(byReason[k])}</p>`}).join('')}
+    `}
+    <button class="btn-secondary btn-block" style="margin-top:10px" onclick="closeModal()">OK</button>`);
+}
+
+function showModal(html){
+  const bg=document.createElement('div');bg.className='modal-bg';bg.id='modal-bg';
+  bg.innerHTML=`<div class="modal">${html}</div>`;
+  bg.addEventListener('click',e=>{if(e.target===bg)closeModal()});
+  document.body.appendChild(bg);
+}
+function closeModal(){el('modal-bg')?.remove()}
+
+setInterval(()=>{
+  if(currentUser){const fresh=localStorage.getItem('svc_data');if(fresh){try{D=JSON.parse(fresh)}catch(e){}}}
+},30000);
+</script>
+</body>
+</html>

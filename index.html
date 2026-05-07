@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Svencycles ERP — Werkstatt-Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0e0e0e;--bg2:#1a1a1a;--bg3:#252525;--orange:#f07000;--orange2:#ff8c00;--text:#e0e0e0;--text2:#999;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;--sidebar-w:220px}
+body{font-family:'Space Mono',monospace;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+h1,h2,h3,h4{font-family:'Barlow Condensed',sans-serif;font-weight:600}
+button{font-family:'Space Mono',monospace;cursor:pointer;border:none;border-radius:6px;padding:8px 16px;font-size:13px;transition:all .2s}
+input,select,textarea{font-family:'Space Mono',monospace;background:var(--bg);border:1px solid #444;border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--orange)}
+textarea{resize:vertical;min-height:60px}
+.btn-primary{background:var(--orange);color:#fff}.btn-primary:hover{background:var(--orange2)}
+.btn-secondary{background:var(--bg3);color:var(--text);border:1px solid #444}.btn-secondary:hover{background:#333}
+.btn-danger{background:var(--red);color:#fff}.btn-danger:hover{background:#dc2626}
+.btn-success{background:var(--green);color:#fff}.btn-success:hover{background:#16a34a}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.badge-offen{background:#f07000;color:#fff}.badge-in-arbeit{background:#3b82f6;color:#fff}
+.badge-fertig{background:#22c55e;color:#fff}.badge-abgerechnet{background:#666;color:#fff}
+.badge-bezahlt{background:#22c55e;color:#fff}.badge-überfällig{background:#ef4444;color:#fff}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px}
+#login-screen img{width:200px;margin-bottom:20px}
+#login-screen h1{font-size:28px;color:var(--orange);margin-bottom:10px}
+.login-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.login-card{background:var(--bg2);border:2px solid #333;border-radius:12px;padding:24px 32px;cursor:pointer;transition:all .2s;text-align:center;width:180px}
+.login-card:hover{border-color:var(--orange);transform:translateY(-3px)}
+.login-card h3{margin-top:8px;font-size:16px}.login-card p{color:var(--text2);font-size:12px;margin-top:4px}
+.login-card .avatar{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;margin:0 auto}
+
+/* LAYOUT */
+#app{display:none;height:100vh}
+#sidebar{position:fixed;left:0;top:0;bottom:0;width:var(--sidebar-w);background:var(--bg2);border-right:1px solid #333;padding:16px 0;overflow-y:auto;z-index:100}
+#sidebar .logo{padding:12px 16px;text-align:center;border-bottom:1px solid #333;margin-bottom:12px}
+#sidebar .logo img{width:140px}
+#sidebar .logo-text{font-family:'Barlow Condensed',sans-serif;font-size:22px;color:var(--orange);font-weight:700}
+#sidebar nav a{display:flex;align-items:center;gap:10px;padding:12px 20px;color:var(--text2);text-decoration:none;font-size:13px;transition:all .15s;border-left:3px solid transparent}
+#sidebar nav a:hover{background:var(--bg3);color:var(--text)}
+#sidebar nav a.active{background:var(--bg3);color:var(--orange);border-left-color:var(--orange)}
+#sidebar .user-info{position:absolute;bottom:0;left:0;right:0;padding:12px 16px;border-top:1px solid #333;font-size:11px;color:var(--text2)}
+#sidebar .user-info strong{color:var(--text);display:block}
+#main{margin-left:var(--sidebar-w);padding:24px 32px;min-height:100vh;overflow-y:auto}
+#main h2{font-size:24px;margin-bottom:20px;color:var(--orange)}
+
+/* KPI Cards */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.kpi{background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;text-align:center}
+.kpi .val{font-size:28px;font-weight:700;color:var(--orange);font-family:'Barlow Condensed',sans-serif}
+.kpi .lbl{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* Tables */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:var(--bg3);padding:10px 12px;text-align:left;font-size:12px;color:var(--text2);border-bottom:1px solid #444}
+td{padding:10px 12px;border-bottom:1px solid #222}
+tr:hover td{background:var(--bg2)}
+.tbl-wrap{background:var(--bg2);border:1px solid #333;border-radius:10px;overflow:hidden;margin-bottom:20px}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:var(--bg2);border:1px solid #444;border-radius:12px;padding:28px;width:100%;max-width:700px;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:20px;color:var(--orange);margin-bottom:16px;font-family:'Barlow Condensed',sans-serif}
+.modal .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.modal .form-row.full{grid-template-columns:1fr}
+.modal label{font-size:11px;color:var(--text2);display:block;margin-bottom:4px}
+.modal .btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end}
+
+/* Search bar */
+.search-bar{display:flex;gap:12px;margin-bottom:16px;align-items:center}
+.search-bar input{max-width:300px}
+.search-bar select{max-width:180px}
+
+/* Stock bar */
+.stock-bar{width:80px;height:8px;background:#333;border-radius:4px;overflow:hidden;display:inline-block;vertical-align:middle}
+.stock-bar-fill{height:100%;border-radius:4px;transition:width .3s}
+
+/* Mobile Overlay */
+#mobile-overlay{position:fixed;inset:0;background:var(--bg);z-index:2000;display:none;flex-direction:column;overflow-y:auto}
+#mobile-overlay .mob-header{background:var(--bg2);padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #333;position:sticky;top:0;z-index:10}
+#mobile-overlay .mob-header img{height:30px}
+#mobile-overlay .mob-content{padding:16px;flex:1}
+.mob-card{background:var(--bg2);border:1px solid #333;border-radius:10px;padding:16px;margin-bottom:12px;cursor:pointer}
+.mob-card:hover{border-color:var(--orange)}
+.timer-display{font-size:48px;font-family:'Barlow Condensed',sans-serif;text-align:center;color:var(--orange);padding:20px 0}
+.mob-btn{width:100%;padding:14px;font-size:15px;margin-bottom:10px;min-height:44px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+<img src="https://www.svencycles.ch/project/public/images/svencycles-logo.png" alt="Svencycles" onerror="this.style.display='none';document.getElementById('logo-fallback').style.display='block'">
+<div id="logo-fallback" style="display:none;font-family:'Barlow Condensed';font-size:36px;color:#f07000;font-weight:700">SVENCYCLES</div>
+<h1>Werkstatt ERP</h1>
+<div style="background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:28px;width:320px">
+<label style="font-size:11px;color:#999">Benutzername</label>
+<input id="login-user" autocomplete="username" style="margin-bottom:12px" onkeydown="if(event.key==='Enter')document.getElementById('login-pw').focus()">
+<label style="font-size:11px;color:#999">Passwort</label>
+<input id="login-pw" type="password" autocomplete="current-password" style="margin-bottom:16px" onkeydown="if(event.key==='Enter')doLogin()">
+<button class="btn-primary" style="width:100%;padding:12px" onclick="doLogin()">Anmelden</button>
+<div id="login-err" style="color:#ef4444;font-size:12px;margin-top:10px;text-align:center;min-height:16px"></div>
+</div>
+<details style="margin-top:16px;color:#666;font-size:11px;max-width:320px">
+<summary style="cursor:pointer">Demo-Zugänge anzeigen</summary>
+<div style="margin-top:8px;line-height:1.6">
+sven / 1234 — Admin (alles)<br>
+lisa / 1234 — Chef-Mechanikerin<br>
+marco / 1234 — Mechaniker (nur Handy)<br>
+cornel / 1234 — Disponent<br>
+traber / 1234 — Buchhaltung
+</div>
+</details>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+<aside id="sidebar">
+<div class="logo">
+<img src="https://www.svencycles.ch/project/public/images/svencycles-logo.png" alt="Svencycles" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+<div class="logo-text" style="display:none">SVENCYCLES</div>
+</div>
+<nav>
+<a href="#" data-view="dashboard" class="active">📊 Dashboard</a>
+<a href="#" data-view="disposition">📅 Disposition</a>
+<a href="#" data-view="aufnahme">📷 Aufnahmen</a>
+<a href="#" data-view="auftraege">🔧 Aufträge</a>
+<a href="#" data-view="offerte">📋 Offerten</a>
+<a href="#" data-view="kunden">👥 Kunden</a>
+<a href="#" data-view="lager">📦 Lager</a>
+<a href="#" data-view="rechnungen">📄 Rechnungen</a>
+<a href="#" data-view="buchhaltung">💰 Buchhaltung</a>
+<a href="#" data-view="personal">👷 Personal</a>
+<a href="#" data-view="importexport">⬆️ Import / Export</a>
+<a href="#" data-view="einstellungen">⚙️ Einstellungen</a>
+</nav>
+<div class="user-info">
+<strong id="user-display"></strong>
+<span id="role-display"></span><br>
+<a href="#" onclick="doLogout()" style="color:var(--orange);font-size:11px">Abmelden</a>
+</div>
+</aside>
+<main id="main"></main>
+</div>
+
+<!-- MOBILE OVERLAY -->
+<div id="mobile-overlay">
+<div class="mob-header">
+<img src="https://www.svencycles.ch/project/public/images/svencycles-logo.png" alt="SC" style="height:28px" onerror="this.outerHTML='<span style=color:#f07000;font-weight:700>SVC</span>'">
+<span id="mob-user" style="flex:1;font-size:14px"></span>
+<button class="btn-secondary" onclick="doLogout()" style="padding:6px 12px;font-size:11px">Abmelden</button>
+</div>
+<div class="mob-content" id="mob-content"></div>
+</div>
+
+<!-- HIDDEN QR container -->
+<div id="qr-container" style="position:absolute;left:-9999px"></div>
+
+<script>
+// ============================================================
+// DATA LAYER
+// ============================================================
+const DEMO_DATA = {
+  customers: [
+    {id:'K001',name:'Hans Brönnimann',tel:'079 444 55 66',email:'hans.b@bluewin.ch',strasse:'Kirchgasse 4',plz:'8200',ort:'Schaffhausen',bikes:[{model:'HD Fat Boy 2018',kz:'SH 1234 U',vin:'1HD1BX5148Y012345',km:28000,col:'Vivid Black'}]},
+    {id:'K002',name:'Peter Hofer',tel:'078 321 99 00',email:'p.hofer@gmx.ch',strasse:'Bahnhofstrasse 12',plz:'8400',ort:'Winterthur',bikes:[{model:'HD Street Glide 2020',kz:'ZH 5678 A',vin:'1HD1KBC20LB654321',km:15200,col:'River Rock Gray'},{model:'HD Iron 883 2016',kz:'ZH 9012 B',vin:'1HD4LE214GC100200',km:42000,col:'Charcoal Denim'}]},
+    {id:'K003',name:'Sandra Meier',tel:'076 888 12 34',email:'s.meier@sunrise.ch',strasse:'Dorfstrasse 7',plz:'8468',ort:'Waltalingen',bikes:[{model:'HD Sportster S 2022',kz:'ZH 3456 C',vin:'1HD1YWJ15NB111222',km:8500,col:'Vivid Black'}]},
+    {id:'K004',name:'Thomas Keller',tel:'079 111 22 33',email:'t.keller@outlook.com',strasse:'Weinbergstrasse 22',plz:'8472',ort:'Seuzach',bikes:[{model:'HD Road King 2019',kz:'ZH 7890 D',vin:'1HD1FRM17KB333444',km:35000,col:'Billiard Blue'}]},
+    {id:'K005',name:'Markus Zimmerli',tel:'078 555 77 88',email:'m.zimmerli@bluewin.ch',strasse:'Industriestrasse 5',plz:'8245',ort:'Feuerthalen',bikes:[{model:'HD Softail Slim 2021',kz:'SH 2345 E',vin:'1HD1BW918MB555666',km:12000,col:'Deadwood Green'}]}
+  ],
+  orders: [
+    {id:'A2026001',cid:'K001',bike:0,status:'in-arbeit',prio:'normal',created:'2026-04-20',mech:'MB',desc:'Jahresservice 10\'000km',parts:[{pid:'P001',qty:4,prc:15.90},{pid:'P002',qty:1,prc:24.50}],time:[{date:'2026-04-21',h:1.5,desc:'Ölwechsel + Filter',mech:'MB'}],notes:'Kunde holt ab Freitag',invoiced:false},
+    {id:'A2026002',cid:'K002',bike:0,status:'fertig',prio:'normal',created:'2026-04-15',mech:'LK',desc:'Bremsbeläge vorne + hinten',parts:[{pid:'P005',qty:2,prc:89.00},{pid:'P006',qty:2,prc:95.00}],time:[{date:'2026-04-16',h:2,desc:'Bremsen v+h gewechselt',mech:'LK'},{date:'2026-04-16',h:0.5,desc:'Probefahrt + Einbremsen',mech:'LK'}],notes:'',invoiced:false},
+    {id:'A2026003',cid:'K003',bike:0,status:'offen',prio:'hoch',created:'2026-05-05',mech:'MB',desc:'Motorstörung — Check Engine Lampe',parts:[],time:[],notes:'Kunde meldet unrunden Leerlauf',invoiced:false},
+    {id:'A2026004',cid:'K002',bike:1,status:'abgerechnet',prio:'normal',created:'2026-03-10',mech:'MB',desc:'Reifen vorne + hinten',parts:[{pid:'P004',qty:2,prc:189.00}],time:[{date:'2026-03-11',h:1.5,desc:'Reifenwechsel komplett',mech:'MB'}],notes:'',invoiced:true},
+    {id:'A2026005',cid:'K004',bike:0,status:'in-arbeit',prio:'normal',created:'2026-05-01',mech:'LK',desc:'Inspektion 30\'000km',parts:[{pid:'P001',qty:4,prc:15.90},{pid:'P002',qty:1,prc:24.50},{pid:'P003',qty:1,prc:18.90}],time:[{date:'2026-05-02',h:2,desc:'Inspektion begonnen',mech:'LK'}],notes:'Ventile einstellen',invoiced:false},
+    {id:'A2026006',cid:'K005',bike:0,status:'offen',prio:'normal',created:'2026-05-06',mech:'MB',desc:'Auspuff-Umbau Vance & Hines',parts:[],time:[],notes:'Teile bestellt, Lieferung KW20',invoiced:false},
+    {id:'A2026007',cid:'K001',bike:0,status:'abgerechnet',prio:'normal',created:'2026-02-05',mech:'LK',desc:'Batterie-Wechsel',parts:[{pid:'P008',qty:1,prc:145.00}],time:[{date:'2026-02-06',h:0.5,desc:'Batterie getauscht',mech:'LK'}],notes:'',invoiced:true},
+    {id:'A2026008',cid:'K004',bike:0,status:'fertig',prio:'hoch',created:'2026-04-28',mech:'MB',desc:'Kupplung rutscht — Lamellen ersetzen',parts:[{pid:'P009',qty:1,prc:220.00}],time:[{date:'2026-04-29',h:3,desc:'Kupplung zerlegt + Lamellen ersetzt',mech:'MB'},{date:'2026-04-30',h:1,desc:'Zusammenbau + Probefahrt',mech:'MB'}],notes:'',invoiced:false}
+  ],
+  parts: [
+    {id:'P001',name:'Motoröl HD 20W-50 1L',sku:'MO-20W50-1L',cat:'Verbrauch',stock:18,min:10,buy:9.50,sell:15.90,sup:'Harley-Davidson'},
+    {id:'P002',name:'Ölfilter HD Sportster/Softail',sku:'OF-HD-SS',cat:'Filter',stock:12,min:5,buy:12.00,sell:24.50,sup:'Harley-Davidson'},
+    {id:'P003',name:'Luftfilter HD Touring',sku:'LF-HD-T',cat:'Filter',stock:6,min:3,buy:9.80,sell:18.90,sup:'Harley-Davidson'},
+    {id:'P004',name:'Reifen Dunlop D401 130/90B16',sku:'RE-D401-F',cat:'Reifen',stock:4,min:2,buy:120.00,sell:189.00,sup:'Custom-Chrome'},
+    {id:'P005',name:'Bremsbeläge vorne Sinter',sku:'BB-V-SINT',cat:'Bremsen',stock:8,min:4,buy:45.00,sell:89.00,sup:'EBC Brakes'},
+    {id:'P006',name:'Bremsbeläge hinten Sinter',sku:'BB-H-SINT',cat:'Bremsen',stock:6,min:4,buy:48.00,sell:95.00,sup:'EBC Brakes'},
+    {id:'P007',name:'Zündkerze HD Twin Cam',sku:'ZK-TC-6R12',cat:'Zündung',stock:20,min:8,buy:8.50,sell:16.90,sup:'NGK'},
+    {id:'P008',name:'Batterie AGM 12V 18Ah',sku:'BAT-AGM-18',cat:'Elektrik',stock:3,min:2,buy:85.00,sell:145.00,sup:'Yuasa'},
+    {id:'P009',name:'Kupplungslamellen-Set HD',sku:'KL-SET-HD',cat:'Motor',stock:2,min:1,buy:130.00,sell:220.00,sup:'Barnett'},
+    {id:'P010',name:'Auspuff Vance&Hines ShortShots',sku:'AUS-VH-SS',cat:'Auspuff',stock:1,min:1,buy:650.00,sell:1090.00,sup:'Vance & Hines'},
+    {id:'P011',name:'Lenkergriffe Avon Memory Foam',sku:'LG-AVON-MF',cat:'Lenker',stock:10,min:4,buy:28.00,sell:52.00,sup:'Avon Grips'},
+    {id:'P012',name:'Bremsflüssigkeit DOT4 500ml',sku:'BF-DOT4-500',cat:'Verbrauch',stock:8,min:4,buy:6.50,sell:12.90,sup:'Castrol'},
+    {id:'P013',name:'Kettenspray 400ml',sku:'KS-400',cat:'Verbrauch',stock:15,min:6,buy:7.00,sell:14.50,sup:'Motul'},
+    {id:'P014',name:'Service-Kit HD Softail 10k',sku:'SK-SF-10K',cat:'Service-Kit',stock:3,min:2,buy:65.00,sell:119.00,sup:'Harley-Davidson'},
+    {id:'P015',name:'LED Blinker Set universal',sku:'BL-LED-UNI',cat:'Elektrik',stock:5,min:3,buy:35.00,sell:69.00,sup:'Kellermann'},
+    {id:'P016',name:'Satteltaschen Leder schwarz',sku:'ST-LED-BLK',cat:'Zubehör',stock:2,min:1,buy:180.00,sell:320.00,sup:'Viking Bags'},
+    {id:'P017',name:'Reifen Michelin Commander III 180/65B16',sku:'RE-MC3-R',cat:'Reifen',stock:3,min:2,buy:140.00,sell:219.00,sup:'Michelin'},
+    {id:'P018',name:'Primäröl HD Formula+ 1L',sku:'PO-FP-1L',cat:'Verbrauch',stock:9,min:4,buy:14.00,sell:26.90,sup:'Harley-Davidson'}
+  ],
+  invoices: [
+    {id:'RG2026001',oid:'A2026004',cid:'K002',date:'2026-03-12',due:'2026-04-12',status:'bezahlt',pos:[{desc:'Reifen Dunlop D401 130/90B16',qty:2,unit:'Stk',prc:189.00},{desc:'Montage Reifenwechsel',qty:1.5,unit:'Std',prc:125.00}]},
+    {id:'RG2026002',oid:'A2026007',cid:'K001',date:'2026-02-07',due:'2026-03-07',status:'bezahlt',pos:[{desc:'Batterie AGM 12V 18Ah',qty:1,unit:'Stk',prc:145.00},{desc:'Einbau + Prüfung',qty:0.5,unit:'Std',prc:125.00}]},
+    {id:'RG2026003',oid:'',cid:'K003',date:'2026-04-01',due:'2026-05-01',status:'überfällig',pos:[{desc:'Diagnose Elektronik',qty:1,unit:'Std',prc:125.00},{desc:'Software-Update ECU',qty:0.5,unit:'Std',prc:125.00}]},
+    {id:'RG2026004',oid:'',cid:'K005',date:'2026-05-02',due:'2026-06-02',status:'offen',pos:[{desc:'Beratung Umbau-Projekt',qty:1,unit:'Std',prc:125.00},{desc:'Konfigurations-Zeichnung',qty:1,unit:'Stk',prc:80.00}]}
+  ],
+  staff: [
+    {id:'ST',name:'Sven Traber',user:'sven',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'admin',email:'sven@svencycles.ch',tel:'052 746 10 60',rate:0,color:'#f07000',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:true,disposition:true,personal:true,einstellungen:true,importexport:true,aufnahme:true,offerte:true,createInvoice:true,viewPrices:true,viewMargin:true,manageStaff:true,exportData:true,deleteData:true}},
+    {id:'LK',name:'Lisa Keller',user:'lisa',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'chef',email:'lisa@svencycles.ch',tel:'079 222 33 44',rate:48,color:'#22c55e',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:false,disposition:true,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
+    {id:'MB',name:'Marco Bieri',user:'marco',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'mechaniker',email:'marco@svencycles.ch',tel:'078 666 77 88',rate:42,color:'#3b82f6',perm:{dashboard:false,auftraege:false,kunden:false,lager:false,rechnungen:false,buchhaltung:false,disposition:false,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:false,createInvoice:false,viewPrices:false,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
+    {id:'CS',name:'Cornel Sonderer',user:'cornel',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'disponent',email:'cornel@svencycles.ch',tel:'079 333 44 55',rate:55,color:'#a855f7',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:false,disposition:true,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
+    {id:'FT',name:'Frau Traber',user:'traber',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'buchhaltung',email:'buchhaltung@svencycles.ch',tel:'052 746 10 61',rate:0,color:'#eab308',perm:{dashboard:true,auftraege:false,kunden:true,lager:false,rechnungen:true,buchhaltung:true,disposition:false,personal:false,einstellungen:false,importexport:true,aufnahme:false,offerte:false,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:true,deleteData:false}}
+  ],
+  pauses: [],
+  rapports: [],
+  offerten: [],
+  termine: [],
+  counters:{order:8,invoice:4,customer:5,part:18,rapport:0,offerte:0,termin:0}
+};
+
+let D;
+function loadData(){const s=localStorage.getItem('svc_data');D=s?JSON.parse(s):JSON.parse(JSON.stringify(DEMO_DATA))}
+function saveData(){localStorage.setItem('svc_data',JSON.stringify(D))}
+loadData();
+
+// ============================================================
+// AUTH
+// ============================================================
+let currentUser=null;
+async function sha256(txt){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(txt));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function doLogin(){
+  const user=document.getElementById('login-user').value.trim().toLowerCase();
+  const pw=document.getElementById('login-pw').value;
+  const err=document.getElementById('login-err');
+  if(!user||!pw){err.textContent='Bitte Benutzer und Passwort eingeben';return}
+  const staff=D.staff.find(s=>(s.user||'').toLowerCase()===user);
+  if(!staff){err.textContent='Benutzer unbekannt';return}
+  const hash=await sha256(pw);
+  if(hash!==staff.pw){err.textContent='Falsches Passwort';return}
+  err.textContent='';
+  document.getElementById('login-pw').value='';
+  currentUser=staff;
+  document.getElementById('login-screen').style.display='none';
+  // Mechaniker = Mobile, alle anderen = Desktop (auch wenn nur Aufnahme-Recht)
+  if(staff.role==='mechaniker'){
+    document.getElementById('mobile-overlay').style.display='flex';
+    document.getElementById('mob-user').textContent=staff.name;
+    renderMobile();
+  } else {
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-display').textContent=staff.name;
+    document.getElementById('role-display').textContent=roleLabel(staff.role);
+    applyPermissions();
+    navigate(firstAllowedView());
+  }
+}
+function roleLabel(r){return {admin:'Administrator',chef:'Chef-Mechaniker',mechaniker:'Mechaniker',disponent:'Disponent',buchhaltung:'Buchhaltung'}[r]||r}
+function can(key){return !!(currentUser&&currentUser.perm&&currentUser.perm[key])}
+function applyPermissions(){
+  document.querySelectorAll('#sidebar nav a').forEach(a=>{
+    const v=a.dataset.view;
+    a.style.display=can(v)?'flex':'none';
+  });
+}
+function firstAllowedView(){
+  const order=['dashboard','disposition','auftraege','offerte','kunden','lager','rechnungen','buchhaltung','personal','importexport','einstellungen'];
+  return order.find(v=>can(v))||'einstellungen';
+}
+function doLogout(){
+  currentUser=null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('mobile-overlay').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pw').value='';
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+document.querySelectorAll('#sidebar nav a').forEach(a=>{
+  a.addEventListener('click',e=>{e.preventDefault();navigate(a.dataset.view)})
+});
+function navigate(view){
+  if(!can(view)){view=firstAllowedView()}
+  document.querySelectorAll('#sidebar nav a').forEach(a=>a.classList.toggle('active',a.dataset.view===view));
+  const m=document.getElementById('main');
+  switch(view){
+    case'dashboard':m.innerHTML=renderDashboard();break;
+    case'disposition':m.innerHTML=renderDisposition();break;
+    case'aufnahme':m.innerHTML=renderAufnahmen();break;
+    case'auftraege':m.innerHTML=renderAuftraege();break;
+    case'offerte':m.innerHTML=renderOfferten();break;
+    case'kunden':m.innerHTML=renderKunden();break;
+    case'lager':m.innerHTML=renderLager();break;
+    case'rechnungen':m.innerHTML=renderRechnungen();break;
+    case'buchhaltung':m.innerHTML=renderBuchhaltung();break;
+    case'personal':m.innerHTML=renderPersonal();break;
+    case'importexport':m.innerHTML=renderImportExport();break;
+    case'einstellungen':m.innerHTML=renderEinstellungen();break;
+  }
+}
+// Stubs für Module die in Phase 2-4 ausgebaut werden
+// ============================================================
+// DISPOSITION (Wochen-Kalender mit Drag & Drop)
+// ============================================================
+let dispoWeekStart=null; // Datum (Montag) der angezeigten Woche
+function getMonday(d){const dt=new Date(d);const day=dt.getDay();const diff=(day===0?-6:1)-day;dt.setDate(dt.getDate()+diff);dt.setHours(0,0,0,0);return dt}
+function fmtDate(d){const dt=new Date(d);return dt.toISOString().slice(0,10)}
+function fmtDateNice(d){const dt=new Date(d);return dt.toLocaleDateString('de-CH',{weekday:'short',day:'2-digit',month:'2-digit'})}
+function renderDisposition(){
+  if(!dispoWeekStart)dispoWeekStart=getMonday(new Date());
+  if(!D.termine)D.termine=[];
+  const mechs=D.staff.filter(s=>s.role==='mechaniker'||s.role==='chef');
+  const days=[0,1,2,3,4,5];
+  const dayNames=['Mo','Di','Mi','Do','Fr','Sa'];
+
+  // Aufträge die noch nicht disponiert sind (offen, kein Termin)
+  const undisponiert=D.orders.filter(o=>(o.status==='offen'||o.status==='in-arbeit')&&!D.termine.some(t=>t.oid===o.id));
+
+  let h=`<h2>📅 Disposition — Wochenplan</h2>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn-secondary" onclick="dispoWeekStart=new Date(dispoWeekStart);dispoWeekStart.setDate(dispoWeekStart.getDate()-7);navigate('disposition')">← Woche</button>
+    <button class="btn-secondary" onclick="dispoWeekStart=getMonday(new Date());navigate('disposition')">Heute</button>
+    <button class="btn-secondary" onclick="dispoWeekStart=new Date(dispoWeekStart);dispoWeekStart.setDate(dispoWeekStart.getDate()+7);navigate('disposition')">Woche →</button>
+    <strong style="margin-left:10px">KW ${getKw(dispoWeekStart)} — ${fmtDateNice(dispoWeekStart)} bis ${fmtDateNice(new Date(dispoWeekStart.getTime()+5*86400000))}</strong>
+    <span style="margin-left:auto"><button class="btn-primary" onclick="exportIcs()">📅 ICS für Outlook exportieren</button></span>
+  </div>`;
+
+  // Auslastungs-Anzeige
+  let auslastung='<div class="kpi-row" style="margin-bottom:14px">';
+  mechs.forEach(m=>{
+    let total=0;
+    days.forEach(d=>{
+      const date=fmtDate(new Date(dispoWeekStart.getTime()+d*86400000));
+      D.termine.filter(t=>t.mech===m.id&&t.date===date).forEach(t=>{total+=t.dauer||1});
+    });
+    const max=8*6; // 8h x 6 Tage
+    const pct=Math.round(total/max*100);
+    const col=pct>90?'var(--red)':pct>70?'var(--orange)':'var(--green)';
+    auslastung+=`<div class="kpi" style="border:2px solid ${m.color}"><div class="val" style="color:${col}">${total}h</div><div class="lbl">${m.name}<br>${pct}% Auslastung</div></div>`;
+  });
+  auslastung+='</div>';
+  h+=auslastung;
+
+  // Layout: 2-spaltig — links Pool, rechts Kalender
+  h+=`<div style="display:grid;grid-template-columns:240px 1fr;gap:14px">
+    <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:12px">
+      <h4 style="color:var(--orange);margin-bottom:8px">📥 Pool (${undisponiert.length})</h4>
+      <p style="font-size:11px;color:#999;margin-bottom:8px">Aufträge ohne Termin. Auf Kalender ziehen.</p>
+      <div id="dispo-pool" style="max-height:600px;overflow-y:auto">`;
+  undisponiert.forEach(o=>{
+    const c=getCustomer(o.cid);
+    const prio=o.prio==='hoch'?'⚡ ':'';
+    h+=`<div draggable="true" ondragstart="dispoDragStart(event,'order','${o.id}')" style="background:var(--bg);border:1px solid #444;border-radius:6px;padding:8px;margin-bottom:6px;cursor:grab;font-size:12px">
+      <strong>${prio}${o.id}</strong><br>
+      <span style="color:#999">${c?c.name:'-'}</span><br>
+      <span style="font-size:11px">${o.desc.substring(0,40)}${o.desc.length>40?'…':''}</span>
+    </div>`;
+  });
+  h+=`</div></div>`;
+
+  // Kalender
+  h+=`<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:12px;overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <tr><th style="padding:6px;border:1px solid #333;background:var(--bg3);width:80px">Mech</th>`;
+  days.forEach(d=>{
+    const date=fmtDate(new Date(dispoWeekStart.getTime()+d*86400000));
+    const isToday=date===fmtDate(new Date());
+    h+=`<th style="padding:6px;border:1px solid #333;background:var(--bg3);${isToday?'color:var(--orange)':''}">${dayNames[d]} ${fmtDateNice(new Date(dispoWeekStart.getTime()+d*86400000)).split(' ')[1]}</th>`;
+  });
+  h+=`</tr>`;
+  mechs.forEach(m=>{
+    h+=`<tr><td style="padding:8px;border:1px solid #333;background:${m.color}22;font-weight:700;color:${m.color}">${m.id}<br><span style="font-size:10px;color:#999">${m.name.split(' ')[0]}</span></td>`;
+    days.forEach(d=>{
+      const date=fmtDate(new Date(dispoWeekStart.getTime()+d*86400000));
+      const slots=D.termine.filter(t=>t.mech===m.id&&t.date===date).sort((a,b)=>(a.start||'09:00').localeCompare(b.start||'09:00'));
+      h+=`<td ondragover="event.preventDefault()" ondrop="dispoDrop(event,'${m.id}','${date}')" style="padding:4px;border:1px solid #333;vertical-align:top;height:80px;min-width:140px">`;
+      slots.forEach(t=>{
+        const o=getOrder(t.oid);const c=o?getCustomer(o.cid):null;
+        h+=`<div onclick="editTermin('${t.id}')" style="background:${m.color}33;border-left:3px solid ${m.color};padding:4px 6px;margin-bottom:3px;border-radius:4px;cursor:pointer;font-size:11px">
+          <strong>${t.start||'?'} (${t.dauer||1}h)</strong><br>
+          ${o?o.id:t.oid}<br>
+          <span style="color:#999">${c?c.name:''}</span>
+        </div>`;
+      });
+      h+=`</td>`;
+    });
+    h+=`</tr>`;
+  });
+  h+=`</table></div></div>`;
+  return h;
+}
+function getKw(d){const dt=new Date(d);dt.setHours(0,0,0,0);dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);const w1=new Date(dt.getFullYear(),0,4);return 1+Math.round(((dt-w1)/86400000-3+(w1.getDay()+6)%7)/7)}
+let dispoDragData=null;
+function dispoDragStart(e,type,id){dispoDragData={type,id};e.dataTransfer.effectAllowed='move'}
+function dispoDrop(e,mech,date){
+  e.preventDefault();
+  if(!dispoDragData)return;
+  if(dispoDragData.type==='order'){
+    // Modal mit Zeit + Dauer
+    showModal(`<h3>Termin festlegen</h3>
+    <p style="color:#999;font-size:12px">Auftrag <strong>${dispoDragData.id}</strong> für <strong>${mech}</strong> am <strong>${date}</strong></p>
+    <div class="form-row" style="margin-top:10px">
+      <div><label>Startzeit</label><input id="td-start" type="time" value="09:00"></div>
+      <div><label>Dauer (Std)</label><input id="td-dauer" type="number" step="0.5" value="2"></div>
+    </div>
+    <div class="form-row full"><div><label>Notiz</label><input id="td-note"></div></div>
+    <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewTermin('${dispoDragData.id}','${mech}','${date}')">Termin anlegen</button></div>`);
+  }
+}
+function saveNewTermin(oid,mech,date){
+  D.counters.termin=(D.counters.termin||0)+1;
+  const id='T'+String(D.counters.termin).padStart(4,'0');
+  if(!D.termine)D.termine=[];
+  D.termine.push({id,oid,mech,date,start:gv('td-start'),dauer:parseFloat(gv('td-dauer'))||1,note:gv('td-note')});
+  // Auftrag: Mechaniker zuweisen
+  const o=getOrder(oid);if(o&&!o.mech)o.mech=mech;
+  saveData();closeModal();navigate('disposition');
+}
+function editTermin(tid){
+  const t=D.termine.find(x=>x.id===tid);if(!t)return;
+  const o=getOrder(t.oid);const c=o?getCustomer(o.cid):null;
+  showModal(`<h3>Termin ${tid}</h3>
+  <p style="color:#999;font-size:12px">Auftrag ${t.oid} · ${c?c.name:'-'}<br>${o?o.desc:''}</p>
+  <div class="form-row" style="margin-top:10px">
+    <div><label>Datum</label><input id="te-date" type="date" value="${t.date}"></div>
+    <div><label>Mechaniker</label><select id="te-mech">${D.staff.filter(s=>s.role==='mechaniker'||s.role==='chef').map(s=>`<option value="${s.id}" ${s.id===t.mech?'selected':''}>${s.name}</option>`).join('')}</select></div>
+  </div>
+  <div class="form-row">
+    <div><label>Start</label><input id="te-start" type="time" value="${t.start||'09:00'}"></div>
+    <div><label>Dauer (Std)</label><input id="te-dauer" type="number" step="0.5" value="${t.dauer||1}"></div>
+  </div>
+  <div class="form-row full"><div><label>Notiz</label><input id="te-note" value="${t.note||''}"></div></div>
+  <div class="btns">
+    <button class="btn-danger" onclick="deleteTermin('${tid}')">Termin löschen</button>
+    <button class="btn-secondary" onclick="closeModal()">Schliessen</button>
+    <button class="btn-primary" onclick="saveTermin('${tid}')">Speichern</button>
+  </div>`);
+}
+function saveTermin(tid){
+  const t=D.termine.find(x=>x.id===tid);if(!t)return;
+  t.date=gv('te-date');t.mech=gv('te-mech');t.start=gv('te-start');t.dauer=parseFloat(gv('te-dauer'))||1;t.note=gv('te-note');
+  const o=getOrder(t.oid);if(o)o.mech=t.mech;
+  saveData();closeModal();navigate('disposition');
+}
+function deleteTermin(tid){
+  if(!confirm('Termin löschen?'))return;
+  D.termine=D.termine.filter(x=>x.id!==tid);
+  saveData();closeModal();navigate('disposition');
+}
+// ICS-Export für Outlook
+function exportIcs(){
+  if(!D.termine||D.termine.length===0){alert('Keine Termine in der Woche');return}
+  const start=dispoWeekStart;
+  const end=new Date(start.getTime()+7*86400000);
+  const inWeek=D.termine.filter(t=>{const d=new Date(t.date);return d>=start&&d<end});
+  if(inWeek.length===0){alert('Keine Termine in dieser Woche');return}
+  let ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Svencycles//ERP//DE\r\nCALSCALE:GREGORIAN\r\nMETHOD:PUBLISH\r\n';
+  inWeek.forEach(t=>{
+    const o=getOrder(t.oid);const c=o?getCustomer(o.cid):null;const m=D.staff.find(s=>s.id===t.mech);
+    const [h,mi]=(t.start||'09:00').split(':').map(Number);
+    const startD=new Date(t.date);startD.setHours(h,mi,0,0);
+    const endD=new Date(startD.getTime()+(t.dauer||1)*3600000);
+    const fmtIcs=d=>d.toISOString().replace(/[-:]/g,'').split('.')[0]+'Z';
+    const summary=`${t.oid} ${m?m.name:''}: ${o?o.desc:''}`;
+    const description=`${c?c.name+' ('+c.tel+')':'-'}\\n${o?o.desc:''}\\n${t.note||''}`.replace(/\n/g,'\\n');
+    ics+=`BEGIN:VEVENT\r\nUID:${t.id}@svencycles.ch\r\nDTSTAMP:${fmtIcs(new Date())}\r\nDTSTART:${fmtIcs(startD)}\r\nDTEND:${fmtIcs(endD)}\r\nSUMMARY:${summary}\r\nDESCRIPTION:${description}\r\nLOCATION:Svencycles GmbH\\, Waltalingen\r\nEND:VEVENT\r\n`;
+  });
+  ics+='END:VCALENDAR\r\n';
+  downloadFile('Svencycles_KW'+getKw(start)+'.ics',ics,'text/calendar');
+}
+function renderAufnahmen(){
+  const list=(D.rapports||[]).map(r=>{
+    const c=getCustomer(r.cid);
+    return `<tr style="cursor:pointer" onclick="openRapport('${r.id}')"><td>${r.id}</td><td>${r.date}</td><td>${r.kontrollschild||'-'}</td><td>${c?c.name:r.custName||'-'}</td><td>${r.bikeModel||'-'}</td><td><span class="badge badge-${r.status==='offen'?'offen':r.status==='offeriert'?'in-arbeit':'fertig'}">${r.status}</span></td><td>${(r.fotos||[]).length} 📷</td><td>${r.aufgenommenVon||'-'}</td></tr>`;
+  }).join('')||'<tr><td colspan="8" style="text-align:center;color:#999;padding:20px">Noch keine Aufnahmen — werden vom Handy aus erstellt</td></tr>';
+  return `<h2>📷 Bike-Aufnahmen</h2>
+  <p style="color:#999;font-size:13px;margin-bottom:16px">Aufnahmen werden auf dem Handy erfasst (Kontrollschild → Foto → Schaden → Sprache-zu-Text). Hier am PC werden Offerten daraus erstellt.</p>
+  <div class="tbl-wrap"><table><tr><th>Nr</th><th>Datum</th><th>KZ</th><th>Kunde</th><th>Bike</th><th>Status</th><th>Fotos</th><th>Von</th></tr>${list}</table></div>`;
+}
+function openRapport(rid){
+  const r=(D.rapports||[]).find(x=>x.id===rid);if(!r)return;
+  const c=getCustomer(r.cid);
+  let fotos=(r.fotos||[]).map((f,i)=>`<img src="${f}" style="width:120px;height:120px;object-fit:cover;border-radius:6px;margin:4px;cursor:pointer" onclick="window.open('${f}')">`).join('');
+  let schaden=(r.schaeden||[]).map(s=>`<li>${s}</li>`).join('')||'<li style="color:#999">Keine vorhandenen Schäden notiert</li>';
+  showModal(`<h3>Aufnahme ${r.id}</h3>
+  <div class="form-row"><div><label>Datum</label><input value="${r.date}" disabled></div><div><label>Kontrollschild</label><input value="${r.kontrollschild||''}" disabled></div></div>
+  <div class="form-row"><div><label>Kunde</label><input value="${c?c.name:r.custName||''}" disabled></div><div><label>Telefon</label><input value="${c?c.tel:r.custTel||''}" disabled></div></div>
+  <div class="form-row"><div><label>Bike</label><input value="${r.bikeModel||''}" disabled></div><div><label>KM-Stand</label><input value="${r.km||''}" disabled></div></div>
+  <div class="form-row full"><div><label>Auftrags-Beschrieb (vom Kunden)</label><textarea disabled style="min-height:80px">${r.beschrieb||''}</textarea></div></div>
+  <h4 style="margin:16px 0 6px;color:#f07000">Vorhandene Schäden bei Annahme</h4>
+  <ul style="margin-left:20px">${schaden}</ul>
+  <h4 style="margin:16px 0 6px;color:#f07000">Fotos</h4>
+  <div style="display:flex;flex-wrap:wrap">${fotos||'<span style="color:#999">Keine Fotos</span>'}</div>
+  <div class="btns">
+    <button class="btn-secondary" onclick="closeModal()">Schliessen</button>
+    ${can('offerte')?`<button class="btn-primary" onclick="createOfferteFromRapport('${rid}')">→ Offerte erstellen</button>`:''}
+    ${can('auftraege')?`<button class="btn-success" onclick="createOrderFromRapport('${rid}')">→ Auftrag erstellen</button>`:''}
+  </div>`);
+}
+function renderOfferten(){
+  if(!D.offerten)D.offerten=[];
+  // Aufnahmen die noch keine Offerte haben
+  const offene=(D.rapports||[]).filter(r=>r.status==='offen');
+  let aufnahmenRows=offene.map(r=>{
+    const c=getCustomer(r.cid);
+    return `<tr><td>${r.id}</td><td>${r.date}</td><td>${r.kontrollschild||'-'}</td><td>${c?c.name:r.custName||'-'}</td><td>${r.bikeModel||'-'}</td><td>${(r.fotos||[]).length} 📷</td><td><button class="btn-primary" style="padding:4px 10px;font-size:11px" onclick="newOfferteFromRapport('${r.id}')">+ Offerte</button></td></tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:#999;padding:14px">Keine offenen Aufnahmen</td></tr>';
+
+  let offRows=D.offerten.map(of=>{
+    const c=getCustomer(of.cid);
+    const tot=of.pos.reduce((s,p)=>s+p.qty*p.prc,0);
+    return `<tr style="cursor:pointer" onclick="openOfferte('${of.id}')"><td>${of.id}</td><td>${of.date}</td><td>${c?c.name:'-'}</td><td>${of.bikeModel||'-'}</td><td><span class="badge badge-${of.status==='offen'?'offen':of.status==='angenommen'?'fertig':'abgerechnet'}">${of.status}</span></td><td>CHF ${fmt(tot)}</td><td>CHF ${fmt(tot*1.081)}</td></tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:#999;padding:14px">Noch keine Offerten</td></tr>';
+
+  return `<h2>📋 Offerten</h2>
+  <h3 style="margin:14px 0 8px;color:#999;font-size:14px">Wartende Aufnahmen → Offerte erstellen</h3>
+  <div class="tbl-wrap"><table><tr><th>Aufnahme</th><th>Datum</th><th>KZ</th><th>Kunde</th><th>Bike</th><th>Fotos</th><th></th></tr>${aufnahmenRows}</table></div>
+  <h3 style="margin:14px 0 8px;color:#999;font-size:14px">Bestehende Offerten</h3>
+  <div class="tbl-wrap"><table><tr><th>Nr</th><th>Datum</th><th>Kunde</th><th>Bike</th><th>Status</th><th>Netto</th><th>Brutto</th></tr>${offRows}</table></div>`;
+}
+function newOfferteFromRapport(rid){
+  if(!can('offerte')){alert('Keine Berechtigung');return}
+  const r=(D.rapports||[]).find(x=>x.id===rid);if(!r)return;
+  if(!D.offerten)D.offerten=[];
+  D.counters.offerte=(D.counters.offerte||0)+1;
+  const id='OF2026'+String(D.counters.offerte).padStart(3,'0');
+  const today=new Date().toISOString().slice(0,10);
+  const gueltig=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+  const o={id,rapportId:rid,cid:r.cid,date:today,gueltig,status:'offen',bikeModel:r.bikeModel,beschrieb:r.beschrieb,pos:[{desc:'Arbeitszeit (geschätzt)',qty:1,unit:'Std',prc:125}]};
+  D.offerten.push(o);
+  r.status='offeriert';r.offerteId=id;
+  saveData();
+  openOfferte(id);
+}
+function openOfferte(oid){
+  const of=D.offerten.find(x=>x.id===oid);if(!of)return;
+  const c=getCustomer(of.cid);
+  const r=(D.rapports||[]).find(x=>x.id===of.rapportId);
+  let posHtml=of.pos.map((p,i)=>`<tr>
+    <td><input value="${p.desc}" oninput="updateOfPos('${oid}',${i},'desc',this.value)"></td>
+    <td><input type="number" step="0.25" value="${p.qty}" style="width:70px" oninput="updateOfPos('${oid}',${i},'qty',parseFloat(this.value))"></td>
+    <td><input value="${p.unit}" style="width:60px" oninput="updateOfPos('${oid}',${i},'unit',this.value)"></td>
+    <td><input type="number" step="0.01" value="${p.prc}" style="width:90px" oninput="updateOfPos('${oid}',${i},'prc',parseFloat(this.value))"></td>
+    <td>CHF ${fmt(p.qty*p.prc)}</td>
+    <td><button class="btn-danger" style="padding:2px 8px;font-size:10px" onclick="rmOfPos('${oid}',${i})">×</button></td></tr>`).join('');
+  const netto=of.pos.reduce((s,p)=>s+p.qty*p.prc,0);
+  const brutto=netto*1.081;
+  let partOpts=D.parts.map(p=>`<option value="${p.id}">${p.name} (CHF ${fmt(p.sell)})</option>`).join('');
+  let fotos=r?(r.fotos||[]).slice(0,4).map(f=>`<img src="${f}" style="width:80px;height:80px;object-fit:cover;border-radius:4px;margin:2px">`).join(''):'';
+  showModal(`<h3>Offerte ${of.id}</h3>
+  <div class="form-row"><div><label>Kunde</label><input value="${c?c.name:'-'}" disabled></div><div><label>Status</label><select onchange="setOfStatus('${oid}',this.value)"><option ${of.status==='offen'?'selected':''}>offen</option><option ${of.status==='versendet'?'selected':''}>versendet</option><option ${of.status==='angenommen'?'selected':''}>angenommen</option><option ${of.status==='abgelehnt'?'selected':''}>abgelehnt</option></select></div></div>
+  <div class="form-row"><div><label>Bike</label><input id="of-bike" value="${of.bikeModel||''}" oninput="of.bikeModel=this.value"></div><div><label>Gültig bis</label><input type="date" value="${of.gueltig}" oninput="(D.offerten.find(x=>x.id==='${oid}')).gueltig=this.value"></div></div>
+  <div class="form-row full"><div><label>Beschrieb / Anlass (vom Rapport)</label><textarea oninput="(D.offerten.find(x=>x.id==='${oid}')).beschrieb=this.value;saveData()" style="min-height:60px">${of.beschrieb||''}</textarea></div></div>
+  ${fotos?`<div style="margin:8px 0">${fotos}</div>`:''}
+  <h4 style="margin:14px 0 6px;color:#f07000">Positionen</h4>
+  <div style="overflow-x:auto"><table style="width:100%"><tr><th>Beschrieb</th><th>Menge</th><th>Einh.</th><th>Preis</th><th>Total</th><th></th></tr>${posHtml}</table></div>
+  <div class="form-row" style="margin-top:8px;grid-template-columns:2fr 1fr 1fr">
+    <div><label>Teil aus Lager</label><select id="of-part">${partOpts}</select></div>
+    <div><label>Menge</label><input id="of-qty" type="number" value="1" step="0.25"></div>
+    <div style="align-self:end"><button class="btn-secondary" onclick="addPartToOf('${oid}')">+ Teil</button></div>
+  </div>
+  <div class="form-row" style="grid-template-columns:2fr 1fr 1fr;margin-top:6px">
+    <div><label>Arbeitszeit-Position</label><input id="of-work-desc" placeholder="z.B. Reifen montieren"></div>
+    <div><label>Stunden</label><input id="of-work-h" type="number" value="1" step="0.25"></div>
+    <div style="align-self:end"><button class="btn-secondary" onclick="addWorkToOf('${oid}')">+ Arbeit</button></div>
+  </div>
+  <div style="margin-top:14px;padding:12px;background:var(--bg);border-radius:8px;text-align:right">
+    <div style="font-size:12px;color:#999">Netto: CHF ${fmt(netto)}</div>
+    <div style="font-size:12px;color:#999">MWST 8.1%: CHF ${fmt(brutto-netto)}</div>
+    <div style="font-size:22px;font-weight:700;color:var(--orange)">Total CHF ${fmt(brutto)}</div>
+  </div>
+  <div class="btns">
+    <button class="btn-danger" onclick="deleteOfferte('${oid}')">Löschen</button>
+    <button class="btn-secondary" onclick="closeModal()">Schliessen</button>
+    <button class="btn-secondary" onclick="generateOfferteFDF('${oid}')">📄 PDF</button>
+    ${of.status!=='angenommen'?`<button class="btn-success" onclick="acceptOfferte('${oid}')">✓ Angenommen → Auftrag</button>`:''}
+  </div>`);
+}
+function updateOfPos(oid,i,k,v){const o=D.offerten.find(x=>x.id===oid);if(!o)return;o.pos[i][k]=v;saveData()}
+function rmOfPos(oid,i){const o=D.offerten.find(x=>x.id===oid);if(!o)return;o.pos.splice(i,1);saveData();openOfferte(oid)}
+function setOfStatus(oid,s){const o=D.offerten.find(x=>x.id===oid);if(o){o.status=s;saveData()}}
+function addPartToOf(oid){
+  const o=D.offerten.find(x=>x.id===oid);const p=getPart(gv('of-part'));const qty=parseFloat(gv('of-qty'))||1;
+  if(!o||!p)return;
+  o.pos.push({desc:p.name,qty,unit:'Stk',prc:p.sell,pid:p.id});
+  saveData();openOfferte(oid);
+}
+function addWorkToOf(oid){
+  const o=D.offerten.find(x=>x.id===oid);if(!o)return;
+  o.pos.push({desc:gv('of-work-desc')||'Arbeitszeit',qty:parseFloat(gv('of-work-h'))||1,unit:'Std',prc:125});
+  saveData();openOfferte(oid);
+}
+function deleteOfferte(oid){
+  if(!confirm('Offerte löschen?'))return;
+  const o=D.offerten.find(x=>x.id===oid);
+  if(o&&o.rapportId){const r=(D.rapports||[]).find(x=>x.id===o.rapportId);if(r){r.status='offen';delete r.offerteId}}
+  D.offerten=D.offerten.filter(x=>x.id!==oid);
+  saveData();closeModal();navigate('offerte');
+}
+function acceptOfferte(oid){
+  const of=D.offerten.find(x=>x.id===oid);if(!of)return;
+  if(!confirm('Offerte als angenommen markieren und Auftrag erstellen?'))return;
+  D.counters.order++;
+  const aid='A2026'+String(D.counters.order).padStart(3,'0');
+  // Positionen ins Auftrag splitten: Material aus Lager → o.parts (nur wo pid), Arbeitszeit → o.time (nur Schätzung)
+  const parts=of.pos.filter(p=>p.pid).map(p=>({pid:p.pid,qty:p.qty,prc:p.prc}));
+  const order={id:aid,cid:of.cid,bike:0,status:'offen',prio:'normal',created:new Date().toISOString().slice(0,10),mech:'',desc:of.beschrieb||of.bikeModel,parts,time:[],notes:'Aus Offerte '+of.id,invoiced:false,offerteId:oid,rapportId:of.rapportId};
+  D.orders.push(order);
+  // Lager-Bestand reduzieren
+  parts.forEach(p=>{const part=getPart(p.pid);if(part)part.stock=Math.max(0,part.stock-p.qty)});
+  of.status='angenommen';of.orderId=aid;
+  if(of.rapportId){const r=(D.rapports||[]).find(x=>x.id===of.rapportId);if(r)r.status='auftrag'}
+  saveData();closeModal();
+  alert('Offerte angenommen — Auftrag '+aid+' erstellt.');
+  navigate('auftraege');
+}
+function generateOfferteFDF(oid){
+  const of=D.offerten.find(x=>x.id===oid);if(!of)return;
+  const c=getCustomer(of.cid);if(!c)return;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF('p','mm','a4');const W=210;
+  const netto=of.pos.reduce((s,p)=>s+p.qty*p.prc,0);
+  const brutto=netto*1.081;
+  // Header
+  doc.setFillColor(240,112,0);doc.rect(0,0,W,28,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(255,255,255);
+  doc.text('SVENCYCLES GmbH',14,14);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('Neunfornerstrasse 2 | 8468 Waltalingen',14,22);
+  doc.text('Tel 052 746 10 60 | info@svencycles.ch',W-14,14,{align:'right'});
+  // Title
+  doc.setFillColor(240,112,0);doc.roundedRect(14,34,50,10,2,2,'F');
+  doc.setFontSize(11);doc.setTextColor(255,255,255);doc.text('Offerte '+of.id,18,41);
+  doc.setTextColor(60,60,60);doc.setFontSize(10);
+  doc.text('Datum: '+of.date,W-14,38,{align:'right'});
+  doc.text('Gültig bis: '+of.gueltig,W-14,44,{align:'right'});
+  doc.setFontSize(11);doc.setTextColor(30,30,30);
+  doc.text(c.name,14,56);doc.text(c.strasse||'',14,62);doc.text((c.plz||'')+' '+(c.ort||''),14,68);
+  // Bike
+  doc.setFontSize(10);doc.setTextColor(100);
+  if(of.bikeModel)doc.text('Bike: '+of.bikeModel,14,78);
+  if(of.beschrieb){
+    doc.text('Anlass:',14,86);
+    const lines=doc.splitTextToSize(of.beschrieb,W-28);
+    doc.text(lines,14,92);
+  }
+  let y=110;
+  doc.setFillColor(240,112,0);doc.rect(14,y,W-28,8,'F');
+  doc.setFontSize(9);doc.setTextColor(255,255,255);
+  doc.text('Pos',16,y+6);doc.text('Beschreibung',28,y+6);doc.text('Menge',110,y+6);doc.text('Einh.',128,y+6);doc.text('Preis',152,y+6);doc.text('Total',176,y+6);
+  y+=12;doc.setTextColor(30,30,30);
+  of.pos.forEach((p,i)=>{
+    doc.text(String(i+1),16,y);doc.text(p.desc.substring(0,40),28,y);
+    doc.text(String(p.qty),112,y);doc.text(p.unit,130,y);
+    doc.text(fmt(p.prc),156,y,{align:'right'});doc.text(fmt(p.qty*p.prc),192,y,{align:'right'});
+    y+=7;
+  });
+  y+=5;doc.setDrawColor(200);doc.line(120,y,196,y);y+=8;
+  doc.setFontSize(10);
+  doc.text('Netto CHF',140,y);doc.text(fmt(netto),192,y,{align:'right'});y+=6;
+  doc.text('MWST 8.1%',140,y);doc.text(fmt(brutto-netto),192,y,{align:'right'});y+=6;
+  doc.setDrawColor(200);doc.line(120,y-2,196,y-2);
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(240,112,0);
+  doc.text('Total CHF '+fmt(brutto),192,y+5,{align:'right'});
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100);
+  doc.text('Diese Offerte ist gültig bis '+of.gueltig+'. Preise inkl. MWST 8.1%. Annahme per Unterschrift / Mail an info@svencycles.ch',14,y+18);
+  doc.text('MWST-Nr: CHE-361.121.290 MWST | IBAN: CH56 0483 5012 3456 7800 9',14,280);
+  doc.save('Offerte_'+of.id+'.pdf');
+}
+function createOfferteFromRapport(rid){newOfferteFromRapport(rid);closeModal()}
+function createOrderFromRapport(rid){
+  const r=(D.rapports||[]).find(x=>x.id===rid);if(!r)return;
+  D.counters.order++;
+  const id='A2026'+String(D.counters.order).padStart(3,'0');
+  D.orders.push({id,cid:r.cid,bike:0,status:'offen',prio:'normal',created:new Date().toISOString().slice(0,10),mech:'',desc:r.beschrieb||'Aus Aufnahme '+rid,parts:[],time:[],notes:'Schäden bei Annahme: '+(r.schaeden||[]).join('; '),invoiced:false,rapportId:rid});
+  r.status='auftrag';
+  saveData();closeModal();navigate('auftraege');
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function fmt(n){return new Intl.NumberFormat('de-CH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n)}
+function getCustomer(id){return D.customers.find(c=>c.id===id)}
+function getOrder(id){return D.orders.find(o=>o.id===id)}
+function getPart(id){return D.parts.find(p=>p.id===id)}
+function getPartByEan(ean){return D.parts.find(p=>p.ean===ean||p.sku===ean)}
+function getInvoice(id){return D.invoices.find(i=>i.id===id)}
+function statusBadge(s){return `<span class="badge badge-${s}">${s}</span>`}
+function orderTotal(o){
+  const matl=o.parts.reduce((s,p)=>s+p.qty*p.prc,0);
+  const time=o.time.reduce((s,t)=>s+t.h,0)*125;
+  return matl+time;
+}
+function invoiceTotal(inv){return inv.pos.reduce((s,p)=>s+p.qty*p.prc,0)}
+function invoiceTotalBrutto(inv){const n=invoiceTotal(inv);return n*(1+0.081)}
+const catColors={Verbrauch:'#f07000',Filter:'#3b82f6',Reifen:'#22c55e',Bremsen:'#ef4444',Motor:'#a855f7',Elektrik:'#eab308',Auspuff:'#64748b',Lenker:'#06b6d4','Zündung':'#f97316','Service-Kit':'#ec4899','Zubehör':'#14b8a6'};
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  const offen=D.orders.filter(o=>o.status==='offen'||o.status==='in-arbeit').length;
+  const monat=D.invoices.filter(i=>{const d=new Date(i.date);const n=new Date();return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear()}).reduce((s,i)=>s+invoiceTotal(i),0);
+  const alerts=D.parts.filter(p=>p.stock<=p.min).length;
+  const offRe=D.invoices.filter(i=>i.status==='offen'||i.status==='überfällig').length;
+  const wartendeRapports=(D.rapports||[]).filter(r=>r.status==='offen').length;
+  const heute=new Date().toISOString().slice(0,10);
+  const heuteTermine=(D.termine||[]).filter(t=>t.date===heute);
+  let h=`<h2>📊 Dashboard — willkommen ${currentUser.name}</h2>
+  <div class="kpi-row">
+    <div class="kpi"><div class="val">${offen}</div><div class="lbl">Offene Aufträge</div></div>
+    ${can('aufnahme')?`<div class="kpi"><div class="val" style="color:${wartendeRapports>0?'var(--purple)':'var(--green)'}">${wartendeRapports}</div><div class="lbl">Wartende Aufnahmen</div></div>`:''}
+    ${can('viewPrices')?`<div class="kpi"><div class="val">CHF ${fmt(monat)}</div><div class="lbl">Monatsumsatz</div></div>`:''}
+    <div class="kpi"><div class="val" style="color:${alerts>0?'var(--red)':'var(--green)'}">${alerts}</div><div class="lbl">Lager-Alerts</div></div>
+    <div class="kpi"><div class="val">${offRe}</div><div class="lbl">Offene Rechnungen</div></div>
+    <div class="kpi"><div class="val">${heuteTermine.length}</div><div class="lbl">Termine heute</div></div>
+  </div>`;
+  // Heutige Termine
+  if(heuteTermine.length){
+    h+=`<h3 style="margin:16px 0 8px;color:var(--orange)">📅 Termine heute</h3><div class="tbl-wrap"><table><tr><th>Zeit</th><th>Mech</th><th>Auftrag</th><th>Kunde</th><th>Beschrieb</th></tr>`;
+    heuteTermine.sort((a,b)=>(a.start||'').localeCompare(b.start||'')).forEach(t=>{
+      const o=getOrder(t.oid);const c=o?getCustomer(o.cid):null;const m=D.staff.find(s=>s.id===t.mech);
+      h+=`<tr style="cursor:pointer" onclick="editTermin('${t.id}')"><td><strong>${t.start} (${t.dauer}h)</strong></td><td><span style="color:${m?m.color:'#fff'}">${t.mech}</span></td><td>${t.oid}</td><td>${c?c.name:'-'}</td><td>${o?o.desc:'-'}</td></tr>`;
+    });
+    h+=`</table></div>`;
+  }
+  // Wartende Aufnahmen
+  if(wartendeRapports>0&&can('offerte')){
+    h+=`<h3 style="margin:16px 0 8px;color:var(--purple)">📷 Wartende Aufnahmen — Offerte erstellen</h3><div class="tbl-wrap"><table><tr><th>Nr</th><th>KZ</th><th>Kunde</th><th>Bike</th><th>Datum</th><th></th></tr>`;
+    (D.rapports||[]).filter(r=>r.status==='offen').slice(0,5).forEach(r=>{
+      const c=getCustomer(r.cid);
+      h+=`<tr><td>${r.id}</td><td>${r.kontrollschild||'-'}</td><td>${c?c.name:r.custName||'-'}</td><td>${r.bikeModel||'-'}</td><td>${r.date}</td><td><button class="btn-primary" style="padding:3px 8px;font-size:11px" onclick="newOfferteFromRapport('${r.id}')">+ Offerte</button></td></tr>`;
+    });
+    h+=`</table></div>`;
+  }
+  // Active orders table
+  const active=D.orders.filter(o=>o.status==='offen'||o.status==='in-arbeit').slice(0,5);
+  h+=`<div class="tbl-wrap"><table><tr><th>Nr</th><th>Kunde</th><th>Beschrieb</th><th>Status</th><th>Mech</th></tr>`;
+  active.forEach(o=>{const c=getCustomer(o.cid);h+=`<tr style="cursor:pointer" onclick="openOrder('${o.id}')"><td>${o.id}</td><td>${c?c.name:'-'}</td><td>${o.desc}</td><td>${statusBadge(o.status)}</td><td>${o.mech}</td></tr>`});
+  h+=`</table></div>`;
+  // Low stock
+  const low=D.parts.filter(p=>p.stock<=p.min);
+  if(low.length){
+    h+=`<h3 style="margin:16px 0 8px;color:var(--red)">⚠️ Lager unter Mindestbestand</h3><div class="tbl-wrap"><table><tr><th>Artikel</th><th>Bestand</th><th>Min</th></tr>`;
+    low.forEach(p=>{h+=`<tr><td>${p.name}</td><td style="color:var(--red)">${p.stock}</td><td>${p.min}</td></tr>`});
+    h+=`</table></div>`;
+  }
+  return h;
+}
+
+// ============================================================
+// AUFTRÄGE
+// ============================================================
+function renderAuftraege(){
+  let h=`<h2>🔧 Aufträge / Reparaturen</h2>
+  <div class="search-bar">
+    <input placeholder="Suche..." id="ord-search" oninput="filterOrders()">
+    <select id="ord-filter" onchange="filterOrders()"><option value="">Alle Status</option><option value="offen">Offen</option><option value="in-arbeit">In Arbeit</option><option value="fertig">Fertig</option><option value="abgerechnet">Abgerechnet</option></select>
+    <button class="btn-primary" onclick="newOrderModal()">+ Neuer Auftrag</button>
+  </div>
+  <div class="tbl-wrap"><table><thead><tr><th>Nr</th><th>Kunde</th><th>Motorrad</th><th>Beschrieb</th><th>Status</th><th>Prio</th><th>Mech</th><th>Total</th><th></th></tr></thead><tbody id="ord-tbody"></tbody></table></div>`;
+  setTimeout(filterOrders,0);
+  return h;
+}
+function filterOrders(){
+  const q=(document.getElementById('ord-search')?.value||'').toLowerCase();
+  const f=document.getElementById('ord-filter')?.value||'';
+  const tb=document.getElementById('ord-tbody');if(!tb)return;
+  let rows='';
+  D.orders.filter(o=>{
+    if(f&&o.status!==f)return false;
+    const c=getCustomer(o.cid);
+    const txt=(o.id+' '+(c?c.name:'')+' '+o.desc).toLowerCase();
+    return txt.includes(q);
+  }).forEach(o=>{
+    const c=getCustomer(o.cid);
+    const bike=c&&c.bikes[o.bike]?c.bikes[o.bike].model:'';
+    const re=o.status==='fertig'&&!o.invoiced?`<button class="btn-primary" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();createInvoiceFromOrder('${o.id}')">→ RE</button>`:'';
+    rows+=`<tr style="cursor:pointer" onclick="openOrder('${o.id}')"><td>${o.id}</td><td>${c?c.name:'-'}</td><td style="font-size:11px">${bike}</td><td>${o.desc}</td><td>${statusBadge(o.status)}</td><td>${o.prio==='hoch'?'<span style="color:var(--red)">⚡ Hoch</span>':'Normal'}</td><td>${o.mech}</td><td>CHF ${fmt(orderTotal(o))}</td><td>${re}</td></tr>`;
+  });
+  tb.innerHTML=rows;
+}
+function newOrderModal(){
+  let opts=D.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  let mechs=D.staff.filter(s=>s.role!=='admin').map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+  showModal(`<h3>Neuer Auftrag</h3>
+  <div class="form-row"><div><label>Kunde</label><select id="no-cid">${opts}</select></div><div><label>Motorrad-Index</label><input id="no-bike" type="number" value="0" min="0"></div></div>
+  <div class="form-row"><div><label>Beschrieb</label><input id="no-desc"></div><div><label>Mechaniker</label><select id="no-mech">${mechs}</select></div></div>
+  <div class="form-row"><div><label>Priorität</label><select id="no-prio"><option value="normal">Normal</option><option value="hoch">Hoch</option></select></div><div><label>Notizen</label><input id="no-notes"></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewOrder()">Erstellen</button></div>`);
+}
+function saveNewOrder(){
+  D.counters.order++;
+  const id='A2026'+String(D.counters.order).padStart(3,'0');
+  D.orders.push({id,cid:gv('no-cid'),bike:parseInt(gv('no-bike'))||0,status:'offen',prio:gv('no-prio'),created:new Date().toISOString().slice(0,10),mech:gv('no-mech'),desc:gv('no-desc'),parts:[],time:[],notes:gv('no-notes'),invoiced:false});
+  saveData();closeModal();navigate('auftraege');
+}
+function openOrder(id){
+  const o=getOrder(id);if(!o)return;
+  const c=getCustomer(o.cid);
+  let partsHtml=o.parts.map((p,i)=>{const pp=getPart(p.pid);return `<tr><td>${pp?pp.name:p.pid}</td><td>${p.qty}</td><td>CHF ${fmt(p.prc)}</td><td>CHF ${fmt(p.qty*p.prc)}</td><td><button class="btn-danger" style="padding:2px 8px;font-size:10px" onclick="removePartFromOrder('${id}',${i})">×</button></td></tr>`}).join('');
+  let timeHtml=o.time.map((t,i)=>`<tr><td>${t.date}</td><td>${t.h}h</td><td>${t.desc}</td><td>${t.mech}</td></tr>`).join('');
+  let mechOpts=D.staff.filter(s=>s.role!=='admin').map(s=>`<option value="${s.id}" ${s.id===o.mech?'selected':''}>${s.name}</option>`).join('');
+  let partOpts=D.parts.map(p=>`<option value="${p.id}">${p.name} (${p.stock} an Lager)</option>`).join('');
+  const total=orderTotal(o);
+  showModal(`<h3>Auftrag ${o.id}</h3>
+  <div class="form-row"><div><label>Kunde</label><input value="${c?c.name:'-'}" disabled></div><div><label>Status</label><select id="eo-status"><option ${o.status==='offen'?'selected':''}>offen</option><option ${o.status==='in-arbeit'?'selected':''}>in-arbeit</option><option ${o.status==='fertig'?'selected':''}>fertig</option><option ${o.status==='abgerechnet'?'selected':''}>abgerechnet</option></select></div></div>
+  <div class="form-row"><div><label>Mechaniker</label><select id="eo-mech">${mechOpts}</select></div><div><label>Priorität</label><select id="eo-prio"><option value="normal" ${o.prio==='normal'?'selected':''}>Normal</option><option value="hoch" ${o.prio==='hoch'?'selected':''}>Hoch</option></select></div></div>
+  <div class="form-row full"><div><label>Beschrieb</label><input id="eo-desc" value="${o.desc}"></div></div>
+  <div class="form-row full"><div><label>Notizen</label><textarea id="eo-notes">${o.notes}</textarea></div></div>
+  <h4 style="margin:16px 0 8px;color:var(--orange)">Ersatzteile</h4>
+  <table><tr><th>Artikel</th><th>Menge</th><th>Preis</th><th>Total</th><th></th></tr>${partsHtml}</table>
+  <div class="form-row" style="margin-top:8px"><div><label>Teil hinzufügen</label><select id="eo-partsel">${partOpts}</select></div><div><label>Menge</label><input id="eo-partqty" type="number" value="1" min="1"></div><div style="align-self:end"><button class="btn-secondary" onclick="addPartToOrder('${id}')">+ Teil</button></div></div>
+  <h4 style="margin:16px 0 8px;color:var(--orange)">Zeiterfassung</h4>
+  <table><tr><th>Datum</th><th>Std</th><th>Beschrieb</th><th>Mech</th></tr>${timeHtml}</table>
+  <div class="form-row" style="margin-top:8px"><div><label>Datum</label><input id="eo-tdate" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Stunden</label><input id="eo-th" type="number" step="0.25" value="1"></div></div>
+  <div class="form-row"><div><label>Beschrieb</label><input id="eo-tdesc"></div><div style="align-self:end"><button class="btn-secondary" onclick="addTimeToOrder('${id}')">+ Zeit</button></div></div>
+  <div style="margin-top:16px;padding:12px;background:var(--bg);border-radius:8px;text-align:right"><span style="font-size:12px;color:var(--text2)">Auftrag-Total:</span><br><span style="font-size:22px;font-weight:700;color:var(--orange)">CHF ${fmt(total)}</span></div>
+  ${o.handover?`<div style="margin-top:12px;padding:10px;background:#22c55e22;border:1px solid #22c55e;border-radius:8px"><strong style="color:#22c55e">✓ Übergabe-Checkliste erfüllt</strong><br><span style="font-size:11px;color:#999">${new Date(o.handover.date).toLocaleString('de-CH')} · ${o.handover.checks.length}/6 Punkte · von ${o.handover.by}</span>${o.handover.notes?`<div style="font-size:12px;margin-top:4px">${o.handover.notes}</div>`:''}</div>`:''}
+  ${o.rapportId?`<div style="margin-top:8px;padding:8px;background:var(--bg3);border-radius:6px"><span style="font-size:11px;color:#999">Aus Aufnahme: <a href="#" onclick="event.preventDefault();closeModal();openRapport('${o.rapportId}')" style="color:var(--orange)">${o.rapportId}</a></span></div>`:''}
+  ${o.offerteId?`<div style="margin-top:6px;padding:8px;background:var(--bg3);border-radius:6px"><span style="font-size:11px;color:#999">Aus Offerte: <a href="#" onclick="event.preventDefault();closeModal();openOfferte('${o.offerteId}')" style="color:var(--orange)">${o.offerteId}</a></span></div>`:''}
+  <div class="btns"><button class="btn-danger" onclick="deleteOrder('${id}')">Löschen</button><button class="btn-secondary" onclick="closeModal()">Schliessen</button><button class="btn-primary" onclick="saveOrder('${id}')">Speichern</button>${o.status==='fertig'&&!o.invoiced&&can('createInvoice')?`<button class="btn-success" onclick="createInvoiceFromOrder('${id}')">→ Rechnung</button>`:''}</div>`);
+}
+function saveOrder(id){
+  const o=getOrder(id);if(!o)return;
+  o.status=gv('eo-status');o.mech=gv('eo-mech');o.prio=gv('eo-prio');o.desc=gv('eo-desc');o.notes=gv('eo-notes');
+  saveData();closeModal();navigate('auftraege');
+}
+function deleteOrder(id){if(!confirm('Auftrag wirklich löschen?'))return;D.orders=D.orders.filter(o=>o.id!==id);saveData();closeModal();navigate('auftraege')}
+function addPartToOrder(oid){
+  const o=getOrder(oid);const pid=gv('eo-partsel');const qty=parseInt(gv('eo-partqty'))||1;
+  const part=getPart(pid);if(!part)return;
+  if(part.stock<qty){alert('Nicht genug an Lager!');return}
+  part.stock-=qty;
+  o.parts.push({pid,qty,prc:part.sell});
+  saveData();openOrder(oid);
+}
+function removePartFromOrder(oid,idx){
+  const o=getOrder(oid);const p=o.parts[idx];
+  const part=getPart(p.pid);if(part)part.stock+=p.qty;
+  o.parts.splice(idx,1);saveData();openOrder(oid);
+}
+function addTimeToOrder(oid){
+  const o=getOrder(oid);
+  o.time.push({date:gv('eo-tdate'),h:parseFloat(gv('eo-th'))||0,desc:gv('eo-tdesc'),mech:currentUser.id});
+  saveData();openOrder(oid);
+}
+
+// ============================================================
+// KUNDEN
+// ============================================================
+function renderKunden(){
+  let rows=D.customers.map(c=>`<tr style="cursor:pointer" onclick="openCustomer('${c.id}')"><td>${c.id}</td><td>${c.name}</td><td>${c.tel}</td><td>${c.email}</td><td>${c.bikes.map(b=>b.model).join(', ')}</td></tr>`).join('');
+  return `<h2>👥 Kunden</h2>
+  <div class="search-bar"><input placeholder="Suche..." oninput="filterCustomers(this.value)"><button class="btn-primary" onclick="newCustomerModal()">+ Neuer Kunde</button></div>
+  <div class="tbl-wrap"><table><tr><th>ID</th><th>Name</th><th>Tel</th><th>Email</th><th>Motorräder</th></tr><tbody id="cust-tbody">${rows}</tbody></table></div>`;
+}
+function filterCustomers(q){
+  q=q.toLowerCase();
+  const rows=D.customers.filter(c=>(c.name+c.tel+c.email+c.bikes.map(b=>b.model).join(' ')).toLowerCase().includes(q)).map(c=>`<tr style="cursor:pointer" onclick="openCustomer('${c.id}')"><td>${c.id}</td><td>${c.name}</td><td>${c.tel}</td><td>${c.email}</td><td>${c.bikes.map(b=>b.model).join(', ')}</td></tr>`).join('');
+  document.getElementById('cust-tbody').innerHTML=rows;
+}
+function newCustomerModal(){
+  showModal(`<h3>Neuer Kunde</h3>
+  <div class="form-row"><div><label>Name</label><input id="nc-name"></div><div><label>Telefon</label><input id="nc-tel"></div></div>
+  <div class="form-row"><div><label>Email</label><input id="nc-email"></div><div><label>Strasse</label><input id="nc-str"></div></div>
+  <div class="form-row"><div><label>PLZ</label><input id="nc-plz"></div><div><label>Ort</label><input id="nc-ort"></div></div>
+  <h4 style="margin:12px 0 8px">Motorrad</h4>
+  <div class="form-row"><div><label>Modell</label><input id="nc-bmodel"></div><div><label>Kennzeichen</label><input id="nc-bkz"></div></div>
+  <div class="form-row"><div><label>VIN</label><input id="nc-bvin"></div><div><label>KM</label><input id="nc-bkm" type="number"></div></div>
+  <div class="form-row"><div><label>Farbe</label><input id="nc-bcol"></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewCustomer()">Erstellen</button></div>`);
+}
+function saveNewCustomer(){
+  D.counters.customer++;
+  const id='K'+String(D.counters.customer).padStart(3,'0');
+  const bikes=gv('nc-bmodel')?[{model:gv('nc-bmodel'),kz:gv('nc-bkz'),vin:gv('nc-bvin'),km:parseInt(gv('nc-bkm'))||0,col:gv('nc-bcol')}]:[];
+  D.customers.push({id,name:gv('nc-name'),tel:gv('nc-tel'),email:gv('nc-email'),strasse:gv('nc-str'),plz:gv('nc-plz'),ort:gv('nc-ort'),bikes});
+  saveData();closeModal();navigate('kunden');
+}
+function openCustomer(id){
+  const c=D.customers.find(x=>x.id===id);if(!c)return;
+  let bikesHtml=c.bikes.map((b,i)=>`<tr><td>${b.model}</td><td>${b.kz}</td><td>${b.vin||'-'}</td><td>${b.km} km</td><td>${b.col}</td></tr>`).join('');
+  let ordersHtml=D.orders.filter(o=>o.cid===id).map(o=>`<tr><td>${o.id}</td><td>${o.desc}</td><td>${statusBadge(o.status)}</td><td>${o.created}</td></tr>`).join('');
+  showModal(`<h3>${c.name}</h3>
+  <div class="form-row"><div><label>Telefon</label><input id="ec-tel" value="${c.tel}"></div><div><label>Email</label><input id="ec-email" value="${c.email}"></div></div>
+  <div class="form-row"><div><label>Strasse</label><input id="ec-str" value="${c.strasse}"></div><div><label>PLZ</label><input id="ec-plz" value="${c.plz}"></div></div>
+  <div class="form-row"><div><label>Ort</label><input id="ec-ort" value="${c.ort}"></div></div>
+  <h4 style="margin:12px 0 8px;color:var(--orange)">Motorräder</h4>
+  <table><tr><th>Modell</th><th>KZ</th><th>VIN</th><th>KM</th><th>Farbe</th></tr>${bikesHtml}</table>
+  <h4 style="margin:12px 0 8px;color:var(--orange)">Auftragshistorie</h4>
+  <table><tr><th>Nr</th><th>Beschrieb</th><th>Status</th><th>Datum</th></tr>${ordersHtml}</table>
+  <div class="btns"><button class="btn-danger" onclick="deleteCustomer('${id}')">Löschen</button><button class="btn-secondary" onclick="closeModal()">Schliessen</button><button class="btn-primary" onclick="saveCustomer('${id}')">Speichern</button></div>`);
+}
+function saveCustomer(id){
+  const c=D.customers.find(x=>x.id===id);if(!c)return;
+  c.tel=gv('ec-tel');c.email=gv('ec-email');c.strasse=gv('ec-str');c.plz=gv('ec-plz');c.ort=gv('ec-ort');
+  saveData();closeModal();navigate('kunden');
+}
+function deleteCustomer(id){if(!confirm('Kunde löschen?'))return;D.customers=D.customers.filter(c=>c.id!==id);saveData();closeModal();navigate('kunden')}
+
+// ============================================================
+// LAGER
+// ============================================================
+function renderLager(){
+  const totalVal=D.parts.reduce((s,p)=>s+p.stock*p.buy,0);
+  const cats=['','Verbrauch','Filter','Reifen','Bremsen','Motor','Elektrik','Auspuff','Lenker','Zündung','Service-Kit','Zubehör'];
+  let catOpts=cats.map(c=>`<option value="${c}">${c||'Alle Kategorien'}</option>`).join('');
+  return `<h2>📦 Lager / Ersatzteile</h2>
+  <div class="search-bar"><input placeholder="Suche..." id="lag-search" oninput="filterLager()"><select id="lag-cat" onchange="filterLager()">${catOpts}</select><button class="btn-primary" onclick="newPartModal()">+ Neuer Artikel</button><button class="btn-secondary" onclick="startWareneingangScan()">📷 Wareneingang scannen</button><button class="btn-secondary" onclick="printAllQrLabels()">🖨 Alle QR-Etiketten</button><span style="margin-left:auto;font-size:12px;color:var(--text2)">Lagerwert: <strong style="color:var(--orange)">CHF ${fmt(totalVal)}</strong></span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>SKU</th><th>Artikel</th><th>Kat</th><th>Bestand</th><th>Min</th><th>EK</th><th>VK</th><th>Marge</th><th>Bestand ±</th><th>QR</th><th></th></tr></thead><tbody id="lag-tbody"></tbody></table></div>`;
+  setTimeout(filterLager,0);
+}
+function filterLager(){
+  const q=(document.getElementById('lag-search')?.value||'').toLowerCase();
+  const cat=document.getElementById('lag-cat')?.value||'';
+  const tb=document.getElementById('lag-tbody');if(!tb)return;
+  let rows='';
+  D.parts.filter(p=>{
+    if(cat&&p.cat!==cat)return false;
+    return(p.name+p.sku+p.cat).toLowerCase().includes(q);
+  }).forEach(p=>{
+    const pct=((p.sell-p.buy)/p.sell*100).toFixed(0);
+    const lvl=p.stock<=p.min?'var(--red)':p.stock<=p.min*2?'#eab308':'var(--green)';
+    const barW=Math.min(100,Math.round(p.stock/(p.min*3)*100));
+    rows+=`<tr><td style="font-size:11px">${p.sku}</td><td>${p.name}</td><td><span style="color:${catColors[p.cat]||'#fff'}">${p.cat}</span></td><td><span style="color:${lvl}">${p.stock}</span> <div class="stock-bar"><div class="stock-bar-fill" style="width:${barW}%;background:${lvl}"></div></div></td><td>${p.min}</td><td>${fmt(p.buy)}</td><td>${fmt(p.sell)}</td><td>${pct}%</td><td><button class="btn-secondary" style="padding:2px 8px;font-size:11px" onclick="adjStock('${p.id}',-1)">−</button> <button class="btn-secondary" style="padding:2px 8px;font-size:11px" onclick="adjStock('${p.id}',1)">+</button></td><td><button class="btn-secondary" style="padding:2px 8px;font-size:11px" onclick="showQrForPart('${p.id}')">▢</button></td><td><button class="btn-secondary" style="padding:2px 8px;font-size:11px" onclick="editPartModal('${p.id}')">✎</button></td></tr>`;
+  });
+  tb.innerHTML=rows;
+}
+function adjStock(pid,delta){const p=getPart(pid);if(!p)return;p.stock=Math.max(0,p.stock+delta);saveData();filterLager()}
+// ----- QR-Code Generator fürs Lager -----
+function showQrForPart(pid){
+  const p=getPart(pid);if(!p)return;
+  const code='SVC:'+p.id;
+  const qrDiv=document.getElementById('qr-container');qrDiv.innerHTML='';
+  new QRCode(qrDiv,{text:code,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+  setTimeout(()=>{
+    const cv=qrDiv.querySelector('canvas');
+    const img=cv?cv.toDataURL():'';
+    showModal(`<h3>QR-Code — ${p.name}</h3>
+    <div style="text-align:center;background:#fff;padding:20px;border-radius:8px;margin:10px 0">
+      <img src="${img}" style="width:200px;height:200px"><br>
+      <strong style="color:#000;font-size:14px">${p.name}</strong><br>
+      <span style="color:#000;font-size:11px">${p.sku} · ${p.id}</span>
+    </div>
+    <p class="muted" style="font-size:11px">Code-Inhalt: ${code}</p>
+    <div class="btns">
+      <button class="btn-secondary" onclick="closeModal()">Schliessen</button>
+      <button class="btn-primary" onclick="printQrLabel('${p.id}')">🖨 Drucken</button>
+      <button class="btn-success" onclick="downloadQrLabel('${p.id}','${img}')">💾 Als PNG laden</button>
+    </div>`);
+  },200);
+}
+function downloadQrLabel(pid,img){
+  const p=getPart(pid);
+  const a=document.createElement('a');a.href=img;a.download='QR_'+p.sku+'.png';a.click();
+}
+function printQrLabel(pid){
+  const p=getPart(pid);
+  const code='SVC:'+p.id;
+  const qrDiv=document.getElementById('qr-container');qrDiv.innerHTML='';
+  new QRCode(qrDiv,{text:code,width:300,height:300,correctLevel:QRCode.CorrectLevel.M});
+  setTimeout(()=>{
+    const img=qrDiv.querySelector('canvas').toDataURL();
+    const w=window.open('','_blank');
+    w.document.write(`<html><head><title>QR ${p.sku}</title><style>body{font-family:sans-serif;padding:20px;text-align:center}img{width:200px;height:200px}.lbl{margin-top:8px;font-weight:bold}</style></head><body><img src="${img}"><div class="lbl">${p.name}</div><div>${p.sku}</div><script>setTimeout(()=>window.print(),200)<\/script></body></html>`);
+  },200);
+}
+function printAllQrLabels(){
+  if(!confirm(`QR-Etiketten für alle ${D.parts.length} Artikel als PDF generieren?`))return;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF('p','mm','a4');
+  const w=210,h=297,m=10;
+  const cols=4,rows=8;
+  const cw=(w-2*m)/cols, ch=(h-2*m)/rows;
+  let idx=0;
+  const qrDiv=document.getElementById('qr-container');
+  function next(){
+    if(idx>=D.parts.length){doc.save('Svencycles_QR_Etiketten.pdf');return}
+    const p=D.parts[idx];const col=idx%cols, row=Math.floor((idx%(cols*rows))/cols);
+    if(idx>0&&idx%(cols*rows)===0)doc.addPage();
+    qrDiv.innerHTML='';
+    new QRCode(qrDiv,{text:'SVC:'+p.id,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+    setTimeout(()=>{
+      const cv=qrDiv.querySelector('canvas');
+      if(cv){
+        const img=cv.toDataURL();
+        const x=m+col*cw, y=m+row*ch;
+        doc.addImage(img,'PNG',x+4,y+2,cw-8,cw-8);
+        doc.setFontSize(7);
+        doc.text(p.name.substring(0,28),x+cw/2,y+ch-6,{align:'center'});
+        doc.setFontSize(6);
+        doc.text(p.sku,x+cw/2,y+ch-2,{align:'center'});
+      }
+      idx++;next();
+    },80);
+  }
+  next();
+}
+function newPartModal(){
+  const cats=['Verbrauch','Filter','Reifen','Bremsen','Motor','Elektrik','Auspuff','Lenker','Zündung','Service-Kit','Zubehör'];
+  let catOpts=cats.map(c=>`<option>${c}</option>`).join('');
+  showModal(`<h3>Neuer Artikel</h3>
+  <div class="form-row"><div><label>Bezeichnung</label><input id="np-name"></div><div><label>SKU</label><input id="np-sku"></div></div>
+  <div class="form-row"><div><label>Kategorie</label><select id="np-cat">${catOpts}</select></div><div><label>Lieferant</label><input id="np-sup"></div></div>
+  <div class="form-row"><div><label>Bestand</label><input id="np-stock" type="number" value="0"></div><div><label>Mindestbestand</label><input id="np-min" type="number" value="2"></div></div>
+  <div class="form-row"><div><label>EK-Preis</label><input id="np-buy" type="number" step="0.01"></div><div><label>VK-Preis</label><input id="np-sell" type="number" step="0.01"></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewPart()">Erstellen</button></div>`);
+}
+function saveNewPart(){
+  D.counters.part++;
+  const id='P'+String(D.counters.part).padStart(3,'0');
+  D.parts.push({id,name:gv('np-name'),sku:gv('np-sku'),cat:gv('np-cat'),stock:parseInt(gv('np-stock'))||0,min:parseInt(gv('np-min'))||2,buy:parseFloat(gv('np-buy'))||0,sell:parseFloat(gv('np-sell'))||0,sup:gv('np-sup')});
+  saveData();closeModal();navigate('lager');
+}
+function editPartModal(pid){
+  const p=getPart(pid);if(!p)return;
+  const cats=['Verbrauch','Filter','Reifen','Bremsen','Motor','Elektrik','Auspuff','Lenker','Zündung','Service-Kit','Zubehör'];
+  let catOpts=cats.map(c=>`<option ${c===p.cat?'selected':''}>${c}</option>`).join('');
+  showModal(`<h3>Artikel bearbeiten</h3>
+  <div class="form-row"><div><label>Bezeichnung</label><input id="ep-name" value="${p.name}"></div><div><label>SKU</label><input id="ep-sku" value="${p.sku}"></div></div>
+  <div class="form-row"><div><label>Kategorie</label><select id="ep-cat">${catOpts}</select></div><div><label>Lieferant</label><input id="ep-sup" value="${p.sup}"></div></div>
+  <div class="form-row"><div><label>Bestand</label><input id="ep-stock" type="number" value="${p.stock}"></div><div><label>Mindestbestand</label><input id="ep-min" type="number" value="${p.min}"></div></div>
+  <div class="form-row"><div><label>EK-Preis</label><input id="ep-buy" type="number" step="0.01" value="${p.buy}"></div><div><label>VK-Preis</label><input id="ep-sell" type="number" step="0.01" value="${p.sell}"></div></div>
+  <div class="btns"><button class="btn-danger" onclick="deletePart('${pid}')">Löschen</button><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="savePart('${pid}')">Speichern</button></div>`);
+}
+function savePart(pid){
+  const p=getPart(pid);if(!p)return;
+  p.name=gv('ep-name');p.sku=gv('ep-sku');p.cat=gv('ep-cat');p.sup=gv('ep-sup');
+  p.stock=parseInt(gv('ep-stock'))||0;p.min=parseInt(gv('ep-min'))||0;
+  p.buy=parseFloat(gv('ep-buy'))||0;p.sell=parseFloat(gv('ep-sell'))||0;
+  saveData();closeModal();navigate('lager');
+}
+function deletePart(pid){if(!confirm('Artikel löschen?'))return;D.parts=D.parts.filter(p=>p.id!==pid);saveData();closeModal();navigate('lager')}
+// ----- Wareneingang-Scanner (PC mit Webcam) -----
+let weScanner=null;
+function startWareneingangScan(){
+  showModal(`<h3>📷 Wareneingang scannen</h3>
+  <p style="color:#999;font-size:12px;margin-bottom:8px">Lieferanten-Barcode/EAN/QR vor Webcam halten. Bekannte Codes erhöhen den Bestand, unbekannte legen einen neuen Artikel an.</p>
+  <div id="we-reader" style="width:100%;max-width:500px;margin:0 auto"></div>
+  <div id="we-info" style="margin-top:10px"></div>
+  <div class="btns"><button class="btn-secondary" onclick="stopWareneingang()">Schliessen</button></div>`);
+  setTimeout(()=>{
+    if(typeof Html5Qrcode==='undefined'){el('we-info').innerHTML='<p style="color:var(--red)">html5-qrcode Bibliothek nicht geladen.</p>';return}
+    weScanner=new Html5Qrcode('we-reader');
+    weScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:300,height:200}},onWareneingang,()=>{}).catch(err=>{
+      el('we-info').innerHTML=`<p style="color:var(--red)">Kamera-Fehler: ${err}<br>Webcam erlauben + HTTPS oder localhost!</p>`;
+    });
+  },150);
+}
+function stopWareneingang(){
+  if(weScanner){weScanner.stop().catch(()=>{}).finally(()=>{weScanner.clear();weScanner=null})}
+  closeModal();
+}
+function onWareneingang(text){
+  let p=getPart(text.replace(/^SVC:/,''))||getPartByEan(text);
+  stopWareneingang();
+  setTimeout(()=>{
+    if(!p){
+      if(confirm(`Code "${text}" unbekannt — neuen Artikel anlegen?`)){
+        showNewPartFromCodeModal(text);
+      }
+      return;
+    }
+    const action=prompt(`${p.name}\nAktueller Bestand: ${p.stock}\n\n+N für Wareneingang (z.B. +5)\n-N für Abgang (z.B. -1)`,'+1');
+    if(!action)return;
+    const n=parseInt(action);if(isNaN(n)){alert('Ungültig');return}
+    p.stock=Math.max(0,p.stock+n);
+    if(text&&!p.ean&&!/^SVC:/.test(text)){p.ean=text} // EAN merken für nächstes Mal
+    saveData();navigate('lager');
+  },300);
+}
+function showNewPartFromCodeModal(code){
+  const cats=['Verbrauch','Filter','Reifen','Bremsen','Motor','Elektrik','Auspuff','Lenker','Zündung','Service-Kit','Zubehör'];
+  let catOpts=cats.map(c=>`<option>${c}</option>`).join('');
+  showModal(`<h3>Neuer Artikel aus Scan</h3>
+  <p style="color:#f07000;font-size:12px;margin-bottom:8px">Lieferanten-Code: <strong>${code}</strong></p>
+  <div class="form-row"><div><label>Bezeichnung</label><input id="snp-name"></div><div><label>SKU (intern)</label><input id="snp-sku" value="${code}"></div></div>
+  <div class="form-row"><div><label>Kategorie</label><select id="snp-cat">${catOpts}</select></div><div><label>Lieferant</label><input id="snp-sup"></div></div>
+  <div class="form-row"><div><label>Bestand</label><input id="snp-stock" type="number" value="1"></div><div><label>Mindestbestand</label><input id="snp-min" type="number" value="2"></div></div>
+  <div class="form-row"><div><label>EK-Preis CHF</label><input id="snp-buy" type="number" step="0.01"></div><div><label>VK-Preis CHF</label><input id="snp-sell" type="number" step="0.01"></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveScannedPart('${code.replace(/'/g,"\\'")}')">Speichern</button></div>`);
+}
+function saveScannedPart(code){
+  D.counters.part++;
+  const id='P'+String(D.counters.part).padStart(3,'0');
+  D.parts.push({id,name:gv('snp-name'),sku:gv('snp-sku'),ean:code,cat:gv('snp-cat'),stock:parseInt(gv('snp-stock'))||1,min:parseInt(gv('snp-min'))||2,buy:parseFloat(gv('snp-buy'))||0,sell:parseFloat(gv('snp-sell'))||0,sup:gv('snp-sup')});
+  saveData();closeModal();navigate('lager');
+}
+
+// ============================================================
+// RECHNUNGEN
+// ============================================================
+function renderRechnungen(){
+  let rows=D.invoices.map(inv=>{
+    const c=getCustomer(inv.cid);
+    const tot=invoiceTotal(inv);
+    return `<tr><td>${inv.id}</td><td>${c?c.name:'-'}</td><td>${inv.date}</td><td>${inv.due}</td><td>${statusBadge(inv.status)}</td><td>CHF ${fmt(tot)}</td><td>
+    <button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="generatePDF('${inv.id}')">PDF+QR</button>
+    ${inv.status!=='bezahlt'?`<button class="btn-success" style="padding:3px 8px;font-size:11px" onclick="markPaid('${inv.id}')">✓ Bezahlt</button>`:''}
+    </td></tr>`;
+  }).join('');
+  return `<h2>📄 Rechnungen</h2>
+  <div class="search-bar"><button class="btn-primary" onclick="newInvoiceModal()">+ Neue Rechnung</button></div>
+  <div class="tbl-wrap"><table><tr><th>Nr</th><th>Kunde</th><th>Datum</th><th>Fällig</th><th>Status</th><th>Total</th><th>Aktionen</th></tr>${rows}</table></div>`;
+}
+function markPaid(id){const inv=getInvoice(id);if(inv){inv.status='bezahlt';saveData();navigate('rechnungen')}}
+function createInvoiceFromOrder(oid){
+  const o=getOrder(oid);if(!o)return;
+  D.counters.invoice++;
+  const id='RG2026'+String(D.counters.invoice).padStart(3,'0');
+  let pos=[];
+  o.parts.forEach(p=>{const pp=getPart(p.pid);pos.push({desc:pp?pp.name:p.pid,qty:p.qty,unit:'Stk',prc:p.prc})});
+  o.time.forEach(t=>{pos.push({desc:t.desc||'Arbeitszeit',qty:t.h,unit:'Std',prc:125})});
+  const today=new Date().toISOString().slice(0,10);
+  const due=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+  D.invoices.push({id,oid,cid:o.cid,date:today,due,status:'offen',pos});
+  o.invoiced=true;o.status='abgerechnet';
+  saveData();closeModal();navigate('rechnungen');
+}
+function newInvoiceModal(){
+  let custOpts=D.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  showModal(`<h3>Neue Rechnung</h3>
+  <div class="form-row"><div><label>Kunde</label><select id="ni-cid">${custOpts}</select></div><div><label>Fällig (Tage)</label><input id="ni-days" type="number" value="30"></div></div>
+  <div class="form-row full"><div><label>Position 1 — Beschrieb</label><input id="ni-p1d" value="Arbeitszeit"></div></div>
+  <div class="form-row"><div><label>Menge</label><input id="ni-p1q" type="number" value="1" step="0.25"></div><div><label>Einheit</label><input id="ni-p1u" value="Std"></div><div><label>Preis</label><input id="ni-p1p" type="number" value="125" step="0.01"></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewInvoice()">Erstellen</button></div>`);
+}
+function saveNewInvoice(){
+  D.counters.invoice++;
+  const id='RG2026'+String(D.counters.invoice).padStart(3,'0');
+  const today=new Date().toISOString().slice(0,10);
+  const days=parseInt(gv('ni-days'))||30;
+  const due=new Date(Date.now()+days*86400000).toISOString().slice(0,10);
+  const pos=[{desc:gv('ni-p1d'),qty:parseFloat(gv('ni-p1q'))||1,unit:gv('ni-p1u'),prc:parseFloat(gv('ni-p1p'))||0}];
+  D.invoices.push({id,oid:'',cid:gv('ni-cid'),date:today,due,status:'offen',pos});
+  saveData();closeModal();navigate('rechnungen');
+}
+
+// ============================================================
+// PDF GENERATION — Swiss QR Invoice
+// ============================================================
+function generatePDF(invId){
+  const inv=getInvoice(invId);if(!inv)return;
+  const c=getCustomer(inv.cid);if(!c)return;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF('p','mm','a4');
+  const W=210,H=297;
+  const netto=invoiceTotal(inv);
+  const mwst=netto*0.081;
+  const brutto=netto+mwst;
+
+  // Header bar
+  doc.setFillColor(240,112,0);doc.rect(0,0,W,28,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(255,255,255);
+  doc.text('SVENCYCLES GmbH',14,14);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text('Neunfornerstrasse 2 | 8468 Waltalingen',14,22);
+  doc.text('Tel 052 746 10 60 | info@svencycles.ch',W-14,14,{align:'right'});
+  doc.text('www.svencycles.ch',W-14,20,{align:'right'});
+
+  // Invoice badge
+  doc.setFillColor(240,112,0);doc.roundedRect(14,34,50,10,2,2,'F');
+  doc.setFontSize(11);doc.setTextColor(255,255,255);doc.text('Rechnung '+inv.id,18,41);
+
+  // Date
+  doc.setTextColor(60,60,60);doc.setFontSize(10);
+  doc.text('Datum: '+inv.date,W-14,38,{align:'right'});
+  doc.text('Fällig: '+inv.due,W-14,44,{align:'right'});
+
+  // Customer address
+  doc.setFontSize(11);doc.setTextColor(30,30,30);
+  doc.text(c.name,14,56);doc.text(c.strasse,14,62);doc.text(c.plz+' '+c.ort,14,68);
+
+  // Positions table
+  let y=80;
+  doc.setFillColor(240,112,0);doc.rect(14,y,W-28,8,'F');
+  doc.setFontSize(9);doc.setTextColor(255,255,255);
+  doc.text('Pos',16,y+6);doc.text('Beschreibung',28,y+6);doc.text('Menge',110,y+6);doc.text('Einheit',128,y+6);doc.text('Preis',152,y+6);doc.text('Total',176,y+6);
+  y+=12;doc.setTextColor(30,30,30);
+  inv.pos.forEach((p,i)=>{
+    doc.text(String(i+1),16,y);doc.text(p.desc.substring(0,40),28,y);
+    doc.text(String(p.qty),112,y);doc.text(p.unit,130,y);
+    doc.text(fmt(p.prc),156,y,{align:'right'});doc.text(fmt(p.qty*p.prc),192,y,{align:'right'});
+    y+=7;
+  });
+
+  // Totals
+  y+=5;doc.setDrawColor(200);doc.line(120,y,196,y);y+=8;
+  doc.setFontSize(10);
+  doc.text('Netto CHF',140,y);doc.text(fmt(netto),192,y,{align:'right'});y+=6;
+  doc.text('MWST 8.1%',140,y);doc.text(fmt(mwst),192,y,{align:'right'});y+=6;
+  doc.setDrawColor(200);doc.line(120,y-2,196,y-2);
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(240,112,0);
+  doc.text('Total CHF '+fmt(brutto),192,y+5,{align:'right'});
+
+  // Footer info
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100);
+  doc.text('MWST-Nr: CHE-361.121.290 MWST | IBAN: CH56 0483 5012 3456 7800 9',14,180);
+
+  // === Swiss QR Payment Slip ===
+  const slipY=192;
+  // Separator line
+  doc.setDrawColor(0);doc.setLineWidth(0.3);doc.setLineDashPattern([2,2]);
+  doc.line(0,slipY,W,slipY);doc.setLineDashPattern([]);
+  doc.setFontSize(7);doc.text('✂',4,slipY-1);
+
+  // Vertical separator
+  doc.setLineDashPattern([2,2]);doc.line(62,slipY,62,H);doc.setLineDashPattern([]);
+
+  // --- Empfangsschein (left, 0-62mm) ---
+  let ey=slipY+8;
+  doc.setFontSize(6);doc.setTextColor(0);doc.setFont('helvetica','bold');
+  doc.text('Empfangsschein',5,ey);ey+=6;
+  doc.setFont('helvetica','normal');doc.setFontSize(6);
+  doc.text('Konto / Zahlbar an',5,ey);ey+=4;
+  doc.text('CH56 0483 5012 3456 7800 9',5,ey);ey+=3;
+  doc.text('Svencycles GmbH',5,ey);ey+=3;
+  doc.text('Neunfornerstrasse 2',5,ey);ey+=3;
+  doc.text('8468 Waltalingen',5,ey);ey+=6;
+  doc.setFont('helvetica','bold');doc.text('Zahlbar durch',5,ey);ey+=4;
+  doc.setFont('helvetica','normal');
+  doc.text(c.name,5,ey);ey+=3;doc.text(c.strasse,5,ey);ey+=3;doc.text(c.plz+' '+c.ort,5,ey);ey+=8;
+  doc.setFont('helvetica','bold');doc.text('Währung',5,ey);doc.text('Betrag',25,ey);ey+=4;
+  doc.setFont('helvetica','normal');doc.text('CHF',5,ey);doc.text(fmt(brutto),25,ey);ey+=8;
+  doc.setFontSize(5);doc.text('Annahmestelle',40,H-5);
+
+  // --- Zahlteil (right, 62-210mm) ---
+  let zy=slipY+8;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.text('Zahlteil',67,zy);zy+=4;
+
+  // QR Code
+  const iban='CH5604835012345678009';
+  const qrPayload='SPC\r\n0200\r\n1\r\n'+iban+'\r\nK\r\nSvencycles GmbH\r\nNeunfornerstrasse 2\r\n8468 Waltalingen\r\n\r\n\r\nCH\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n'+brutto.toFixed(2)+'\r\nCHF\r\nK\r\n'+c.name+'\r\n'+c.strasse+'\r\n'+c.plz+' '+c.ort+'\r\n\r\n\r\nCH\r\nNON\r\n\r\n'+inv.id+'\r\nEPD';
+
+  // Generate QR on hidden div
+  const qrDiv=document.getElementById('qr-container');
+  qrDiv.innerHTML='';
+  new QRCode(qrDiv,{text:qrPayload,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+  setTimeout(()=>{
+    const canvas=qrDiv.querySelector('canvas');
+    if(canvas){
+      const imgData=canvas.toDataURL('image/png');
+      doc.addImage(imgData,'PNG',67,zy,46,46);
+      // Swiss cross in center
+      const cx=67+23,cy=zy+23;
+      doc.setFillColor(0,0,0);doc.rect(cx-3.5,cy-3.5,7,7,'F');
+      doc.setFillColor(255,255,255);doc.rect(cx-2.5,cy-0.7,5,1.4,'F');doc.rect(cx-0.7,cy-2.5,1.4,5,'F');
+    }
+    // Payment info right of QR
+    let ry=zy+2;const rx=118;
+    doc.setFontSize(6);doc.setFont('helvetica','bold');doc.setTextColor(0);
+    doc.text('Konto / Zahlbar an',rx,ry);ry+=4;
+    doc.setFont('helvetica','normal');
+    doc.text('CH56 0483 5012 3456 7800 9',rx,ry);ry+=3;
+    doc.text('Svencycles GmbH',rx,ry);ry+=3;
+    doc.text('Neunfornerstrasse 2',rx,ry);ry+=3;
+    doc.text('8468 Waltalingen',rx,ry);ry+=6;
+    doc.setFont('helvetica','bold');doc.text('Referenz',rx,ry);ry+=4;
+    doc.setFont('helvetica','normal');doc.text(inv.id,rx,ry);ry+=6;
+    doc.setFont('helvetica','bold');doc.text('Zahlbar durch',rx,ry);ry+=4;
+    doc.setFont('helvetica','normal');
+    doc.text(c.name,rx,ry);ry+=3;doc.text(c.strasse,rx,ry);ry+=3;doc.text(c.plz+' '+c.ort,rx,ry);ry+=8;
+    doc.setFont('helvetica','bold');doc.text('Währung',rx,ry);doc.text('Betrag',rx+20,ry);ry+=4;
+    doc.setFont('helvetica','normal');doc.text('CHF',rx,ry);doc.text(fmt(brutto),rx+20,ry);
+
+    doc.save('Rechnung_'+inv.id+'.pdf');
+  },300);
+}
+
+// ============================================================
+// BUCHHALTUNG
+// ============================================================
+function renderBuchhaltung(){
+  const year=new Date().getFullYear();
+  const yearInv=D.invoices.filter(i=>i.date.startsWith(year));
+  const paid=yearInv.filter(i=>i.status==='bezahlt');
+  const overdue=yearInv.filter(i=>i.status==='überfällig');
+  const open=yearInv.filter(i=>i.status==='offen');
+  const totalPaid=paid.reduce((s,i)=>s+invoiceTotal(i),0);
+  const totalOver=overdue.reduce((s,i)=>s+invoiceTotal(i),0);
+  const totalOpen=open.reduce((s,i)=>s+invoiceTotal(i),0);
+  const totalYear=yearInv.reduce((s,i)=>s+invoiceTotal(i),0);
+
+  let months='';
+  for(let m=0;m<12;m++){
+    const mi=yearInv.filter(i=>new Date(i.date).getMonth()===m);
+    if(mi.length===0)continue;
+    const net=mi.reduce((s,i)=>s+invoiceTotal(i),0);
+    const vat=net*0.081;
+    months+=`<tr><td>${['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][m]} ${year}</td><td>${mi.length}</td><td>CHF ${fmt(net)}</td><td>CHF ${fmt(vat)}</td><td>CHF ${fmt(net+vat)}</td></tr>`;
+  }
+
+  let overdueRows=D.invoices.filter(i=>i.status==='überfällig'||i.status==='offen').map(i=>{const c=getCustomer(i.cid);return `<tr><td>${i.id}</td><td>${c?c.name:'-'}</td><td>${i.due}</td><td>${statusBadge(i.status)}</td><td>CHF ${fmt(invoiceTotal(i))}</td></tr>`}).join('');
+
+  return `<h2>💰 Buchhaltung</h2>
+  <div class="kpi-row">
+    <div class="kpi"><div class="val">CHF ${fmt(totalYear)}</div><div class="lbl">Jahresumsatz ${year}</div></div>
+    <div class="kpi"><div class="val" style="color:var(--green)">CHF ${fmt(totalPaid)}</div><div class="lbl">Bezahlt</div></div>
+    <div class="kpi"><div class="val" style="color:var(--red)">CHF ${fmt(totalOver)}</div><div class="lbl">Überfällig</div></div>
+    <div class="kpi"><div class="val">CHF ${fmt(totalOpen)}</div><div class="lbl">Ausstehend</div></div>
+  </div>
+  <h3 style="margin:16px 0 8px">Monatsumsatz ${year}</h3>
+  <div class="tbl-wrap"><table><tr><th>Monat</th><th>Anz. RE</th><th>Netto</th><th>MWST</th><th>Brutto</th></tr>${months}</table></div>
+  <h3 style="margin:16px 0 8px">Ausstehende Zahlungen</h3>
+  <div class="tbl-wrap"><table><tr><th>Nr</th><th>Kunde</th><th>Fällig</th><th>Status</th><th>Betrag</th></tr>${overdueRows}</table></div>
+  <button class="btn-primary" onclick="exportMwstCSV()">MWST-Auszug CSV exportieren</button>`;
+}
+function exportMwstCSV(){
+  let csv='Rechnung;Datum;Kunde;Netto;MWST 8.1%;Brutto\n';
+  D.invoices.forEach(i=>{
+    const c=getCustomer(i.cid);const n=invoiceTotal(i);
+    csv+=`${i.id};${i.date};${c?c.name:'-'};${n.toFixed(2)};${(n*0.081).toFixed(2)};${(n*1.081).toFixed(2)}\n`;
+  });
+  downloadFile('MWST_Auszug_Svencycles.csv',csv,'text/csv');
+}
+
+// ============================================================
+// PERSONAL
+// ============================================================
+const PERM_LABELS={
+  dashboard:'📊 Dashboard sehen',
+  disposition:'📅 Disposition (Kalender)',
+  aufnahme:'📷 Aufnahmen sehen/erstellen',
+  auftraege:'🔧 Aufträge verwalten',
+  offerte:'📋 Offerten erstellen',
+  kunden:'👥 Kunden verwalten',
+  lager:'📦 Lager verwalten',
+  rechnungen:'📄 Rechnungen sehen',
+  buchhaltung:'💰 Buchhaltung',
+  personal:'👷 Personal verwalten',
+  einstellungen:'⚙️ Einstellungen',
+  importexport:'⬆️ Import/Export',
+  createInvoice:'➕ Rechnungen erstellen',
+  viewPrices:'💵 Preise sehen',
+  viewMargin:'📈 Marge sehen',
+  manageStaff:'👥 Mitarbeiter anlegen/löschen',
+  exportData:'💾 Daten exportieren',
+  deleteData:'🗑️ Daten löschen / Demo-Reset'
+};
+const PERM_PRESETS={
+  admin:{dashboard:1,disposition:1,aufnahme:1,auftraege:1,offerte:1,kunden:1,lager:1,rechnungen:1,buchhaltung:1,personal:1,einstellungen:1,importexport:1,createInvoice:1,viewPrices:1,viewMargin:1,manageStaff:1,exportData:1,deleteData:1},
+  chef:{dashboard:1,disposition:1,aufnahme:1,auftraege:1,offerte:1,kunden:1,lager:1,rechnungen:1,createInvoice:1,viewPrices:1},
+  disponent:{dashboard:1,disposition:1,aufnahme:1,auftraege:1,offerte:1,kunden:1,lager:1,rechnungen:1,createInvoice:1,viewPrices:1},
+  mechaniker:{aufnahme:1},
+  buchhaltung:{dashboard:1,kunden:1,rechnungen:1,buchhaltung:1,importexport:1,createInvoice:1,viewPrices:1,exportData:1}
+};
+function renderPersonal(){
+  let cards=D.staff.map(s=>{
+    const orders=D.orders.filter(o=>o.mech===s.id).length;
+    const hours=D.orders.reduce((sum,o)=>sum+o.time.filter(t=>t.mech===s.id).reduce((h,t)=>h+t.h,0),0);
+    const isMe=currentUser&&currentUser.id===s.id;
+    return `<div style="background:var(--bg2);border:2px solid ${s.color};border-radius:12px;padding:20px;flex:1;min-width:280px;cursor:${can('manageStaff')?'pointer':'default'}" ${can('manageStaff')?`onclick="editStaffModal('${s.id}')"`:''}>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="width:40px;height:40px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff">${s.id}</div><div style="flex:1"><strong>${s.name}</strong>${isMe?' <span style="color:#22c55e;font-size:11px">(Sie)</span>':''}<br><span style="font-size:11px;color:var(--text2)">${roleLabel(s.role)}</span></div></div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6">👤 ${s.user||'-'}<br>📧 ${s.email}<br>📞 ${s.tel}<br>💵 CHF ${s.rate>0?fmt(s.rate):'—'}/h<br>🔧 ${orders} Aufträge · ${hours}h</div>
+    ${can('manageStaff')?'<div style="text-align:right;margin-top:10px;font-size:11px;color:#f07000">Klicken zum Bearbeiten →</div>':''}</div>`;
+  }).join('');
+  return `<h2>👷 Personal</h2>
+  <p style="color:#999;font-size:13px;margin-bottom:16px">${can('manageStaff')?'Klick auf eine Karte zum Bearbeiten der Rechte und des Passworts.':'Sie haben keine Rechte zum Verwalten der Mitarbeiter.'}</p>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px">${cards}</div>
+  ${can('manageStaff')?'<button class="btn-primary" onclick="newStaffModal()">+ Neuer Mitarbeiter</button>':''}`;
+}
+function permCheckboxes(prefix,perm){
+  return Object.keys(PERM_LABELS).map(k=>`<label style="display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0;cursor:pointer"><input type="checkbox" id="${prefix}-perm-${k}" ${perm[k]?'checked':''} style="width:auto"> ${PERM_LABELS[k]}</label>`).join('');
+}
+function readPerms(prefix){
+  const o={};Object.keys(PERM_LABELS).forEach(k=>{o[k]=document.getElementById(`${prefix}-perm-${k}`)?.checked||false});
+  return o;
+}
+function newStaffModal(){
+  if(!can('manageStaff'))return;
+  showModal(`<h3>Neuer Mitarbeiter</h3>
+  <div class="form-row"><div><label>Name</label><input id="ns-name"></div><div><label>Kürzel (2 Buchst.)</label><input id="ns-id" maxlength="3" style="text-transform:uppercase"></div></div>
+  <div class="form-row"><div><label>Benutzername (Login)</label><input id="ns-user" autocomplete="off"></div><div><label>Passwort initial</label><input id="ns-pw" type="text" value="1234"></div></div>
+  <div class="form-row"><div><label>Email</label><input id="ns-email"></div><div><label>Telefon</label><input id="ns-tel"></div></div>
+  <div class="form-row"><div><label>Rolle</label><select id="ns-role" onchange="applyPresetToNew()"><option value="mechaniker">Mechaniker</option><option value="chef">Chef-Mechaniker</option><option value="disponent">Disponent</option><option value="buchhaltung">Buchhaltung</option><option value="admin">Admin</option></select></div><div><label>Stundenlohn CHF</label><input id="ns-rate" type="number" value="42"></div></div>
+  <div class="form-row"><div><label>Farbe</label><input id="ns-color" type="color" value="#3b82f6"></div></div>
+  <h4 style="margin:12px 0 6px;color:#f07000">Berechtigungen (Preset durch Rolle, einzeln änderbar)</h4>
+  <div id="ns-perms" style="background:#0e0e0e;border:1px solid #333;border-radius:6px;padding:10px;max-height:240px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:4px">${permCheckboxes('ns',PERM_PRESETS.mechaniker)}</div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewStaff()">Erstellen</button></div>`);
+}
+function applyPresetToNew(){
+  const r=gv('ns-role');const preset=PERM_PRESETS[r]||{};
+  Object.keys(PERM_LABELS).forEach(k=>{const cb=document.getElementById('ns-perm-'+k);if(cb)cb.checked=!!preset[k]});
+}
+async function saveNewStaff(){
+  const id=gv('ns-id').toUpperCase().slice(0,3);
+  if(!id||!gv('ns-name')||!gv('ns-user')||!gv('ns-pw')){alert('Name, Kürzel, Benutzername und Passwort sind Pflicht');return}
+  if(D.staff.find(s=>s.id===id)){alert('Kürzel bereits vergeben');return}
+  if(D.staff.find(s=>(s.user||'').toLowerCase()===gv('ns-user').toLowerCase())){alert('Benutzername bereits vergeben');return}
+  const pw=await sha256(gv('ns-pw'));
+  D.staff.push({id,name:gv('ns-name'),user:gv('ns-user').toLowerCase(),pw,role:gv('ns-role'),email:gv('ns-email'),tel:gv('ns-tel'),rate:parseFloat(gv('ns-rate'))||0,color:gv('ns-color'),perm:readPerms('ns')});
+  saveData();closeModal();navigate('personal');
+}
+function editStaffModal(sid){
+  if(!can('manageStaff'))return;
+  const s=D.staff.find(x=>x.id===sid);if(!s)return;
+  if(!s.perm)s.perm={...(PERM_PRESETS[s.role]||{})};
+  const isMe=currentUser&&currentUser.id===s.id;
+  showModal(`<h3>Mitarbeiter bearbeiten — ${s.name}</h3>
+  <div class="form-row"><div><label>Name</label><input id="es-name" value="${s.name}"></div><div><label>Kürzel</label><input value="${s.id}" disabled></div></div>
+  <div class="form-row"><div><label>Benutzername</label><input id="es-user" value="${s.user||''}"></div><div><label>Rolle</label><select id="es-role"><option value="mechaniker" ${s.role==='mechaniker'?'selected':''}>Mechaniker</option><option value="chef" ${s.role==='chef'?'selected':''}>Chef-Mechaniker</option><option value="disponent" ${s.role==='disponent'?'selected':''}>Disponent</option><option value="buchhaltung" ${s.role==='buchhaltung'?'selected':''}>Buchhaltung</option><option value="admin" ${s.role==='admin'?'selected':''}>Admin</option></select></div></div>
+  <div class="form-row"><div><label>Email</label><input id="es-email" value="${s.email||''}"></div><div><label>Telefon</label><input id="es-tel" value="${s.tel||''}"></div></div>
+  <div class="form-row"><div><label>Stundenlohn CHF</label><input id="es-rate" type="number" value="${s.rate||0}"></div><div><label>Farbe</label><input id="es-color" type="color" value="${s.color||'#3b82f6'}"></div></div>
+  <h4 style="margin:14px 0 6px;color:#f07000">Passwort</h4>
+  <div class="form-row"><div><label>Neues Passwort (leer = unverändert)</label><input id="es-newpw" type="text" placeholder="z.B. 1234"></div><div style="align-self:end"><button class="btn-secondary" type="button" onclick="document.getElementById('es-newpw').value='1234'">Auf '1234' zurücksetzen</button></div></div>
+  <h4 style="margin:14px 0 6px;color:#f07000">Berechtigungen</h4>
+  <div style="margin-bottom:8px"><button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="applyPresetToEdit('${s.id}')">Preset aus Rolle laden</button></div>
+  <div id="es-perms" style="background:#0e0e0e;border:1px solid #333;border-radius:6px;padding:10px;max-height:240px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:4px">${permCheckboxes('es',s.perm)}</div>
+  <div class="btns">
+    ${!isMe?`<button class="btn-danger" onclick="deleteStaff('${s.id}')">Löschen</button>`:'<span style="color:#999;font-size:11px;align-self:center">Eigener Account — nicht löschbar</span>'}
+    <button class="btn-secondary" onclick="closeModal()">Abbrechen</button>
+    <button class="btn-primary" onclick="saveStaff('${s.id}')">Speichern</button>
+  </div>`);
+}
+function applyPresetToEdit(sid){
+  const r=gv('es-role');const preset=PERM_PRESETS[r]||{};
+  Object.keys(PERM_LABELS).forEach(k=>{const cb=document.getElementById('es-perm-'+k);if(cb)cb.checked=!!preset[k]});
+}
+async function saveStaff(sid){
+  const s=D.staff.find(x=>x.id===sid);if(!s)return;
+  const newUser=gv('es-user').toLowerCase().trim();
+  if(newUser&&newUser!==(s.user||'').toLowerCase()&&D.staff.find(x=>x.id!==sid&&(x.user||'').toLowerCase()===newUser)){alert('Benutzername bereits vergeben');return}
+  s.name=gv('es-name');s.user=newUser;s.role=gv('es-role');s.email=gv('es-email');s.tel=gv('es-tel');
+  s.rate=parseFloat(gv('es-rate'))||0;s.color=gv('es-color');s.perm=readPerms('es');
+  const newpw=gv('es-newpw');
+  if(newpw){s.pw=await sha256(newpw)}
+  // Wenn man sich selbst bearbeitet: aktuelle Permissions sofort übernehmen
+  if(currentUser&&currentUser.id===sid){currentUser=s;applyPermissions()}
+  saveData();closeModal();navigate('personal');
+}
+function deleteStaff(sid){
+  if(currentUser&&currentUser.id===sid){alert('Eigenen Account kann man nicht löschen');return}
+  const s=D.staff.find(x=>x.id===sid);if(!s)return;
+  const used=D.orders.some(o=>o.mech===sid)||D.orders.some(o=>o.time.some(t=>t.mech===sid));
+  const msg=used?`Mitarbeiter "${s.name}" hat bestehende Aufträge / Zeitbuchungen.\nWirklich löschen? (Aufträge bleiben erhalten, Mech-Kürzel bleibt in Historie)`:`Mitarbeiter "${s.name}" wirklich löschen?`;
+  if(!confirm(msg))return;
+  D.staff=D.staff.filter(x=>x.id!==sid);
+  saveData();closeModal();navigate('personal');
+}
+
+// ============================================================
+// IMPORT / EXPORT
+// ============================================================
+function renderImportExport(){
+  return `<h2>⬆️ Import / Export</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px">
+    <h3 style="color:var(--orange);margin-bottom:12px">Export</h3>
+    <button class="btn-primary mob-btn" onclick="exportBackup()">💾 Komplett-Backup JSON</button>
+    <button class="btn-secondary mob-btn" onclick="exportMwstCSV()">📊 MWST CSV</button>
+    <button class="btn-secondary mob-btn" onclick="exportCSV('customers')">👥 Kunden CSV</button>
+    <button class="btn-secondary mob-btn" onclick="exportCSV('parts')">📦 Lager CSV</button>
+    <button class="btn-secondary mob-btn" onclick="exportCSV('orders')">🔧 Aufträge CSV</button>
+    <button class="btn-secondary mob-btn" onclick="exportCSV('invoices')">📄 Rechnungen CSV</button>
+  </div>
+  <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px">
+    <h3 style="color:var(--orange);margin-bottom:12px">Import</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">JSON-Backup laden (überschreibt alle Daten!)</p>
+    <input type="file" id="import-file" accept=".json" style="margin-bottom:12px">
+    <button class="btn-primary mob-btn" onclick="importBackup()">📂 Backup importieren</button>
+    <hr style="border-color:#333;margin:16px 0">
+    <button class="btn-danger mob-btn" onclick="resetDemo()">🔄 Demo-Reset (alle Daten zurücksetzen)</button>
+  </div></div>`;
+}
+function exportBackup(){downloadFile('Svencycles_Backup_'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(D,null,2),'application/json')}
+function exportCSV(type){
+  let csv='';
+  if(type==='customers'){
+    csv='ID;Name;Tel;Email;Strasse;PLZ;Ort;Motorräder\n';
+    D.customers.forEach(c=>{csv+=`${c.id};${c.name};${c.tel};${c.email};${c.strasse};${c.plz};${c.ort};${c.bikes.map(b=>b.model).join(', ')}\n`});
+  }else if(type==='parts'){
+    csv='ID;Name;SKU;Kategorie;Bestand;Min;EK;VK;Lieferant\n';
+    D.parts.forEach(p=>{csv+=`${p.id};${p.name};${p.sku};${p.cat};${p.stock};${p.min};${p.buy};${p.sell};${p.sup}\n`});
+  }else if(type==='orders'){
+    csv='ID;Kunde;Beschrieb;Status;Prio;Mechaniker;Erstellt;Total\n';
+    D.orders.forEach(o=>{const c=getCustomer(o.cid);csv+=`${o.id};${c?c.name:'-'};${o.desc};${o.status};${o.prio};${o.mech};${o.created};${orderTotal(o).toFixed(2)}\n`});
+  }else if(type==='invoices'){
+    csv='ID;Kunde;Datum;Fällig;Status;Total\n';
+    D.invoices.forEach(i=>{const c=getCustomer(i.cid);csv+=`${i.id};${c?c.name:'-'};${i.date};${i.due};${i.status};${invoiceTotal(i).toFixed(2)}\n`});
+  }
+  downloadFile('Svencycles_'+type+'_'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv');
+}
+function importBackup(){
+  const f=document.getElementById('import-file').files[0];if(!f){alert('Keine Datei ausgewählt');return}
+  const r=new FileReader();r.onload=e=>{try{D=JSON.parse(e.target.result);saveData();alert('Import erfolgreich!');navigate('dashboard')}catch(err){alert('Fehler: '+err.message)}};r.readAsText(f);
+}
+function resetDemo(){if(!can('deleteData')){alert('Keine Berechtigung');return}if(!confirm('Alle Daten auf Demo zurücksetzen?'))return;D=JSON.parse(JSON.stringify(DEMO_DATA));saveData();navigate(firstAllowedView())}
+
+// ============================================================
+// EINSTELLUNGEN
+// ============================================================
+function renderEinstellungen(){
+  const size=new Blob([JSON.stringify(D)]).size;
+  return `<h2>⚙️ Einstellungen</h2>
+  <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;max-width:500px">
+  <h3 style="color:var(--orange);margin-bottom:12px">Firmendaten</h3>
+  <p style="font-size:12px;line-height:1.8">
+  <strong>Svencycles GmbH</strong><br>
+  Neunfornerstrasse 2, 8468 Waltalingen ZH<br>
+  Tel: 052 746 10 60<br>
+  Email: info@svencycles.ch<br>
+  Web: www.svencycles.ch<br>
+  MWST: CHE-361.121.290<br>
+  Stundensatz: CHF 125.–<br>
+  MWST-Satz: 8.1%
+  </p>
+  <hr style="border-color:#333;margin:16px 0">
+  <h3 style="color:var(--orange);margin-bottom:12px">System-Info</h3>
+  <p style="font-size:12px;line-height:1.8">
+  Version: 1.0.0<br>
+  Kunden: ${D.customers.length}<br>
+  Aufträge: ${D.orders.length}<br>
+  Lager-Artikel: ${D.parts.length}<br>
+  Rechnungen: ${D.invoices.length}<br>
+  Storage: ${(size/1024).toFixed(1)} KB
+  </p>
+  <hr style="border-color:#333;margin:16px 0">
+  <h3 style="color:var(--orange);margin-bottom:8px">Geplante Module (v2.1+)</h3>
+  <ul style="font-size:12px;line-height:1.8;color:var(--text2);margin-left:20px">
+    <li>🏠 Einlagerung / Reifenhotel (Winter-Bikes mit Standort + automatische Frühjahrs-Rechnung)</li>
+    <li>📅 MFK-Erinnerung (CH-pflicht alle 4/3/2 Jahre, Mail an Kunden)</li>
+    <li>📧 Kunden-Mail "Bike fertig zur Abholung" mit einem Klick</li>
+    <li>📱 WhatsApp-Integration (Twilio API)</li>
+    <li>☁️ Cloud-Backup automatisch nach Google Drive</li>
+    <li>🔄 Multi-User Live-Sync (Backend mit Node.js + PostgreSQL)</li>
+    <li>📊 Werkstatt-Auslastungs-Heatmap mit Saison-Vorhersage</li>
+    <li>🏢 Versicherungs-Schaden-Modul (direkt mit Versicherung abrechnen)</li>
+  </ul>
+  </div>`;
+}
+
+// ============================================================
+// MOBILE VIEW (within index.html for mechaniker role)
+// ============================================================
+let mobileTimer=null,mobileSeconds=0,mobileOrderId=null;
+let mobilePauseStart=null,mobilePauseSeconds=0,mobilePauseReason=null,mobilePauses=[];
+const PAUSE_REASONS=[
+  {k:'kunde',l:'👤 Kundengespräch',c:'#3b82f6'},
+  {k:'tel',l:'📞 Telefon',c:'#06b6d4'},
+  {k:'teile',l:'📦 Teile holen',c:'#a855f7'},
+  {k:'wc',l:'🚻 WC',c:'#64748b'},
+  {k:'mittag',l:'🍴 Mittag',c:'#eab308'},
+  {k:'sonst',l:'❓ Anderes',c:'#999'}
+];
+function renderMobile(){
+  const mc=document.getElementById('mob-content');
+  if(mobileOrderId){renderMobileOrder(mobileOrderId);return}
+  const myOrders=D.orders.filter(o=>o.mech===currentUser.id&&o.status!=='abgerechnet');
+  let h='<h3 style="color:var(--orange);margin-bottom:12px">Meine Aufträge</h3>';
+  if(myOrders.length===0)h+='<p style="color:var(--text2)">Keine Aufträge zugewiesen.</p>';
+  myOrders.forEach(o=>{
+    const c=getCustomer(o.cid);
+    h+=`<div class="mob-card" onclick="mobileOrderId='${o.id}';renderMobile()">
+    <div style="display:flex;justify-content:space-between;align-items:center"><strong>${o.id}</strong>${statusBadge(o.status)}</div>
+    <div style="margin-top:6px;font-size:13px">${c?c.name:'-'}</div>
+    <div style="font-size:12px;color:var(--text2)">${o.desc}</div>
+    </div>`;
+  });
+  mc.innerHTML=h;
+}
+function renderMobileOrder(oid){
+  const o=getOrder(oid);if(!o){mobileOrderId=null;renderMobile();return}
+  const c=getCustomer(o.cid);
+  let timeRows=o.time.filter(t=>t.mech===currentUser.id).map(t=>`<div style="font-size:12px;padding:6px 0;border-bottom:1px solid #222">${t.date} — ${t.h}h — ${t.desc}</div>`).join('');
+  const todayPauses=mobilePauses.filter(p=>p.oid===oid);
+  const totalPauseS=todayPauses.reduce((s,p)=>s+p.sec,0);
+  let pauseRows=todayPauses.map(p=>{const r=PAUSE_REASONS.find(x=>x.k===p.reason)||{l:p.reason,c:'#999'};return `<div style="font-size:11px;padding:4px 0;color:${r.c}">${r.l} — ${fmtTime(p.sec)}</div>`}).join('');
+  const isPausing=mobilePauseStart!==null;
+  const mc=document.getElementById('mob-content');
+  mc.innerHTML=`
+  <button class="btn-secondary mob-btn" onclick="if(mobileTimer||mobilePauseStart){if(!confirm('Timer/Pause läuft — wirklich zurück?'))return}mobileOrderId=null;renderMobile()">← Zurück</button>
+  <h3 style="color:var(--orange);margin:12px 0">${o.id} — ${o.desc}</h3>
+  <p style="font-size:13px;margin-bottom:8px">Kunde: ${c?c.name:'-'} | Status: ${o.status}</p>
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <button class="btn-primary mob-btn" style="flex:1" onclick="setMobStatus('${oid}','in-arbeit')">▶ In Arbeit</button>
+    <button class="btn-success mob-btn" style="flex:1" onclick="setMobStatus('${oid}','fertig')">✓ Fertig</button>
+  </div>
+  <div style="background:${isPausing?'#a855f7':'#1a1a1a'};border-radius:12px;padding:16px;margin-bottom:16px;text-align:center">
+    <div style="font-size:11px;color:${isPausing?'#fff':'#999'};text-transform:uppercase;letter-spacing:1px">${isPausing?'⏸ '+(PAUSE_REASONS.find(r=>r.k===mobilePauseReason)?.l||'Pause'):'Arbeitszeit'}</div>
+    <div style="font-size:42px;font-family:'Barlow Condensed';color:#fff;font-weight:700" id="timer-disp">${isPausing?fmtTime(Math.floor((Date.now()-mobilePauseStart)/1000)):fmtTime(mobileSeconds)}</div>
+    ${totalPauseS>0?`<div style="font-size:11px;color:#999">Pausen heute: ${fmtTime(totalPauseS)}</div>`:''}
+  </div>
+  ${isPausing?`
+    <button class="btn-success mob-btn" onclick="endPause('${oid}')">▶ Pause beenden — Weiterarbeiten</button>
+  `:`
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="${mobileTimer?'btn-danger':'btn-primary'} mob-btn" style="flex:1" id="timer-btn" onclick="toggleTimer('${oid}')">${mobileTimer?'⏹ Stop':'▶ Start'}</button>
+    </div>
+    ${mobileTimer?`
+      <div style="font-size:11px;color:#999;text-align:center;margin-bottom:6px">Pause starten:</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px">
+        ${PAUSE_REASONS.map(r=>`<button class="mob-btn" style="background:${r.c};color:#fff;font-size:13px;padding:10px;margin:0" onclick="startPause('${oid}','${r.k}')">${r.l}</button>`).join('')}
+      </div>
+    `:''}
+  `}
+  <div style="margin-bottom:12px"><label style="font-size:11px;color:var(--text2)">Stunden manuell (oder aus Timer)</label><input id="mob-hours" type="number" step="0.25" value="${(mobileSeconds/3600).toFixed(2)}" style="margin-top:4px"></div>
+  <div style="margin-bottom:12px"><label style="font-size:11px;color:var(--text2)">Beschrieb (was wurde gemacht?)</label><textarea id="mob-desc" style="margin-top:4px" placeholder="z.B. Ölwechsel + Filter erneuert"></textarea></div>
+  <button class="btn-success mob-btn" onclick="bookMobTime('${oid}')">✓ Zeit buchen</button>
+  ${pauseRows?`<h4 style="color:#a855f7;margin:16px 0 8px;font-size:14px">Pausen-Protokoll</h4>${pauseRows}`:''}
+  <h4 style="color:var(--orange);margin:16px 0 8px">Gebuchte Zeiten</h4>
+  ${timeRows||'<p style="color:var(--text2);font-size:12px">Noch keine Zeiten gebucht.</p>'}`;
+}
+function fmtTime(s){const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+function toggleTimer(oid){
+  if(mobileTimer){clearInterval(mobileTimer);mobileTimer=null}
+  else{mobileTimer=setInterval(()=>{
+    if(mobilePauseStart)return; // Bei Pause nicht hochzählen
+    mobileSeconds++;
+    const d=document.getElementById('timer-disp');if(d)d.textContent=fmtTime(mobileSeconds);
+  },1000)}
+  if(oid)renderMobileOrder(oid);
+}
+function startPause(oid,reason){
+  if(!mobileTimer){alert('Bitte zuerst Timer starten');return}
+  mobilePauseStart=Date.now();
+  mobilePauseReason=reason;
+  // Live-Anzeige der Pause
+  setTimeout(()=>{
+    const tick=setInterval(()=>{
+      if(!mobilePauseStart){clearInterval(tick);return}
+      const d=document.getElementById('timer-disp');
+      if(d)d.textContent=fmtTime(Math.floor((Date.now()-mobilePauseStart)/1000));
+    },1000);
+  },50);
+  renderMobileOrder(oid);
+}
+function endPause(oid){
+  if(!mobilePauseStart)return;
+  const sec=Math.floor((Date.now()-mobilePauseStart)/1000);
+  mobilePauses.push({oid,reason:mobilePauseReason,sec,date:new Date().toISOString().slice(0,10),mech:currentUser.id,start:new Date(mobilePauseStart).toISOString()});
+  // Auch persistent speichern für Auswertung
+  if(!D.pauses)D.pauses=[];
+  D.pauses.push(mobilePauses[mobilePauses.length-1]);
+  mobilePauseStart=null;mobilePauseReason=null;
+  saveData();
+  renderMobileOrder(oid);
+}
+function bookMobTime(oid){
+  const o=getOrder(oid);if(!o)return;
+  const h=parseFloat(document.getElementById('mob-hours')?.value)||(mobileSeconds/3600);
+  const desc=document.getElementById('mob-desc')?.value||'';
+  if(!h||h<=0){alert('Bitte Stunden eintragen');return}
+  o.time.push({date:new Date().toISOString().slice(0,10),h:Math.round(h*4)/4,desc,mech:currentUser.id});
+  mobileSeconds=0;
+  if(mobileTimer){clearInterval(mobileTimer);mobileTimer=null}
+  if(mobilePauseStart){endPause(oid)}
+  mobilePauses=mobilePauses.filter(p=>p.oid!==oid); // nach Buchung leeren
+  saveData();renderMobileOrder(oid);
+}
+function setMobStatus(oid,status){const o=getOrder(oid);if(o){o.status=status;saveData();renderMobileOrder(oid)}}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function gv(id){return document.getElementById(id)?.value||''}
+function showModal(html){
+  const ov=document.createElement('div');ov.className='modal-overlay';ov.id='modal-ov';
+  ov.innerHTML=`<div class="modal">${html}</div>`;
+  ov.addEventListener('click',e=>{if(e.target===ov)closeModal()});
+  document.body.appendChild(ov);
+}
+function closeModal(){document.getElementById('modal-ov')?.remove()}
+function downloadFile(name,content,type){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([content],{type}));
+  a.download=name;a.click();URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>
