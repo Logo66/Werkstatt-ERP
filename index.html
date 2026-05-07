@@ -25,6 +25,8 @@ textarea{resize:vertical;min-height:60px}
 .badge-offen{background:#f07000;color:#fff}.badge-in-arbeit{background:#3b82f6;color:#fff}
 .badge-fertig{background:#22c55e;color:#fff}.badge-abgerechnet{background:#666;color:#fff}
 .badge-bezahlt{background:#22c55e;color:#fff}.badge-überfällig{background:#ef4444;color:#fff}
+.badge-notfall{background:#ef4444;color:#fff;animation:flashred 1s infinite}
+@keyframes flashred{0%,100%{background:#ef4444;box-shadow:0 0 0 0 rgba(239,68,68,.7)}50%{background:#dc2626;box-shadow:0 0 0 6px rgba(239,68,68,0)}}
 
 /* LOGIN */
 #login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:20px}
@@ -134,6 +136,8 @@ traber / 1234 — Buchhaltung
 <a href="#" data-view="offerte">📋 Offerten</a>
 <a href="#" data-view="kunden">👥 Kunden</a>
 <a href="#" data-view="lager">📦 Lager</a>
+<a href="#" data-view="wareneingang">📥 Wareneingang</a>
+<a href="#" data-view="saison">🏠 Einlagerung / MFK</a>
 <a href="#" data-view="rechnungen">📄 Rechnungen</a>
 <a href="#" data-view="buchhaltung">💰 Buchhaltung</a>
 <a href="#" data-view="personal">👷 Personal</a>
@@ -211,17 +215,38 @@ const DEMO_DATA = {
     {id:'RG2026004',oid:'',cid:'K005',date:'2026-05-02',due:'2026-06-02',status:'offen',pos:[{desc:'Beratung Umbau-Projekt',qty:1,unit:'Std',prc:125.00},{desc:'Konfigurations-Zeichnung',qty:1,unit:'Stk',prc:80.00}]}
   ],
   staff: [
-    {id:'ST',name:'Sven Traber',user:'sven',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'admin',email:'sven@svencycles.ch',tel:'052 746 10 60',rate:0,color:'#f07000',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:true,disposition:true,personal:true,einstellungen:true,importexport:true,aufnahme:true,offerte:true,createInvoice:true,viewPrices:true,viewMargin:true,manageStaff:true,exportData:true,deleteData:true}},
-    {id:'LK',name:'Lisa Keller',user:'lisa',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'chef',email:'lisa@svencycles.ch',tel:'079 222 33 44',rate:48,color:'#22c55e',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:false,disposition:true,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
-    {id:'MB',name:'Marco Bieri',user:'marco',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'mechaniker',email:'marco@svencycles.ch',tel:'078 666 77 88',rate:42,color:'#3b82f6',perm:{dashboard:false,auftraege:false,kunden:false,lager:false,rechnungen:false,buchhaltung:false,disposition:false,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:false,createInvoice:false,viewPrices:false,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
-    {id:'CS',name:'Cornel Sonderer',user:'cornel',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'disponent',email:'cornel@svencycles.ch',tel:'079 333 44 55',rate:55,color:'#a855f7',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:false,disposition:true,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
-    {id:'FT',name:'Frau Traber',user:'traber',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'buchhaltung',email:'buchhaltung@svencycles.ch',tel:'052 746 10 61',rate:0,color:'#eab308',perm:{dashboard:true,auftraege:false,kunden:true,lager:false,rechnungen:true,buchhaltung:true,disposition:false,personal:false,einstellungen:false,importexport:true,aufnahme:false,offerte:false,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:true,deleteData:false}}
+    {id:'ST',name:'Sven Traber',user:'sven',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'admin',email:'sven@svencycles.ch',tel:'052 746 10 60',rate:0,color:'#f07000',ahvNr:'756.1234.5678.97',geburtsdatum:'1975-06-12',eintritt:'2010-01-01',pensum:100,lohn:{brutto:0,stundenlohn:0,lohnart:'inhaber'},iban:'CH56 0483 5012 3456 7800 9',bank:'Credit Suisse',bvg:{versicherung:'Helvetia',altersgutschritt:18},strasse:'Neunfornerstrasse 2',plz:'8468',ort:'Waltalingen',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:true,disposition:true,personal:true,einstellungen:true,importexport:true,aufnahme:true,offerte:true,wareneingang:true,createInvoice:true,viewPrices:true,viewMargin:true,manageStaff:true,exportData:true,deleteData:true}},
+    {id:'LK',name:'Lisa Keller',user:'lisa',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'chef',email:'lisa@svencycles.ch',tel:'079 222 33 44',rate:48,color:'#22c55e',ahvNr:'756.2345.6789.01',geburtsdatum:'1985-03-22',eintritt:'2018-04-01',pensum:100,lohn:{brutto:5800,stundenlohn:48,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'Raiffeisenbank',bvg:{versicherung:'Helvetia',altersgutschritt:10},strasse:'Bachstrasse 4',plz:'8408',ort:'Winterthur',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:false,disposition:true,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:true,wareneingang:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
+    {id:'MB',name:'Marco Bieri',user:'marco',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'mechaniker',email:'marco@svencycles.ch',tel:'078 666 77 88',rate:42,color:'#3b82f6',ahvNr:'756.3456.7890.12',geburtsdatum:'1992-09-14',eintritt:'2022-01-01',pensum:100,lohn:{brutto:5000,stundenlohn:42,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'PostFinance',bvg:{versicherung:'Helvetia',altersgutschritt:7},strasse:'Musterstrasse 1',plz:'8400',ort:'Winterthur',perm:{dashboard:false,auftraege:false,kunden:false,lager:false,rechnungen:false,buchhaltung:false,disposition:false,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:false,wareneingang:false,createInvoice:false,viewPrices:false,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
+    {id:'CS',name:'Cornel Sonderer',user:'cornel',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'disponent',email:'cornel@svencycles.ch',tel:'079 333 44 55',rate:55,color:'#a855f7',ahvNr:'756.4567.8901.23',geburtsdatum:'1980-11-05',eintritt:'2020-08-01',pensum:80,lohn:{brutto:5200,stundenlohn:55,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'ZKB',bvg:{versicherung:'Helvetia',altersgutschritt:15},strasse:'Seestrasse 22',plz:'8200',ort:'Schaffhausen',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:false,disposition:true,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:true,wareneingang:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
+    {id:'FT',name:'Frau Traber',user:'traber',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'buchhaltung',email:'buchhaltung@svencycles.ch',tel:'052 746 10 61',rate:0,color:'#eab308',ahvNr:'756.5678.9012.34',geburtsdatum:'1978-04-18',eintritt:'2010-01-01',pensum:40,lohn:{brutto:2500,stundenlohn:0,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'Credit Suisse',bvg:{versicherung:'Helvetia',altersgutschritt:15},strasse:'Neunfornerstrasse 2',plz:'8468',ort:'Waltalingen',perm:{dashboard:true,auftraege:false,kunden:true,lager:false,rechnungen:true,buchhaltung:true,disposition:false,personal:false,einstellungen:false,importexport:true,aufnahme:false,offerte:false,wareneingang:false,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:true,deleteData:false}}
   ],
+  fixkosten: [
+    {id:'FK001',name:'Werkstatt-Miete',kat:'Gebäude',konto:'6000',betrag:2800,faelligkeit:1,zahlungsart:'Dauerauftrag',sup:'Vermieter Müller AG',aktiv:true},
+    {id:'FK002',name:'Strom + Wasser',kat:'Gebäude',konto:'6200',betrag:320,faelligkeit:15,zahlungsart:'eBill',sup:'EKZ',aktiv:true},
+    {id:'FK003',name:'Betriebshaftpflicht',kat:'Versicherung',konto:'6300',betrag:180,faelligkeit:1,zahlungsart:'Jahresrechnung',sup:'Zürich Versicherung',aktiv:true},
+    {id:'FK004',name:'Inventarversicherung',kat:'Versicherung',konto:'6300',betrag:95,faelligkeit:1,zahlungsart:'Jahresrechnung',sup:'Zürich Versicherung',aktiv:true},
+    {id:'FK005',name:'Internet + Telefon',kat:'IT',konto:'6400',betrag:89,faelligkeit:1,zahlungsart:'eBill',sup:'Swisscom',aktiv:true},
+    {id:'FK006',name:'Treuhänder',kat:'IT',konto:'6400',betrag:350,faelligkeit:1,zahlungsart:'Rechnung',sup:'Treuhand Müller',aktiv:true},
+    {id:'FK007',name:'Leasing Lieferwagen',kat:'Fahrzeuge',konto:'6700',betrag:650,faelligkeit:15,zahlungsart:'Dauerauftrag',sup:'VW Financial Services',aktiv:true},
+    {id:'FK008',name:'Website Hosting',kat:'Marketing',konto:'6500',betrag:45,faelligkeit:1,zahlungsart:'Kreditkarte',sup:'Hostpoint',aktiv:true}
+  ],
+  eingaenge: [],
+  buchungen: [],
+  loehne: [],
+  wareneingang: [],
+  einlagerungen: [],
   pauses: [],
   rapports: [],
   offerten: [],
   termine: [],
-  counters:{order:8,invoice:4,customer:5,part:18,rapport:0,offerte:0,termin:0}
+  einstellungen: {
+    firma:'Svencycles GmbH', strasse:'Neunfornerstrasse 2', plz:'8468', ort:'Waltalingen', tel:'052 746 10 60', email:'info@svencycles.ch', web:'www.svencycles.ch',
+    iban:'CH56 0483 5012 3456 7800 9', mwstNr:'CHE-361.121.290 MWST', stundensatz:125, mwstSatz:0.081, mwstModus:'effektiv', zahlungsfrist:30,
+    ahv_an:0.053, ahv_ag:0.053, alv_an:0.011, alv_ag:0.011, uvg_nbu_an:0.013, uvg_bu_ag:0.012, ktg_an:0.005, ktg_ag:0.005, fak_ag:0.025,
+    bvg_koord:2575, ahvKasse:'SVA Zürich', bvgVersicherung:'Helvetia'
+  },
+  counters:{order:8,invoice:4,customer:5,part:18,rapport:0,offerte:0,termin:0,we:0,einlagerung:0,eingang:0,lohn:0}
 };
 
 let D;
@@ -272,7 +297,7 @@ function applyPermissions(){
   });
 }
 function firstAllowedView(){
-  const order=['dashboard','disposition','auftraege','offerte','kunden','lager','rechnungen','buchhaltung','personal','importexport','einstellungen'];
+  const order=['dashboard','disposition','auftraege','offerte','aufnahme','kunden','lager','wareneingang','saison','rechnungen','buchhaltung','personal','importexport','einstellungen'];
   return order.find(v=>can(v))||'einstellungen';
 }
 function doLogout(){
@@ -302,6 +327,8 @@ function navigate(view){
     case'offerte':m.innerHTML=renderOfferten();break;
     case'kunden':m.innerHTML=renderKunden();break;
     case'lager':m.innerHTML=renderLager();break;
+    case'wareneingang':m.innerHTML=renderWareneingang();break;
+    case'saison':m.innerHTML=renderSaison();break;
     case'rechnungen':m.innerHTML=renderRechnungen();break;
     case'buchhaltung':m.innerHTML=renderBuchhaltung();break;
     case'personal':m.innerHTML=renderPersonal();break;
@@ -788,7 +815,8 @@ function filterOrders(){
     const c=getCustomer(o.cid);
     const bike=c&&c.bikes[o.bike]?c.bikes[o.bike].model:'';
     const re=o.status==='fertig'&&!o.invoiced?`<button class="btn-primary" style="padding:4px 8px;font-size:11px" onclick="event.stopPropagation();createInvoiceFromOrder('${o.id}')">→ RE</button>`:'';
-    rows+=`<tr style="cursor:pointer" onclick="openOrder('${o.id}')"><td>${o.id}</td><td>${c?c.name:'-'}</td><td style="font-size:11px">${bike}</td><td>${o.desc}</td><td>${statusBadge(o.status)}</td><td>${o.prio==='hoch'?'<span style="color:var(--red)">⚡ Hoch</span>':'Normal'}</td><td>${o.mech}</td><td>CHF ${fmt(orderTotal(o))}</td><td>${re}</td></tr>`;
+    const prioBadge=o.prio==='notfall'?'<span class="badge badge-notfall">⚠️ NOTFALL</span>':o.prio==='hoch'?'<span style="color:var(--red);font-weight:700">⚡ Hoch</span>':'Normal';
+    rows+=`<tr style="cursor:pointer${o.prio==='notfall'?';background:#3a000033':''}" onclick="openOrder('${o.id}')"><td>${o.id}</td><td>${c?c.name:'-'}</td><td style="font-size:11px">${bike}</td><td>${o.desc}</td><td>${statusBadge(o.status)}</td><td>${prioBadge}</td><td>${o.mech}</td><td>CHF ${fmt(orderTotal(o))}</td><td>${re}</td></tr>`;
   });
   tb.innerHTML=rows;
 }
@@ -798,7 +826,7 @@ function newOrderModal(){
   showModal(`<h3>Neuer Auftrag</h3>
   <div class="form-row"><div><label>Kunde</label><select id="no-cid">${opts}</select></div><div><label>Motorrad-Index</label><input id="no-bike" type="number" value="0" min="0"></div></div>
   <div class="form-row"><div><label>Beschrieb</label><input id="no-desc"></div><div><label>Mechaniker</label><select id="no-mech">${mechs}</select></div></div>
-  <div class="form-row"><div><label>Priorität</label><select id="no-prio"><option value="normal">Normal</option><option value="hoch">Hoch</option></select></div><div><label>Notizen</label><input id="no-notes"></div></div>
+  <div class="form-row"><div><label>Priorität</label><select id="no-prio"><option value="normal">Normal</option><option value="hoch">⚡ Hoch</option><option value="notfall">⚠️ NOTFALL</option></select></div><div><label>Notizen</label><input id="no-notes"></div></div>
   <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewOrder()">Erstellen</button></div>`);
 }
 function saveNewOrder(){
@@ -817,7 +845,7 @@ function openOrder(id){
   const total=orderTotal(o);
   showModal(`<h3>Auftrag ${o.id}</h3>
   <div class="form-row"><div><label>Kunde</label><input value="${c?c.name:'-'}" disabled></div><div><label>Status</label><select id="eo-status"><option ${o.status==='offen'?'selected':''}>offen</option><option ${o.status==='in-arbeit'?'selected':''}>in-arbeit</option><option ${o.status==='fertig'?'selected':''}>fertig</option><option ${o.status==='abgerechnet'?'selected':''}>abgerechnet</option></select></div></div>
-  <div class="form-row"><div><label>Mechaniker</label><select id="eo-mech">${mechOpts}</select></div><div><label>Priorität</label><select id="eo-prio"><option value="normal" ${o.prio==='normal'?'selected':''}>Normal</option><option value="hoch" ${o.prio==='hoch'?'selected':''}>Hoch</option></select></div></div>
+  <div class="form-row"><div><label>Mechaniker</label><select id="eo-mech">${mechOpts}</select></div><div><label>Priorität</label><select id="eo-prio"><option value="normal" ${o.prio==='normal'?'selected':''}>Normal</option><option value="hoch" ${o.prio==='hoch'?'selected':''}>⚡ Hoch</option><option value="notfall" ${o.prio==='notfall'?'selected':''}>⚠️ NOTFALL</option></select></div></div>
   <div class="form-row full"><div><label>Beschrieb</label><input id="eo-desc" value="${o.desc}"></div></div>
   <div class="form-row full"><div><label>Notizen</label><textarea id="eo-notes">${o.notes}</textarea></div></div>
   <h4 style="margin:16px 0 8px;color:var(--orange)">Ersatzteile</h4>
@@ -892,24 +920,66 @@ function saveNewCustomer(){
 }
 function openCustomer(id){
   const c=D.customers.find(x=>x.id===id);if(!c)return;
-  let bikesHtml=c.bikes.map((b,i)=>`<tr><td>${b.model}</td><td>${b.kz}</td><td>${b.vin||'-'}</td><td>${b.km} km</td><td>${b.col}</td></tr>`).join('');
+  let bikesHtml=c.bikes.map((b,i)=>{
+    const mfk=calcMfkFaellig(b);
+    const mfkClr=mfk?(new Date(mfk)<new Date()?'var(--red)':(new Date(mfk)-new Date()<90*86400000?'var(--orange)':'#999')):'#999';
+    return `<tr><td>${b.model}</td><td>${b.kz}</td><td>${b.km} km</td><td>${b.col||'-'}</td><td>${b.erstzulassung||'<span style="color:#999">-</span>'}</td><td><span style="color:${mfkClr}">${mfk||'-'}</span></td><td><button class="btn-secondary" style="padding:2px 8px;font-size:11px" onclick="editBikeModal('${id}',${i})">✎</button></td></tr>`;
+  }).join('');
   let ordersHtml=D.orders.filter(o=>o.cid===id).map(o=>`<tr><td>${o.id}</td><td>${o.desc}</td><td>${statusBadge(o.status)}</td><td>${o.created}</td></tr>`).join('');
   showModal(`<h3>${c.name}</h3>
   <div class="form-row"><div><label>Telefon</label><input id="ec-tel" value="${c.tel}"></div><div><label>Email</label><input id="ec-email" value="${c.email}"></div></div>
   <div class="form-row"><div><label>Strasse</label><input id="ec-str" value="${c.strasse}"></div><div><label>PLZ</label><input id="ec-plz" value="${c.plz}"></div></div>
   <div class="form-row"><div><label>Ort</label><input id="ec-ort" value="${c.ort}"></div></div>
-  <h4 style="margin:12px 0 8px;color:var(--orange)">Motorräder</h4>
-  <table><tr><th>Modell</th><th>KZ</th><th>VIN</th><th>KM</th><th>Farbe</th></tr>${bikesHtml}</table>
+  <div class="form-row full"><div><label>Notizen / Kunden-Hinweise</label><textarea id="ec-notes" placeholder="z.B. HOG-Mitglied, Stammkunde, bevorzugt Termin am Mittwoch...">${c.notizen||''}</textarea></div></div>
+  <h4 style="margin:12px 0 8px;color:var(--orange)">Motorräder <button class="btn-secondary" style="padding:2px 8px;font-size:11px;margin-left:8px" onclick="addBikeModal('${id}')">+ Bike</button></h4>
+  <table><tr><th>Modell</th><th>KZ</th><th>KM</th><th>Farbe</th><th>Erstzulassung</th><th>MFK fällig</th><th></th></tr>${bikesHtml}</table>
   <h4 style="margin:12px 0 8px;color:var(--orange)">Auftragshistorie</h4>
   <table><tr><th>Nr</th><th>Beschrieb</th><th>Status</th><th>Datum</th></tr>${ordersHtml}</table>
   <div class="btns"><button class="btn-danger" onclick="deleteCustomer('${id}')">Löschen</button><button class="btn-secondary" onclick="closeModal()">Schliessen</button><button class="btn-primary" onclick="saveCustomer('${id}')">Speichern</button></div>`);
 }
 function saveCustomer(id){
   const c=D.customers.find(x=>x.id===id);if(!c)return;
-  c.tel=gv('ec-tel');c.email=gv('ec-email');c.strasse=gv('ec-str');c.plz=gv('ec-plz');c.ort=gv('ec-ort');
+  c.tel=gv('ec-tel');c.email=gv('ec-email');c.strasse=gv('ec-str');c.plz=gv('ec-plz');c.ort=gv('ec-ort');c.notizen=gv('ec-notes');
   saveData();closeModal();navigate('kunden');
 }
 function deleteCustomer(id){if(!confirm('Kunde löschen?'))return;D.customers=D.customers.filter(c=>c.id!==id);saveData();closeModal();navigate('kunden')}
+function addBikeModal(cid){
+  showModal(`<h3>Neues Bike für Kunde ${cid}</h3>
+  <div class="form-row"><div><label>Modell</label><input id="ab-model" placeholder="z.B. HD Sportster 2020"></div><div><label>Kennzeichen</label><input id="ab-kz" placeholder="ZH 12345"></div></div>
+  <div class="form-row"><div><label>VIN</label><input id="ab-vin"></div><div><label>KM-Stand</label><input id="ab-km" type="number" value="0"></div></div>
+  <div class="form-row"><div><label>Farbe</label><input id="ab-col"></div><div><label>Motor</label><input id="ab-engine" placeholder="z.B. Milwaukee-Eight 117"></div></div>
+  <div class="form-row"><div><label>Erstzulassung</label><input id="ab-erst" type="date"></div><div><label>Letzte MFK</label><input id="ab-mfk" type="date"></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewBike('${cid}')">Speichern</button></div>`);
+}
+function saveNewBike(cid){
+  const c=getCustomer(cid);if(!c)return;
+  if(!c.bikes)c.bikes=[];
+  c.bikes.push({model:gv('ab-model'),kz:gv('ab-kz'),vin:gv('ab-vin'),km:parseInt(gv('ab-km'))||0,col:gv('ab-col'),engine:gv('ab-engine'),erstzulassung:gv('ab-erst'),letzteMfk:gv('ab-mfk')});
+  saveData();closeModal();openCustomer(cid);
+}
+function editBikeModal(cid,bi){
+  const c=getCustomer(cid);if(!c||!c.bikes[bi])return;
+  const b=c.bikes[bi];
+  showModal(`<h3>Bike bearbeiten — ${b.model}</h3>
+  <div class="form-row"><div><label>Modell</label><input id="eb-model" value="${b.model||''}"></div><div><label>Kennzeichen</label><input id="eb-kz" value="${b.kz||''}"></div></div>
+  <div class="form-row"><div><label>VIN</label><input id="eb-vin" value="${b.vin||''}"></div><div><label>KM-Stand</label><input id="eb-km" type="number" value="${b.km||0}"></div></div>
+  <div class="form-row"><div><label>Farbe</label><input id="eb-col" value="${b.col||''}"></div><div><label>Motor</label><input id="eb-engine" value="${b.engine||''}"></div></div>
+  <div class="form-row"><div><label>Erstzulassung</label><input id="eb-erst" type="date" value="${b.erstzulassung||''}"></div><div><label>Letzte MFK</label><input id="eb-mfk" type="date" value="${b.letzteMfk||''}"></div></div>
+  <p class="muted" style="font-size:11px">Erstzulassung wird für MFK-Erinnerung benötigt (CH: 4/3/2 Jahre)</p>
+  <div class="btns"><button class="btn-danger" onclick="deleteBike('${cid}',${bi})">Bike löschen</button><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveBike('${cid}',${bi})">Speichern</button></div>`);
+}
+function saveBike(cid,bi){
+  const c=getCustomer(cid);if(!c||!c.bikes[bi])return;
+  const b=c.bikes[bi];
+  b.model=gv('eb-model');b.kz=gv('eb-kz');b.vin=gv('eb-vin');b.km=parseInt(gv('eb-km'))||0;
+  b.col=gv('eb-col');b.engine=gv('eb-engine');b.erstzulassung=gv('eb-erst');b.letzteMfk=gv('eb-mfk');
+  saveData();closeModal();openCustomer(cid);
+}
+function deleteBike(cid,bi){
+  if(!confirm('Bike löschen? (Aufträge bleiben erhalten)'))return;
+  const c=getCustomer(cid);if(!c)return;
+  c.bikes.splice(bi,1);saveData();closeModal();openCustomer(cid);
+}
 
 // ============================================================
 // LAGER
@@ -1030,8 +1100,10 @@ function editPartModal(pid){
   const cats=['Verbrauch','Filter','Reifen','Bremsen','Motor','Elektrik','Auspuff','Lenker','Zündung','Service-Kit','Zubehör'];
   let catOpts=cats.map(c=>`<option ${c===p.cat?'selected':''}>${c}</option>`).join('');
   showModal(`<h3>Artikel bearbeiten</h3>
-  <div class="form-row"><div><label>Bezeichnung</label><input id="ep-name" value="${p.name}"></div><div><label>SKU</label><input id="ep-sku" value="${p.sku}"></div></div>
-  <div class="form-row"><div><label>Kategorie</label><select id="ep-cat">${catOpts}</select></div><div><label>Lieferant</label><input id="ep-sup" value="${p.sup}"></div></div>
+  <div class="form-row"><div><label>Bezeichnung</label><input id="ep-name" value="${p.name}"></div><div><label>SKU (intern)</label><input id="ep-sku" value="${p.sku}"></div></div>
+  <div class="form-row"><div><label>EAN / Barcode</label><input id="ep-ean" value="${p.ean||''}" placeholder="z.B. 4006501234567"></div><div><label>Lieferanten-Art.-Nr</label><input id="ep-supart" value="${p.supArtNr||''}" placeholder="z.B. CC-85095"></div></div>
+  <div class="form-row"><div><label>Kategorie</label><select id="ep-cat">${catOpts}</select></div><div><label>Lieferant</label><input id="ep-sup" value="${p.sup||''}"></div></div>
+  <div class="form-row"><div><label>Lagerort</label><input id="ep-loc" value="${p.location||''}" placeholder="z.B. Regal A3"></div></div>
   <div class="form-row"><div><label>Bestand</label><input id="ep-stock" type="number" value="${p.stock}"></div><div><label>Mindestbestand</label><input id="ep-min" type="number" value="${p.min}"></div></div>
   <div class="form-row"><div><label>EK-Preis</label><input id="ep-buy" type="number" step="0.01" value="${p.buy}"></div><div><label>VK-Preis</label><input id="ep-sell" type="number" step="0.01" value="${p.sell}"></div></div>
   <div class="btns"><button class="btn-danger" onclick="deletePart('${pid}')">Löschen</button><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="savePart('${pid}')">Speichern</button></div>`);
@@ -1039,11 +1111,357 @@ function editPartModal(pid){
 function savePart(pid){
   const p=getPart(pid);if(!p)return;
   p.name=gv('ep-name');p.sku=gv('ep-sku');p.cat=gv('ep-cat');p.sup=gv('ep-sup');
+  p.ean=gv('ep-ean');p.supArtNr=gv('ep-supart');p.location=gv('ep-loc');
   p.stock=parseInt(gv('ep-stock'))||0;p.min=parseInt(gv('ep-min'))||0;
   p.buy=parseFloat(gv('ep-buy'))||0;p.sell=parseFloat(gv('ep-sell'))||0;
   saveData();closeModal();navigate('lager');
 }
 function deletePart(pid){if(!confirm('Artikel löschen?'))return;D.parts=D.parts.filter(p=>p.id!==pid);saveData();closeModal();navigate('lager')}
+// ============================================================
+// SAISON: EINLAGERUNG + MFK + KUNDEN-MAIL
+// ============================================================
+let saisonTab='einlag';
+function renderSaison(){
+  const tabs=[['einlag','🏠 Einlagerung / Reifenhotel'],['mfk','📅 MFK-Erinnerung'],['mail','📧 Kunden-Mail']];
+  let h=`<h2>🏠 Saison & Erinnerungen</h2>
+  <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid #333">
+    ${tabs.map(([k,l])=>`<button class="${saisonTab===k?'btn-primary':'btn-secondary'}" style="padding:8px 14px" onclick="saisonTab='${k}';navigate('saison')">${l}</button>`).join('')}
+  </div>`;
+  if(saisonTab==='einlag')h+=renderEinlagerung();
+  else if(saisonTab==='mfk')h+=renderMfk();
+  else if(saisonTab==='mail')h+=renderKundenMail();
+  return h;
+}
+
+// ----- EINLAGERUNG / REIFENHOTEL -----
+function renderEinlagerung(){
+  const eList=D.einlagerungen||[];
+  const aktiv=eList.filter(e=>e.status==='eingelagert');
+  const totalCharge=aktiv.reduce((s,e)=>s+(e.tarif||0),0);
+  const today=new Date().toISOString().slice(0,10);
+  let h=`<div class="kpi-row" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+    <div class="kpi"><div class="val">${aktiv.length}</div><div class="lbl">Aktuell eingelagert</div></div>
+    <div class="kpi"><div class="val">${eList.filter(e=>e.typ==='bike').length}</div><div class="lbl">Bikes total</div></div>
+    <div class="kpi"><div class="val">${eList.filter(e=>e.typ==='reifen').length}</div><div class="lbl">Reifensätze total</div></div>
+    <div class="kpi"><div class="val">CHF ${fmt(totalCharge)}</div><div class="lbl">Saison-Gebühren offen</div></div>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn-primary" onclick="newEinlagerungModal()">+ Neue Einlagerung</button>
+    <button class="btn-secondary" onclick="exportEinlagerungenCSV()">📊 CSV Export</button>
+    <button class="btn-success" onclick="rechnungenAusEinlagerungen()">📄 Saison-Rechnungen erstellen</button>
+  </div>`;
+  let rows=eList.sort((a,b)=>(b.von||'').localeCompare(a.von||'')).map(e=>{
+    const c=getCustomer(e.cid);
+    return `<tr><td>${e.id}</td><td>${e.typ==='bike'?'🏍️ Bike':'🛞 Reifen'}</td><td>${c?c.name:'-'}</td><td>${e.beschrieb||'-'}</td><td>${e.standort||'-'}</td><td>${e.von||'-'} → ${e.bis||'-'}</td><td style="text-align:right">CHF ${fmt(e.tarif||0)}</td><td><span class="badge badge-${e.status==='eingelagert'?'in-arbeit':'fertig'}">${e.status}</span></td><td>
+      ${e.status==='eingelagert'?`<button class="btn-success" style="padding:3px 8px;font-size:11px" onclick="auslagern('${e.id}')">↗ Auslagern</button>`:''}
+      <button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="editEinlagerung('${e.id}')">✎</button>
+      <button class="btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteEinlagerung('${e.id}')">×</button>
+    </td></tr>`;
+  }).join('')||'<tr><td colspan="9" style="text-align:center;color:#999;padding:14px">Noch keine Einlagerungen erfasst</td></tr>';
+  h+=`<div class="tbl-wrap"><table>
+    <tr><th>Nr</th><th>Typ</th><th>Kunde</th><th>Beschrieb</th><th>Standort</th><th>Zeitraum</th><th style="text-align:right">Tarif</th><th>Status</th><th></th></tr>
+    ${rows}
+  </table></div>
+  <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:14px;margin-top:14px;font-size:12px">
+    <strong style="color:var(--orange)">💡 Saison-Workflow:</strong>
+    <ol style="margin-left:20px;margin-top:6px;line-height:1.7">
+      <li>Bike/Reifen einlagern (Oktober/November) → Standort markieren</li>
+      <li>Im Frühling auf "Saison-Rechnungen erstellen" → automatisch alle aktiven Einlagerungen abrechnen</li>
+      <li>Bei Abholung: "↗ Auslagern" klicken → Status wird "abgeholt"</li>
+    </ol>
+  </div>`;
+  return h;
+}
+function newEinlagerungModal(){
+  let custOpts=D.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  showModal(`<h3>Neue Einlagerung</h3>
+  <div class="form-row"><div><label>Typ</label><select id="ne-typ"><option value="bike">🏍️ Bike</option><option value="reifen">🛞 Reifensatz</option></select></div><div><label>Kunde</label><select id="ne-cid">${custOpts}</select></div></div>
+  <div class="form-row full"><div><label>Beschrieb (Modell / Reifen-Spezifikation)</label><input id="ne-desc" placeholder="z.B. HD Sportster 2020 oder Michelin 180/65 Sommer"></div></div>
+  <div class="form-row"><div><label>Standort</label><input id="ne-stand" placeholder="z.B. Halle B, Regal 3"></div><div><label>Tarif CHF (Saison)</label><input id="ne-tarif" type="number" step="0.01" value="350"></div></div>
+  <div class="form-row"><div><label>Eingelagert am</label><input id="ne-von" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Geplant bis</label><input id="ne-bis" type="date" value="${(new Date(Date.now()+180*86400000)).toISOString().slice(0,10)}"></div></div>
+  <div class="form-row full"><div><label>Notizen</label><textarea id="ne-notes" placeholder="Zustand bei Einlagerung, KM-Stand, etc."></textarea></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveEinlagerung()">✓ Einlagern</button></div>`);
+}
+function saveEinlagerung(){
+  if(!D.einlagerungen)D.einlagerungen=[];
+  D.counters.einlagerung=(D.counters.einlagerung||0)+1;
+  const id='EL'+new Date().getFullYear()+String(D.counters.einlagerung).padStart(3,'0');
+  D.einlagerungen.push({id,typ:gv('ne-typ'),cid:gv('ne-cid'),beschrieb:gv('ne-desc'),standort:gv('ne-stand'),tarif:parseFloat(gv('ne-tarif'))||0,von:gv('ne-von'),bis:gv('ne-bis'),notes:gv('ne-notes'),status:'eingelagert',invoiced:false});
+  saveData();closeModal();navigate('saison');
+}
+function editEinlagerung(id){
+  const e=D.einlagerungen.find(x=>x.id===id);if(!e)return;
+  let custOpts=D.customers.map(c=>`<option value="${c.id}" ${c.id===e.cid?'selected':''}>${c.name}</option>`).join('');
+  showModal(`<h3>Einlagerung ${id} bearbeiten</h3>
+  <div class="form-row"><div><label>Typ</label><select id="ee-typ"><option value="bike" ${e.typ==='bike'?'selected':''}>🏍️ Bike</option><option value="reifen" ${e.typ==='reifen'?'selected':''}>🛞 Reifensatz</option></select></div><div><label>Kunde</label><select id="ee-cid">${custOpts}</select></div></div>
+  <div class="form-row full"><div><label>Beschrieb</label><input id="ee-desc" value="${e.beschrieb||''}"></div></div>
+  <div class="form-row"><div><label>Standort</label><input id="ee-stand" value="${e.standort||''}"></div><div><label>Tarif CHF</label><input id="ee-tarif" type="number" step="0.01" value="${e.tarif||0}"></div></div>
+  <div class="form-row"><div><label>Von</label><input id="ee-von" type="date" value="${e.von||''}"></div><div><label>Bis</label><input id="ee-bis" type="date" value="${e.bis||''}"></div></div>
+  <div class="form-row full"><div><label>Notizen</label><textarea id="ee-notes">${e.notes||''}</textarea></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="updateEinlagerung('${id}')">Speichern</button></div>`);
+}
+function updateEinlagerung(id){
+  const e=D.einlagerungen.find(x=>x.id===id);if(!e)return;
+  e.typ=gv('ee-typ');e.cid=gv('ee-cid');e.beschrieb=gv('ee-desc');e.standort=gv('ee-stand');
+  e.tarif=parseFloat(gv('ee-tarif'))||0;e.von=gv('ee-von');e.bis=gv('ee-bis');e.notes=gv('ee-notes');
+  saveData();closeModal();navigate('saison');
+}
+function auslagern(id){
+  const e=D.einlagerungen.find(x=>x.id===id);if(!e)return;
+  if(!confirm('Einlagerung als abgeholt markieren?'))return;
+  e.status='abgeholt';e.abgeholt=new Date().toISOString().slice(0,10);
+  saveData();navigate('saison');
+}
+function deleteEinlagerung(id){
+  if(!confirm('Einlagerung löschen?'))return;
+  D.einlagerungen=D.einlagerungen.filter(x=>x.id!==id);
+  saveData();navigate('saison');
+}
+function exportEinlagerungenCSV(){
+  let csv='Nr;Typ;Kunde;Beschrieb;Standort;Von;Bis;Tarif;Status\n';
+  (D.einlagerungen||[]).forEach(e=>{const c=getCustomer(e.cid);csv+=`${e.id};${e.typ};${c?c.name:''};${e.beschrieb||''};${e.standort||''};${e.von||''};${e.bis||''};${(e.tarif||0).toFixed(2)};${e.status}\n`});
+  downloadFile('Einlagerungen_'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv');
+}
+function rechnungenAusEinlagerungen(){
+  const aktiv=(D.einlagerungen||[]).filter(e=>e.status==='eingelagert'&&!e.invoiced&&e.tarif>0);
+  if(aktiv.length===0){alert('Keine offenen Einlagerungen zum Abrechnen');return}
+  if(!confirm(`Für ${aktiv.length} Einlagerungen Rechnungen erstellen?`))return;
+  let count=0;
+  aktiv.forEach(e=>{
+    D.counters.invoice++;
+    const id='RG'+new Date().getFullYear()+String(D.counters.invoice).padStart(3,'0');
+    const today=new Date().toISOString().slice(0,10);
+    const due=new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+    D.invoices.push({id,oid:'',cid:e.cid,date:today,due,status:'offen',pos:[{desc:`${e.typ==='bike'?'Bike-Einlagerung':'Reifenhotel'}: ${e.beschrieb}`,qty:1,unit:'Saison',prc:e.tarif}],einlagerungId:e.id});
+    e.invoiced=true;e.rechnungId=id;
+    count++;
+  });
+  saveData();navigate('saison');
+  alert(count+' Rechnungen erstellt.');
+}
+
+// ----- MFK-ERINNERUNG -----
+function calcMfkFaellig(bike){
+  // Schweizer MFK-Regel: Erste MFK 4 Jahre nach Erstzulassung, dann 3 Jahre, dann alle 2 Jahre
+  if(!bike.erstzulassung)return null;
+  const ez=new Date(bike.erstzulassung);
+  let faellig=new Date(ez);
+  faellig.setFullYear(faellig.getFullYear()+4);
+  if(bike.letzteMfk){
+    const lm=new Date(bike.letzteMfk);
+    const yearsSince=(lm-ez)/(365.25*86400000);
+    faellig=new Date(lm);
+    faellig.setFullYear(faellig.getFullYear()+(yearsSince>=4?2:3));
+  }
+  return faellig.toISOString().slice(0,10);
+}
+function renderMfk(){
+  const today=new Date();
+  const list=[];
+  D.customers.forEach(c=>{
+    (c.bikes||[]).forEach((b,bi)=>{
+      const faellig=calcMfkFaellig(b);
+      if(!faellig)return;
+      const d=new Date(faellig);
+      const diff=Math.floor((d-today)/86400000);
+      list.push({c,b,bi,faellig,diff});
+    });
+  });
+  list.sort((a,b)=>a.diff-b.diff);
+  const ueberfaellig=list.filter(x=>x.diff<0);
+  const bald=list.filter(x=>x.diff>=0&&x.diff<=90);
+  const ohneDaten=D.customers.flatMap(c=>(c.bikes||[]).filter(b=>!b.erstzulassung));
+
+  let h=`<div class="kpi-row" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+    <div class="kpi"><div class="val" style="color:var(--red)">${ueberfaellig.length}</div><div class="lbl">Überfällig</div></div>
+    <div class="kpi"><div class="val" style="color:var(--orange)">${bald.length}</div><div class="lbl">Fällig in 90 Tagen</div></div>
+    <div class="kpi"><div class="val">${list.length}</div><div class="lbl">Bikes mit MFK-Daten</div></div>
+    <div class="kpi"><div class="val" style="color:#999">${ohneDaten.length}</div><div class="lbl">Ohne Erstzulassung</div></div>
+  </div>
+  <p class="muted" style="margin-bottom:14px;font-size:12px">CH-Regel: 1. MFK nach 4 Jahren, dann nach 3 Jahren, dann alle 2 Jahre. Erstzulassung beim Bike erfassen damit System rechnen kann.</p>`;
+  if(ueberfaellig.length||bald.length){
+    h+=`<h3 style="color:var(--orange);margin:14px 0 8px">Anstehende MFK</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>Status</th><th>Kunde</th><th>Bike</th><th>KZ</th><th>Erstzulassung</th><th>Letzte MFK</th><th>Fällig</th><th></th></tr>
+      ${[...ueberfaellig,...bald].map(x=>{
+        const sev=x.diff<0?'var(--red)':x.diff<30?'var(--orange)':'#eab308';
+        const lbl=x.diff<0?`${-x.diff} Tg überfällig`:`in ${x.diff} Tg`;
+        return `<tr><td><span style="color:${sev}">⚠️ ${lbl}</span></td><td>${x.c.name}</td><td>${x.b.model}</td><td>${x.b.kz}</td><td>${x.b.erstzulassung||'-'}</td><td>${x.b.letzteMfk||'noch keine'}</td><td>${x.faellig}</td><td>
+          <button class="btn-primary" style="padding:3px 8px;font-size:11px" onclick="mailMfk('${x.c.id}',${x.bi})">📧 Mail an Kunde</button>
+        </td></tr>`;
+      }).join('')}
+    </table></div>`;
+  }
+  if(ohneDaten.length){
+    h+=`<h3 style="color:#999;margin:14px 0 8px">Bikes ohne Erstzulassungs-Datum (${ohneDaten.length})</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:8px">Bei Kunde editieren → Bikes → Erstzulassung eintragen.</p>`;
+  }
+  return h;
+}
+function mailMfk(cid,bi){
+  const c=getCustomer(cid);if(!c)return;
+  const b=c.bikes[bi];if(!b)return;
+  const faellig=calcMfkFaellig(b);
+  const subject='MFK-Erinnerung für '+b.model;
+  const body=`Sehr geehrter Herr / Frau ${c.name.split(' ').pop()}\n\nIhre Motorfahrzeugkontrolle (MFK) für\n  ${b.model} (${b.kz})\nist ${faellig?'fällig per '+faellig:'demnächst fällig'}.\n\nGerne organisieren wir die MFK für Sie. Rufen Sie uns an unter 052 746 10 60 oder antworten Sie auf diese E-Mail.\n\nFreundliche Grüsse\nSvencycles GmbH\nNeunfornerstrasse 2 · 8468 Waltalingen`;
+  window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+// ----- KUNDEN-MAIL "Bike fertig" -----
+function renderKundenMail(){
+  const fertig=D.orders.filter(o=>o.status==='fertig'&&!o.kundeBenachrichtigt);
+  const infertig=D.orders.filter(o=>o.status==='in-arbeit');
+  let h=`<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:18px">
+    <h3 style="color:var(--orange);margin-bottom:10px">📧 Kunden benachrichtigen</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:14px">Vorbereitete Mail-Vorlagen — öffnet dein Mail-Programm mit fertigem Text. Du musst nur "Senden" klicken.</p>`;
+  if(fertig.length){
+    h+=`<h4 style="margin:12px 0 6px;color:var(--orange);font-size:13px">Bikes bereit zur Abholung (${fertig.length})</h4>
+    <div class="tbl-wrap"><table>
+      <tr><th>Auftrag</th><th>Kunde</th><th>Bike</th><th>Beschrieb</th><th>Total</th><th></th></tr>
+      ${fertig.map(o=>{const c=getCustomer(o.cid);const bike=c?.bikes[o.bike||0];return `<tr><td>${o.id}</td><td>${c?c.name:'-'}</td><td>${bike?bike.model:'-'}</td><td>${o.desc}</td><td>CHF ${fmt(orderTotal(o))}</td><td>
+        <button class="btn-primary" style="padding:3px 8px;font-size:11px" onclick="mailFertig('${o.id}')">📧 Bike fertig</button>
+        ${c?.tel?`<button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="window.location.href='tel:${c.tel.replace(/\\s/g,'')}'">📞 Anrufen</button>`:''}
+      </td></tr>`}).join('')}
+    </table></div>`;
+  } else {
+    h+='<p class="muted">Keine Bikes wartend zur Abholung. ✓</p>';
+  }
+  if(infertig.length){
+    h+=`<h4 style="margin:14px 0 6px;color:#999;font-size:13px">In Arbeit (${infertig.length}) — bei Verzögerung benachrichtigen</h4>
+    <div class="tbl-wrap"><table>
+      <tr><th>Auftrag</th><th>Kunde</th><th>Beschrieb</th><th></th></tr>
+      ${infertig.map(o=>{const c=getCustomer(o.cid);return `<tr><td>${o.id}</td><td>${c?c.name:'-'}</td><td>${o.desc}</td><td><button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="mailVerzoegerung('${o.id}')">📧 Verzögerung mitteilen</button></td></tr>`}).join('')}
+    </table></div>`;
+  }
+  h+=`</div>`;
+  return h;
+}
+function mailFertig(oid){
+  const o=getOrder(oid);if(!o)return;
+  const c=getCustomer(o.cid);if(!c)return;
+  const bike=c.bikes[o.bike||0];
+  const total=orderTotal(o);
+  const subject=`Ihr Bike ist fertig zur Abholung — ${bike?bike.model:'Auftrag '+o.id}`;
+  const body=`Hoi ${c.name.split(' ')[0]}\n\nDein ${bike?bike.model:'Bike'} ist fertig — wir haben ${o.desc.toLowerCase()} erledigt.\n\nDu kannst es ab sofort abholen.\nÖffnungszeiten: Mo-Fr 8-12 / 13-18 Uhr, Sa 9-12 Uhr.\n\nRechnungsbetrag: CHF ${fmt(total)}\n\nMelde dich kurz wenn du kommst, dann ist alles bereit.\n\nGruss\nSven\n\n---\nSvencycles GmbH\nNeunfornerstrasse 2 · 8468 Waltalingen\nTel 052 746 10 60`;
+  o.kundeBenachrichtigt=new Date().toISOString();
+  saveData();
+  window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  setTimeout(()=>navigate('saison'),200);
+}
+function mailVerzoegerung(oid){
+  const o=getOrder(oid);if(!o)return;
+  const c=getCustomer(o.cid);if(!c)return;
+  const subject=`Update zu deinem Auftrag ${o.id}`;
+  const body=`Hoi ${c.name.split(' ')[0]}\n\nKurzer Status zu deinem ${o.desc}:\n\n[bitte hier ergänzen — z.B. "Teil ist verzögert, neue Lieferung KW 32"]\n\nIch melde mich sofort wenn dein Bike abholbereit ist.\n\nGruss\nSven\n\n---\nSvencycles GmbH · 052 746 10 60`;
+  window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
+// ============================================================
+// WARENEINGANG (eigenes Modul mit Historie)
+// ============================================================
+function renderWareneingang(){
+  const we=D.wareneingang||[];
+  const today=new Date().toISOString().slice(0,10);
+  const todayCount=we.filter(w=>w.date===today).length;
+  const weekStart=new Date(Date.now()-7*86400000).toISOString().slice(0,10);
+  const weekCount=we.filter(w=>w.date>=weekStart).length;
+  const totalValue=we.reduce((s,w)=>s+(w.qty*w.buyPrice),0);
+
+  // Filter
+  const fSup=document.getElementById('we-fil-sup')?.value||'';
+  const fFrom=document.getElementById('we-fil-from')?.value||'';
+  const fTo=document.getElementById('we-fil-to')?.value||'';
+  let filtered=we.slice().sort((a,b)=>(b.date+b.id).localeCompare(a.date+a.id));
+  if(fSup)filtered=filtered.filter(w=>(w.lieferant||'').toLowerCase().includes(fSup.toLowerCase()));
+  if(fFrom)filtered=filtered.filter(w=>w.date>=fFrom);
+  if(fTo)filtered=filtered.filter(w=>w.date<=fTo);
+
+  let rows=filtered.slice(0,100).map(w=>{
+    const p=getPart(w.pid);
+    return `<tr><td>${w.id}</td><td>${w.date}</td><td>${p?p.name:w.pid}</td><td style="text-align:right">${w.qty}</td><td style="text-align:right">CHF ${fmt(w.buyPrice)}</td><td style="text-align:right">CHF ${fmt(w.qty*w.buyPrice)}</td><td>${w.lieferant||'-'}</td><td>${w.lieferscheinNr||'-'}</td><td>${w.mech||'-'}</td><td><button class="btn-danger" style="padding:2px 8px;font-size:11px" onclick="deleteWareneingang('${w.id}')">×</button></td></tr>`;
+  }).join('')||'<tr><td colspan="10" style="text-align:center;color:#999;padding:14px">Noch keine Wareneingänge erfasst</td></tr>';
+
+  // Top-Lieferanten (letzte 90 Tage)
+  const since=new Date(Date.now()-90*86400000).toISOString().slice(0,10);
+  const supSums={};
+  we.filter(w=>w.date>=since).forEach(w=>{const k=w.lieferant||'-';supSums[k]=(supSums[k]||0)+w.qty*w.buyPrice});
+  const topSups=Object.entries(supSums).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  return `<h2>📥 Wareneingang</h2>
+  <div class="kpi-row" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
+    <div class="kpi"><div class="val">${todayCount}</div><div class="lbl">Heute eingebucht</div></div>
+    <div class="kpi"><div class="val">${weekCount}</div><div class="lbl">Letzte 7 Tage</div></div>
+    <div class="kpi"><div class="val">${we.length}</div><div class="lbl">Total Buchungen</div></div>
+    <div class="kpi"><div class="val">CHF ${fmt(totalValue)}</div><div class="lbl">Wareneinkauf total</div></div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn-primary" onclick="newWeManualModal()">+ Manuell erfassen</button>
+    <button class="btn-purple" onclick="startWareneingangScan()">📷 Barcode scannen</button>
+    <button class="btn-secondary" onclick="exportWareneingangCSV()">📊 CSV Export</button>
+  </div>
+
+  ${topSups.length?`<div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:14px;margin-bottom:14px">
+    <h4 style="color:var(--orange);margin-bottom:8px">Top-Lieferanten letzte 90 Tage</h4>
+    ${topSups.map(([sup,sum])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #222"><span>${sup}</span><strong>CHF ${fmt(sum)}</strong></div>`).join('')}
+  </div>`:''}
+
+  <h3 style="margin:14px 0 8px;color:var(--orange);font-size:15px">Wareneingangs-Historie</h3>
+  <div class="search-bar">
+    <input id="we-fil-sup" placeholder="Lieferant filtern..." oninput="navigate('wareneingang')">
+    <input id="we-fil-from" type="date" oninput="navigate('wareneingang')" style="max-width:180px">
+    <input id="we-fil-to" type="date" oninput="navigate('wareneingang')" style="max-width:180px">
+  </div>
+  <div class="tbl-wrap"><table>
+    <tr><th>Nr</th><th>Datum</th><th>Artikel</th><th style="text-align:right">Menge</th><th style="text-align:right">EK</th><th style="text-align:right">Total</th><th>Lieferant</th><th>Lieferschein</th><th>Mech</th><th></th></tr>
+    ${rows}
+  </table></div>
+  ${filtered.length>100?`<p class="muted" style="margin-top:8px">Es werden nur die letzten 100 Buchungen angezeigt (${filtered.length} total).</p>`:''}`;
+}
+function newWeManualModal(){
+  let partOpts=D.parts.map(p=>`<option value="${p.id}">${p.name} (${p.sku}) — Bestand: ${p.stock}</option>`).join('');
+  showModal(`<h3>Wareneingang erfassen</h3>
+  <div class="form-row"><div><label>Datum</label><input id="nw-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Lieferschein-Nr</label><input id="nw-ls" placeholder="z.B. LS-12345"></div></div>
+  <div class="form-row full"><div><label>Artikel</label><select id="nw-pid">${partOpts}</select></div></div>
+  <div class="form-row"><div><label>Menge</label><input id="nw-qty" type="number" min="1" value="1"></div><div><label>EK-Preis CHF/Stk.</label><input id="nw-buy" type="number" step="0.01"></div></div>
+  <div class="form-row full"><div><label>Lieferant</label><input id="nw-sup" placeholder="z.B. Custom Chrome"></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewWe()">✓ Einbuchen</button></div>`);
+  // EK-Preis vorausfüllen
+  setTimeout(()=>{
+    const sel=document.getElementById('nw-pid');
+    sel.addEventListener('change',()=>{
+      const p=getPart(sel.value);
+      if(p){document.getElementById('nw-buy').value=p.buy;document.getElementById('nw-sup').value=p.sup||''}
+    });
+    sel.dispatchEvent(new Event('change'));
+  },50);
+}
+function saveNewWe(){
+  const pid=gv('nw-pid');const p=getPart(pid);if(!p)return;
+  const qty=parseInt(gv('nw-qty'))||1;const buy=parseFloat(gv('nw-buy'))||p.buy;
+  if(!D.wareneingang)D.wareneingang=[];
+  D.counters.we=(D.counters.we||0)+1;
+  const id='WE'+new Date().getFullYear()+String(D.counters.we).padStart(4,'0');
+  D.wareneingang.push({id,date:gv('nw-date'),pid,qty,buyPrice:buy,lieferant:gv('nw-sup'),lieferscheinNr:gv('nw-ls'),mech:currentUser?.id||'-'});
+  p.stock+=qty;
+  if(buy&&buy!==p.buy)p.buy=buy; // EK aktualisieren
+  if(gv('nw-sup'))p.sup=gv('nw-sup');
+  saveData();closeModal();navigate('wareneingang');
+}
+function deleteWareneingang(wid){
+  if(!confirm('Wareneingang löschen? (Bestand wird nicht zurückgesetzt!)'))return;
+  D.wareneingang=D.wareneingang.filter(w=>w.id!==wid);
+  saveData();navigate('wareneingang');
+}
+function exportWareneingangCSV(){
+  let csv='Nr;Datum;Artikel-SKU;Artikel-Name;Menge;EK-Preis;Total;Lieferant;Lieferschein;Mech\n';
+  (D.wareneingang||[]).forEach(w=>{
+    const p=getPart(w.pid);
+    csv+=`${w.id};${w.date};${p?p.sku:''};${p?p.name:w.pid};${w.qty};${w.buyPrice.toFixed(2)};${(w.qty*w.buyPrice).toFixed(2)};${w.lieferant||''};${w.lieferscheinNr||''};${w.mech||''}\n`;
+  });
+  downloadFile('Wareneingang_'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv');
+}
+
 // ----- Wareneingang-Scanner (PC mit Webcam) -----
 let weScanner=null;
 function startWareneingangScan(){
@@ -1283,49 +1701,315 @@ function generatePDF(invId){
 // ============================================================
 // BUCHHALTUNG
 // ============================================================
+// ============================================================
+// BUCHHALTUNG (Tabs: Übersicht / Fixkosten / Eingangsrechnungen / Monats-Abschluss / Bexio)
+// ============================================================
+let buchhTab='ueber';
+const KONTENPLAN={
+  '1000':'Kasse','1020':'Bank','1100':'Debitoren','1200':'Vorräte/Lager',
+  '2000':'Kreditoren','2200':'MWST-Verbindlichkeiten','2270':'AHV/ALV-Verbindlichkeiten','2300':'BVG-Verbindlichkeiten',
+  '3000':'Umsatz Werkstatt','3100':'Umsatz Ersatzteile','3200':'Umsatz Einlagerung',
+  '4000':'Materialaufwand','5000':'Löhne','5100':'AHV/ALV AG','5200':'BVG AG','5300':'UVG/KTG AG',
+  '6000':'Miete','6100':'Nebenkosten','6200':'Energie','6300':'Versicherungen','6400':'IT/Verwaltung','6500':'Marketing','6700':'Fahrzeug','6800':'Abschreibungen','6900':'Bankspesen','7000':'Steuern'
+};
 function renderBuchhaltung(){
+  const tabs=[['ueber','📊 Übersicht'],['fix','💸 Fixkosten'],['eingang','📨 Eingangsrechnungen'],['monat','📆 Monats-Abschluss'],['bexio','📤 Bexio-Export']];
+  let h=`<h2>💰 Buchhaltung</h2>
+  <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid #333;padding-bottom:0">
+    ${tabs.map(([k,l])=>`<button class="${buchhTab===k?'btn-primary':'btn-secondary'}" style="padding:8px 14px" onclick="buchhTab='${k}';navigate('buchhaltung')">${l}</button>`).join('')}
+  </div>`;
+  if(buchhTab==='ueber')h+=renderBuchhUebersicht();
+  else if(buchhTab==='fix')h+=renderBuchhFixkosten();
+  else if(buchhTab==='eingang')h+=renderBuchhEingang();
+  else if(buchhTab==='monat')h+=renderBuchhMonat();
+  else if(buchhTab==='bexio')h+=renderBuchhBexio();
+  return h;
+}
+
+// --- Tab: Übersicht ---
+function renderBuchhUebersicht(){
   const year=new Date().getFullYear();
   const yearInv=D.invoices.filter(i=>i.date.startsWith(year));
-  const paid=yearInv.filter(i=>i.status==='bezahlt');
-  const overdue=yearInv.filter(i=>i.status==='überfällig');
-  const open=yearInv.filter(i=>i.status==='offen');
-  const totalPaid=paid.reduce((s,i)=>s+invoiceTotal(i),0);
-  const totalOver=overdue.reduce((s,i)=>s+invoiceTotal(i),0);
-  const totalOpen=open.reduce((s,i)=>s+invoiceTotal(i),0);
+  const totalPaid=yearInv.filter(i=>i.status==='bezahlt').reduce((s,i)=>s+invoiceTotal(i),0);
+  const totalOver=yearInv.filter(i=>i.status==='überfällig').reduce((s,i)=>s+invoiceTotal(i),0);
+  const totalOpen=yearInv.filter(i=>i.status==='offen').reduce((s,i)=>s+invoiceTotal(i),0);
   const totalYear=yearInv.reduce((s,i)=>s+invoiceTotal(i),0);
+  // Fixkosten/Jahr
+  const fixYear=(D.fixkosten||[]).filter(f=>f.aktiv).reduce((s,f)=>s+f.betrag*12,0);
+  // Lohnkosten/Jahr inkl. AG-Anteil
+  const sets=D.einstellungen;
+  const agSatz=sets.ahv_ag+sets.alv_ag+sets.uvg_bu_ag+sets.ktg_ag+sets.fak_ag;
+  const lohnYear=D.staff.filter(s=>s.lohn&&s.lohn.brutto>0).reduce((s,m)=>{
+    const brutto=m.lohn.brutto*12;const koord=Math.max(0,brutto-sets.bvg_koord*12);
+    const bvg=koord*((m.bvg?.altersgutschritt||0)/100);
+    return s+brutto*(1+agSatz)+bvg;
+  },0);
+  // MWST Quartal
+  const q=Math.floor(new Date().getMonth()/3);
+  const qInv=yearInv.filter(i=>{const m=new Date(i.date).getMonth();return Math.floor(m/3)===q});
+  const mwstQ=qInv.reduce((s,i)=>s+invoiceTotal(i)*sets.mwstSatz,0);
+  const ebitda=totalYear-fixYear-lohnYear;
 
-  let months='';
-  for(let m=0;m<12;m++){
-    const mi=yearInv.filter(i=>new Date(i.date).getMonth()===m);
-    if(mi.length===0)continue;
-    const net=mi.reduce((s,i)=>s+invoiceTotal(i),0);
-    const vat=net*0.081;
-    months+=`<tr><td>${['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][m]} ${year}</td><td>${mi.length}</td><td>CHF ${fmt(net)}</td><td>CHF ${fmt(vat)}</td><td>CHF ${fmt(net+vat)}</td></tr>`;
-  }
-
-  let overdueRows=D.invoices.filter(i=>i.status==='überfällig'||i.status==='offen').map(i=>{const c=getCustomer(i.cid);return `<tr><td>${i.id}</td><td>${c?c.name:'-'}</td><td>${i.due}</td><td>${statusBadge(i.status)}</td><td>CHF ${fmt(invoiceTotal(i))}</td></tr>`}).join('');
-
-  return `<h2>💰 Buchhaltung</h2>
-  <div class="kpi-row">
+  let h=`<div class="kpi-row">
     <div class="kpi"><div class="val">CHF ${fmt(totalYear)}</div><div class="lbl">Jahresumsatz ${year}</div></div>
-    <div class="kpi"><div class="val" style="color:var(--green)">CHF ${fmt(totalPaid)}</div><div class="lbl">Bezahlt</div></div>
-    <div class="kpi"><div class="val" style="color:var(--red)">CHF ${fmt(totalOver)}</div><div class="lbl">Überfällig</div></div>
-    <div class="kpi"><div class="val">CHF ${fmt(totalOpen)}</div><div class="lbl">Ausstehend</div></div>
-  </div>
-  <h3 style="margin:16px 0 8px">Monatsumsatz ${year}</h3>
-  <div class="tbl-wrap"><table><tr><th>Monat</th><th>Anz. RE</th><th>Netto</th><th>MWST</th><th>Brutto</th></tr>${months}</table></div>
-  <h3 style="margin:16px 0 8px">Ausstehende Zahlungen</h3>
-  <div class="tbl-wrap"><table><tr><th>Nr</th><th>Kunde</th><th>Fällig</th><th>Status</th><th>Betrag</th></tr>${overdueRows}</table></div>
-  <button class="btn-primary" onclick="exportMwstCSV()">MWST-Auszug CSV exportieren</button>`;
+    <div class="kpi"><div class="val" style="color:var(--red)">CHF ${fmt(fixYear+lohnYear)}</div><div class="lbl">Jahreskosten (Fix + Lohn)</div></div>
+    <div class="kpi"><div class="val" style="color:${ebitda>=0?'var(--green)':'var(--red)'}">CHF ${fmt(ebitda)}</div><div class="lbl">EBITDA hochgerechnet</div></div>
+    <div class="kpi"><div class="val">CHF ${fmt(mwstQ)}</div><div class="lbl">MWST Q${q+1}/${year}</div></div>
+    <div class="kpi"><div class="val" style="color:var(--green)">CHF ${fmt(totalPaid)}</div><div class="lbl">Bezahlt ${year}</div></div>
+    <div class="kpi"><div class="val" style="color:var(--red)">CHF ${fmt(totalOver+totalOpen)}</div><div class="lbl">Offen + Überfällig</div></div>
+  </div>`;
+  // Erfolgsrechnung
+  h+=`<h3 style="margin:18px 0 8px;color:var(--orange)">Erfolgsrechnung ${year} (hochgerechnet)</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Position</th><th style="text-align:right">CHF</th></tr>
+    <tr><td>Umsatz Werkstatt + Material</td><td style="text-align:right;color:var(--green)">+${fmt(totalYear)}</td></tr>
+    <tr><td>./. Fixkosten (12 Monate)</td><td style="text-align:right;color:var(--red)">-${fmt(fixYear)}</td></tr>
+    <tr><td>./. Lohnkosten brutto inkl. AG-Anteile (12 Mt.)</td><td style="text-align:right;color:var(--red)">-${fmt(lohnYear)}</td></tr>
+    <tr style="font-weight:700;background:var(--bg3)"><td>= EBITDA</td><td style="text-align:right;color:${ebitda>=0?'var(--green)':'var(--red)'}">${fmt(ebitda)}</td></tr>
+  </table></div>
+  <p class="muted" style="font-size:11px">Hinweis: Material-Aufwand (EK) wird hier als Teil der Aufträge gezählt. Für vollständige FIBU mit Bilanz → Bexio oder Treuhänder.</p>`;
+  // Offene Rechnungen
+  let overdueRows=D.invoices.filter(i=>i.status==='überfällig'||i.status==='offen').map(i=>{const c=getCustomer(i.cid);return `<tr><td>${i.id}</td><td>${c?c.name:'-'}</td><td>${i.due}</td><td>${statusBadge(i.status)}</td><td style="text-align:right">CHF ${fmt(invoiceTotal(i))}</td></tr>`}).join('')||'<tr><td colspan="5" style="text-align:center;color:#999;padding:14px">Keine offenen Rechnungen</td></tr>';
+  h+=`<h3 style="margin:18px 0 8px;color:var(--orange)">Offene Forderungen</h3>
+  <div class="tbl-wrap"><table><tr><th>Nr</th><th>Kunde</th><th>Fällig</th><th>Status</th><th style="text-align:right">Betrag</th></tr>${overdueRows}</table></div>`;
+  return h;
+}
+
+// --- Tab: Fixkosten ---
+function renderBuchhFixkosten(){
+  const fix=D.fixkosten||[];
+  const groups={};fix.forEach(f=>{(groups[f.kat]=groups[f.kat]||[]).push(f)});
+  const total=fix.filter(f=>f.aktiv).reduce((s,f)=>s+f.betrag,0);
+  const totalYear=total*12;
+  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn-primary" onclick="newFixModal()">+ Neue Fixkosten</button>
+    <span style="margin-left:auto;font-size:13px">Total monatlich: <strong style="color:var(--orange)">CHF ${fmt(total)}</strong> · Jahr: <strong>CHF ${fmt(totalYear)}</strong></span>
+  </div>`;
+  Object.keys(groups).sort().forEach(kat=>{
+    const sum=groups[kat].filter(f=>f.aktiv).reduce((s,f)=>s+f.betrag,0);
+    h+=`<h3 style="margin:14px 0 6px;color:var(--orange);font-size:15px">${kat} <span style="color:#999;font-weight:400;font-size:12px">— CHF ${fmt(sum)}/Mt.</span></h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>ID</th><th>Bezeichnung</th><th>Lieferant</th><th>Konto</th><th>Fällig</th><th>Zahlung</th><th style="text-align:right">CHF/Mt.</th><th>Aktiv</th><th></th></tr>
+      ${groups[kat].map(f=>`<tr style="${f.aktiv?'':'opacity:.5'}">
+        <td>${f.id}</td><td>${f.name}</td><td>${f.sup||'-'}</td>
+        <td><span style="font-size:11px;color:#999">${f.konto} ${KONTENPLAN[f.konto]||''}</span></td>
+        <td>${f.faelligkeit}.</td><td style="font-size:11px">${f.zahlungsart}</td>
+        <td style="text-align:right;font-weight:700">${fmt(f.betrag)}</td>
+        <td><label style="cursor:pointer"><input type="checkbox" ${f.aktiv?'checked':''} style="width:auto" onchange="toggleFix('${f.id}')"></label></td>
+        <td><button class="btn-secondary" style="padding:2px 8px;font-size:11px" onclick="editFixModal('${f.id}')">✎</button></td>
+      </tr>`).join('')}
+    </table></div>`;
+  });
+  return h;
+}
+function newFixModal(){
+  const kats=['Gebäude','Versicherung','Fahrzeuge','IT','Marketing','Sonstiges'];
+  const kontos=['6000','6100','6200','6300','6400','6500','6700','6800','6900'];
+  showModal(`<h3>Neue Fixkosten</h3>
+  <div class="form-row"><div><label>Bezeichnung</label><input id="nf-name"></div><div><label>Kategorie</label><select id="nf-kat">${kats.map(k=>`<option>${k}</option>`).join('')}</select></div></div>
+  <div class="form-row"><div><label>Konto</label><select id="nf-konto">${kontos.map(k=>`<option value="${k}">${k} ${KONTENPLAN[k]}</option>`).join('')}</select></div><div><label>Lieferant</label><input id="nf-sup"></div></div>
+  <div class="form-row"><div><label>Betrag CHF/Mt.</label><input id="nf-betrag" type="number" step="0.01"></div><div><label>Fällig am Tag</label><input id="nf-faell" type="number" min="1" max="28" value="1"></div></div>
+  <div class="form-row"><div><label>Zahlungsart</label><select id="nf-zahl"><option>Dauerauftrag</option><option>eBill</option><option>Rechnung</option><option>Kreditkarte</option><option>Jahresrechnung</option></select></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewFix()">Speichern</button></div>`);
+}
+function saveNewFix(){
+  const fix=D.fixkosten=D.fixkosten||[];
+  const id='FK'+String(fix.length+1).padStart(3,'0');
+  fix.push({id,name:gv('nf-name'),kat:gv('nf-kat'),konto:gv('nf-konto'),betrag:parseFloat(gv('nf-betrag'))||0,faelligkeit:parseInt(gv('nf-faell'))||1,zahlungsart:gv('nf-zahl'),sup:gv('nf-sup'),aktiv:true});
+  saveData();closeModal();navigate('buchhaltung');
+}
+function editFixModal(id){
+  const f=D.fixkosten.find(x=>x.id===id);if(!f)return;
+  const kats=['Gebäude','Versicherung','Fahrzeuge','IT','Marketing','Sonstiges'];
+  const kontos=['6000','6100','6200','6300','6400','6500','6700','6800','6900'];
+  showModal(`<h3>Fixkosten bearbeiten — ${f.id}</h3>
+  <div class="form-row"><div><label>Bezeichnung</label><input id="ef-name" value="${f.name}"></div><div><label>Kategorie</label><select id="ef-kat">${kats.map(k=>`<option ${k===f.kat?'selected':''}>${k}</option>`).join('')}</select></div></div>
+  <div class="form-row"><div><label>Konto</label><select id="ef-konto">${kontos.map(k=>`<option value="${k}" ${k===f.konto?'selected':''}>${k} ${KONTENPLAN[k]}</option>`).join('')}</select></div><div><label>Lieferant</label><input id="ef-sup" value="${f.sup||''}"></div></div>
+  <div class="form-row"><div><label>Betrag CHF/Mt.</label><input id="ef-betrag" type="number" step="0.01" value="${f.betrag}"></div><div><label>Fällig am Tag</label><input id="ef-faell" type="number" min="1" max="28" value="${f.faelligkeit}"></div></div>
+  <div class="form-row"><div><label>Zahlungsart</label><select id="ef-zahl"><option ${f.zahlungsart==='Dauerauftrag'?'selected':''}>Dauerauftrag</option><option ${f.zahlungsart==='eBill'?'selected':''}>eBill</option><option ${f.zahlungsart==='Rechnung'?'selected':''}>Rechnung</option><option ${f.zahlungsart==='Kreditkarte'?'selected':''}>Kreditkarte</option><option ${f.zahlungsart==='Jahresrechnung'?'selected':''}>Jahresrechnung</option></select></div></div>
+  <div class="btns"><button class="btn-danger" onclick="deleteFix('${id}')">Löschen</button><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveFix('${id}')">Speichern</button></div>`);
+}
+function saveFix(id){
+  const f=D.fixkosten.find(x=>x.id===id);if(!f)return;
+  f.name=gv('ef-name');f.kat=gv('ef-kat');f.konto=gv('ef-konto');f.sup=gv('ef-sup');
+  f.betrag=parseFloat(gv('ef-betrag'))||0;f.faelligkeit=parseInt(gv('ef-faell'))||1;f.zahlungsart=gv('ef-zahl');
+  saveData();closeModal();navigate('buchhaltung');
+}
+function deleteFix(id){if(!confirm('Fixkosten löschen?'))return;D.fixkosten=D.fixkosten.filter(x=>x.id!==id);saveData();closeModal();navigate('buchhaltung')}
+function toggleFix(id){const f=D.fixkosten.find(x=>x.id===id);if(f){f.aktiv=!f.aktiv;saveData()}}
+
+// --- Tab: Eingangsrechnungen ---
+function renderBuchhEingang(){
+  const eg=D.eingaenge||[];
+  const offen=eg.filter(e=>!e.bezahlt);
+  const totalOffen=offen.reduce((s,e)=>s+e.betrag,0);
+  let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <button class="btn-primary" onclick="newEingangModal()">+ Eingangsrechnung erfassen</button>
+    <button class="btn-secondary" onclick="generateMonatsbuchungen()">📅 Monats-Fixkosten buchen</button>
+    <span style="margin-left:auto;font-size:13px">Offen: <strong style="color:var(--red)">CHF ${fmt(totalOffen)}</strong></span>
+  </div>`;
+  let rows=eg.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).map(e=>{
+    return `<tr style="${e.bezahlt?'opacity:.6':''}"><td>${e.id}</td><td>${e.date}</td><td>${e.due||'-'}</td><td>${e.sup||'-'}</td><td><span style="font-size:11px;color:#999">${e.konto} ${KONTENPLAN[e.konto]||''}</span></td><td style="text-align:right">CHF ${fmt(e.betrag)}</td><td>${e.bezahlt?'<span class="badge badge-bezahlt">bezahlt</span>':'<span class="badge badge-offen">offen</span>'}</td><td>
+      ${!e.bezahlt?`<button class="btn-success" style="padding:3px 8px;font-size:11px" onclick="markEingangBezahlt('${e.id}')">✓ Bezahlt</button>`:''}
+      <button class="btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteEingang('${e.id}')">×</button>
+    </td></tr>`;
+  }).join('')||'<tr><td colspan="8" style="text-align:center;color:#999;padding:14px">Noch keine Eingangsrechnungen</td></tr>';
+  h+=`<div class="tbl-wrap"><table><tr><th>Nr</th><th>Datum</th><th>Fällig</th><th>Lieferant</th><th>Konto</th><th style="text-align:right">Betrag</th><th>Status</th><th></th></tr>${rows}</table></div>`;
+  return h;
+}
+function newEingangModal(){
+  const kontos=['4000','6000','6100','6200','6300','6400','6500','6700','6800','6900','7000'];
+  showModal(`<h3>Eingangsrechnung erfassen</h3>
+  <div class="form-row"><div><label>Lieferant</label><input id="ne-sup"></div><div><label>Datum</label><input id="ne-date" type="date" value="${new Date().toISOString().slice(0,10)}"></div></div>
+  <div class="form-row"><div><label>Fällig</label><input id="ne-due" type="date" value="${new Date(Date.now()+30*86400000).toISOString().slice(0,10)}"></div><div><label>Konto</label><select id="ne-konto">${kontos.map(k=>`<option value="${k}">${k} ${KONTENPLAN[k]}</option>`).join('')}</select></div></div>
+  <div class="form-row"><div><label>Betrag CHF</label><input id="ne-betrag" type="number" step="0.01"></div><div><label>MWST-Satz</label><select id="ne-mwst"><option value="0.081">8.1% Standard</option><option value="0.026">2.6% reduziert</option><option value="0">0% / ohne</option></select></div></div>
+  <div class="form-row full"><div><label>Beleg-Nr / Notiz</label><input id="ne-note"></div></div>
+  <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewEingang()">Speichern</button></div>`);
+}
+function saveNewEingang(){
+  if(!D.eingaenge)D.eingaenge=[];
+  D.counters.eingang=(D.counters.eingang||0)+1;
+  const id='ER'+new Date().getFullYear()+String(D.counters.eingang).padStart(4,'0');
+  D.eingaenge.push({id,sup:gv('ne-sup'),date:gv('ne-date'),due:gv('ne-due'),konto:gv('ne-konto'),betrag:parseFloat(gv('ne-betrag'))||0,mwst:parseFloat(gv('ne-mwst'))||0,note:gv('ne-note'),bezahlt:false});
+  saveData();closeModal();navigate('buchhaltung');
+}
+function markEingangBezahlt(id){const e=D.eingaenge.find(x=>x.id===id);if(e){e.bezahlt=true;e.bezahltAm=new Date().toISOString().slice(0,10);saveData();navigate('buchhaltung')}}
+function deleteEingang(id){if(!confirm('Eingangsrechnung löschen?'))return;D.eingaenge=D.eingaenge.filter(x=>x.id!==id);saveData();navigate('buchhaltung')}
+function generateMonatsbuchungen(){
+  const ym=new Date().toISOString().slice(0,7); // YYYY-MM
+  if(!D.eingaenge)D.eingaenge=[];
+  const aktive=(D.fixkosten||[]).filter(f=>f.aktiv);
+  // Existieren bereits Buchungen für diesen Monat?
+  const exists=D.eingaenge.filter(e=>e.fixId&&e.date.startsWith(ym));
+  if(exists.length>0){if(!confirm(`Es gibt bereits ${exists.length} Fixkosten-Buchungen für ${ym}. Trotzdem alle erneut erstellen?`))return}
+  let count=0;
+  aktive.forEach(f=>{
+    D.counters.eingang=(D.counters.eingang||0)+1;
+    const id='ER'+new Date().getFullYear()+String(D.counters.eingang).padStart(4,'0');
+    const date=ym+'-'+String(f.faelligkeit).padStart(2,'0');
+    D.eingaenge.push({id,sup:f.sup,date,due:date,konto:f.konto,betrag:f.betrag,mwst:0.081,note:'Auto: '+f.name,bezahlt:false,fixId:f.id});
+    count++;
+  });
+  saveData();navigate('buchhaltung');
+  alert(count+' Fixkosten-Buchungen für '+ym+' erstellt.');
+}
+
+// --- Tab: Monats-Abschluss ---
+function renderBuchhMonat(){
+  const year=new Date().getFullYear();
+  let rows='';
+  let totUms=0,totFix=0,totLohn=0,totErgebnis=0,totMwst=0;
+  for(let m=0;m<12;m++){
+    const ym=year+'-'+String(m+1).padStart(2,'0');
+    const ums=D.invoices.filter(i=>i.date.startsWith(ym)).reduce((s,i)=>s+invoiceTotal(i),0);
+    const fix=(D.eingaenge||[]).filter(e=>e.date.startsWith(ym)&&e.fixId).reduce((s,e)=>s+e.betrag,0);
+    const eingang=(D.eingaenge||[]).filter(e=>e.date.startsWith(ym)&&!e.fixId).reduce((s,e)=>s+e.betrag,0);
+    const lohn=(D.loehne||[]).filter(l=>l.monat===ym).reduce((s,l)=>s+(l.totalAg||0),0);
+    if(ums===0&&fix===0&&eingang===0&&lohn===0)continue;
+    const erg=ums-fix-eingang-lohn;
+    const mwst=ums*D.einstellungen.mwstSatz;
+    rows+=`<tr><td>${['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][m]} ${year}</td><td style="text-align:right;color:var(--green)">${fmt(ums)}</td><td style="text-align:right;color:var(--red)">${fmt(fix)}</td><td style="text-align:right;color:var(--red)">${fmt(eingang)}</td><td style="text-align:right;color:var(--red)">${fmt(lohn)}</td><td style="text-align:right;font-weight:700;color:${erg>=0?'var(--green)':'var(--red)'}">${fmt(erg)}</td><td style="text-align:right">${fmt(mwst)}</td></tr>`;
+    totUms+=ums;totFix+=fix;totLohn+=lohn;totErgebnis+=erg;totMwst+=mwst;
+  }
+  if(!rows)rows='<tr><td colspan="7" style="text-align:center;color:#999;padding:14px">Noch keine Buchungen — erst Rechnungen + Fixkosten erfassen</td></tr>';
+  // Quartalssumme MWST
+  let mwstQ=[0,0,0,0];
+  for(let m=0;m<12;m++){const ym=year+'-'+String(m+1).padStart(2,'0');const ums=D.invoices.filter(i=>i.date.startsWith(ym)).reduce((s,i)=>s+invoiceTotal(i),0);mwstQ[Math.floor(m/3)]+=ums*D.einstellungen.mwstSatz}
+  return `<h3 style="color:var(--orange);margin-bottom:8px">Monats-Abschluss ${year}</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Monat</th><th style="text-align:right">Umsatz</th><th style="text-align:right">Fixkosten</th><th style="text-align:right">Sonst. Eingänge</th><th style="text-align:right">Löhne (AG)</th><th style="text-align:right">Ergebnis</th><th style="text-align:right">MWST</th></tr>
+    ${rows}
+    <tr style="font-weight:700;background:var(--bg3)"><td>Total ${year}</td><td style="text-align:right">${fmt(totUms)}</td><td style="text-align:right">${fmt(totFix)}</td><td style="text-align:right"></td><td style="text-align:right">${fmt(totLohn)}</td><td style="text-align:right;color:${totErgebnis>=0?'var(--green)':'var(--red)'}">${fmt(totErgebnis)}</td><td style="text-align:right">${fmt(totMwst)}</td></tr>
+  </table></div>
+  <h3 style="color:var(--orange);margin:16px 0 8px">MWST Quartals-Übersicht ${year}</h3>
+  <div class="tbl-wrap"><table><tr><th>Quartal</th><th>Periode</th><th style="text-align:right">MWST geschuldet</th></tr>
+    ${[0,1,2,3].map(q=>`<tr><td>Q${q+1}</td><td>${['Jan-Mär','Apr-Jun','Jul-Sep','Okt-Dez'][q]}</td><td style="text-align:right;font-weight:700">CHF ${fmt(mwstQ[q])}</td></tr>`).join('')}
+  </table></div>
+  <div style="margin-top:14px"><button class="btn-primary" onclick="exportMwstCSV()">📊 MWST-Auszug CSV</button>
+  <button class="btn-secondary" onclick="exportMonatsabschluss()">📄 Monats-Abschluss CSV</button></div>
+  <p class="muted" style="margin-top:14px;font-size:11px">Hinweis: MWST-Quartalsabrechnung bei ESTV einreichen. CSV ist für Treuhänder oder Bexio-Import gedacht.</p>`;
 }
 function exportMwstCSV(){
-  let csv='Rechnung;Datum;Kunde;Netto;MWST 8.1%;Brutto\n';
+  let csv='Rechnung;Datum;Kunde;Netto;MWST '+(D.einstellungen.mwstSatz*100).toFixed(1)+'%;Brutto\n';
   D.invoices.forEach(i=>{
     const c=getCustomer(i.cid);const n=invoiceTotal(i);
-    csv+=`${i.id};${i.date};${c?c.name:'-'};${n.toFixed(2)};${(n*0.081).toFixed(2)};${(n*1.081).toFixed(2)}\n`;
+    csv+=`${i.id};${i.date};${c?c.name:'-'};${n.toFixed(2)};${(n*D.einstellungen.mwstSatz).toFixed(2)};${(n*(1+D.einstellungen.mwstSatz)).toFixed(2)}\n`;
   });
   downloadFile('MWST_Auszug_Svencycles.csv',csv,'text/csv');
 }
+function exportMonatsabschluss(){
+  const year=new Date().getFullYear();
+  let csv='Monat;Umsatz;Fixkosten;Eingänge;Lohnkosten AG;Ergebnis;MWST\n';
+  for(let m=0;m<12;m++){
+    const ym=year+'-'+String(m+1).padStart(2,'0');
+    const ums=D.invoices.filter(i=>i.date.startsWith(ym)).reduce((s,i)=>s+invoiceTotal(i),0);
+    const fix=(D.eingaenge||[]).filter(e=>e.date.startsWith(ym)&&e.fixId).reduce((s,e)=>s+e.betrag,0);
+    const eingang=(D.eingaenge||[]).filter(e=>e.date.startsWith(ym)&&!e.fixId).reduce((s,e)=>s+e.betrag,0);
+    const lohn=(D.loehne||[]).filter(l=>l.monat===ym).reduce((s,l)=>s+(l.totalAg||0),0);
+    csv+=`${ym};${ums.toFixed(2)};${fix.toFixed(2)};${eingang.toFixed(2)};${lohn.toFixed(2)};${(ums-fix-eingang-lohn).toFixed(2)};${(ums*D.einstellungen.mwstSatz).toFixed(2)}\n`;
+  }
+  downloadFile('Monatsabschluss_'+year+'.csv',csv,'text/csv');
+}
+
+// --- Tab: Bexio-Export ---
+function renderBuchhBexio(){
+  return `<div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:18px;margin-bottom:14px">
+  <h3 style="color:var(--orange)">📤 Bexio-Export</h3>
+  <p class="muted" style="margin-bottom:12px">Bexio (CHF ~50/Mt.) ist eine Schweizer Cloud-Buchhaltungs-Software. Diese Exports sind direkt importierbar.</p>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div style="background:var(--bg);padding:14px;border-radius:8px">
+      <h4 style="color:var(--orange);margin-bottom:6px">Rechnungen → Bexio</h4>
+      <p class="muted" style="font-size:12px;margin-bottom:8px">Alle Ausgangsrechnungen mit Status</p>
+      <button class="btn-primary mob-btn" onclick="exportBexioRechnungen()">CSV exportieren</button>
+    </div>
+    <div style="background:var(--bg);padding:14px;border-radius:8px">
+      <h4 style="color:var(--orange);margin-bottom:6px">Buchungsjournal → Bexio</h4>
+      <p class="muted" style="font-size:12px;margin-bottom:8px">Fixkosten + Eingangsrechnungen als Journal</p>
+      <button class="btn-primary mob-btn" onclick="exportBexioJournal()">CSV exportieren</button>
+    </div>
+    <div style="background:var(--bg);padding:14px;border-radius:8px">
+      <h4 style="color:var(--orange);margin-bottom:6px">Kunden → Bexio</h4>
+      <button class="btn-primary mob-btn" onclick="exportBexioKunden()">CSV exportieren</button>
+    </div>
+    <div style="background:var(--bg);padding:14px;border-radius:8px">
+      <h4 style="color:var(--orange);margin-bottom:6px">Artikel → Bexio</h4>
+      <button class="btn-primary mob-btn" onclick="exportBexioArtikel()">CSV exportieren</button>
+    </div>
+  </div>
+  </div>
+  <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:18px">
+    <h3 style="color:var(--orange);margin-bottom:6px">Schweizer Kontenplan KMU</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;font-family:monospace">
+      ${Object.keys(KONTENPLAN).map(k=>`<div><strong style="color:var(--orange)">${k}</strong> ${KONTENPLAN[k]}</div>`).join('')}
+    </div>
+  </div>`;
+}
+function exportBexioRechnungen(){
+  let csv='Rechnungsnummer;Kontakt;Rechnungsdatum;Faelligkeitsdatum;Waehrung;Nettobetrag;MWST-Satz;MWST-Betrag;Bruttobetrag;Status\n';
+  D.invoices.forEach(i=>{
+    const c=getCustomer(i.cid);const n=invoiceTotal(i);
+    csv+=`${i.id};${c?c.name:'-'};${dToCh(i.date)};${dToCh(i.due)};CHF;${n.toFixed(2)};${(D.einstellungen.mwstSatz*100).toFixed(1)};${(n*D.einstellungen.mwstSatz).toFixed(2)};${(n*(1+D.einstellungen.mwstSatz)).toFixed(2)};${i.status}\n`;
+  });
+  downloadFile('Bexio_Rechnungen_'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv');
+}
+function exportBexioJournal(){
+  let csv='Datum;Buchungstext;Konto-Soll;Konto-Haben;Betrag;MWST-Code\n';
+  (D.eingaenge||[]).forEach(e=>{
+    csv+=`${dToCh(e.date)};${e.sup} - ${e.note||''};${e.konto};2000;${e.betrag.toFixed(2)};${e.mwst?'VS81':'-'}\n`;
+  });
+  downloadFile('Bexio_Journal_'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv');
+}
+function exportBexioKunden(){
+  let csv='Nr;Name;Strasse;PLZ;Ort;Telefon;Email\n';
+  D.customers.forEach(c=>{csv+=`${c.id};${c.name};${c.strasse};${c.plz};${c.ort};${c.tel};${c.email}\n`});
+  downloadFile('Bexio_Kunden_'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv');
+}
+function exportBexioArtikel(){
+  let csv='ArtNr;Bezeichnung;EAN;Bestand;EKPreis;VKPreis;Lieferant\n';
+  D.parts.forEach(p=>{csv+=`${p.sku};${p.name};${p.ean||''};${p.stock};${p.buy};${p.sell};${p.sup||''}\n`});
+  downloadFile('Bexio_Artikel_'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv');
+}
+function dToCh(d){if(!d)return '';const [y,m,da]=d.split('-');return `${da}.${m}.${y}`}
 
 // ============================================================
 // PERSONAL
@@ -1338,6 +2022,8 @@ const PERM_LABELS={
   offerte:'📋 Offerten erstellen',
   kunden:'👥 Kunden verwalten',
   lager:'📦 Lager verwalten',
+  wareneingang:'📥 Wareneingang erfassen',
+  saison:'🏠 Einlagerung / MFK',
   rechnungen:'📄 Rechnungen sehen',
   buchhaltung:'💰 Buchhaltung',
   personal:'👷 Personal verwalten',
@@ -1351,13 +2037,218 @@ const PERM_LABELS={
   deleteData:'🗑️ Daten löschen / Demo-Reset'
 };
 const PERM_PRESETS={
-  admin:{dashboard:1,disposition:1,aufnahme:1,auftraege:1,offerte:1,kunden:1,lager:1,rechnungen:1,buchhaltung:1,personal:1,einstellungen:1,importexport:1,createInvoice:1,viewPrices:1,viewMargin:1,manageStaff:1,exportData:1,deleteData:1},
-  chef:{dashboard:1,disposition:1,aufnahme:1,auftraege:1,offerte:1,kunden:1,lager:1,rechnungen:1,createInvoice:1,viewPrices:1},
-  disponent:{dashboard:1,disposition:1,aufnahme:1,auftraege:1,offerte:1,kunden:1,lager:1,rechnungen:1,createInvoice:1,viewPrices:1},
+  admin:{dashboard:1,disposition:1,aufnahme:1,auftraege:1,offerte:1,kunden:1,lager:1,wareneingang:1,saison:1,rechnungen:1,buchhaltung:1,personal:1,einstellungen:1,importexport:1,createInvoice:1,viewPrices:1,viewMargin:1,manageStaff:1,exportData:1,deleteData:1},
+  chef:{dashboard:1,disposition:1,aufnahme:1,auftraege:1,offerte:1,kunden:1,lager:1,wareneingang:1,saison:1,rechnungen:1,createInvoice:1,viewPrices:1},
+  disponent:{dashboard:1,disposition:1,aufnahme:1,auftraege:1,offerte:1,kunden:1,lager:1,wareneingang:1,saison:1,rechnungen:1,createInvoice:1,viewPrices:1},
   mechaniker:{aufnahme:1},
   buchhaltung:{dashboard:1,kunden:1,rechnungen:1,buchhaltung:1,importexport:1,createInvoice:1,viewPrices:1,exportData:1}
 };
+// ============================================================
+// LOHNBUCHHALTUNG (Schweizer Sätze 2026)
+// ============================================================
+function lohnberechnung(staff,monat){
+  const sets=D.einstellungen;
+  const brutto=staff.lohn?.brutto||0;
+  if(brutto<=0)return null;
+  // Monatlicher Koordinationsabzug
+  const koord=Math.max(0,brutto-sets.bvg_koord);
+  const bvgSatz=(staff.bvg?.altersgutschritt||7)/100;
+  const ahv_an=brutto*sets.ahv_an;
+  const alv_an=brutto*sets.alv_an;
+  const uvg_nbu_an=brutto*sets.uvg_nbu_an;
+  const ktg_an=brutto*sets.ktg_an;
+  const bvg_an=koord*bvgSatz;
+  const totalAn=ahv_an+alv_an+uvg_nbu_an+ktg_an+bvg_an;
+  const netto=brutto-totalAn;
+  const ahv_ag=brutto*sets.ahv_ag;
+  const alv_ag=brutto*sets.alv_ag;
+  const uvg_bu_ag=brutto*sets.uvg_bu_ag;
+  const ktg_ag=brutto*sets.ktg_ag;
+  const fak_ag=brutto*sets.fak_ag;
+  const bvg_ag=koord*bvgSatz;
+  const totalAg=brutto+ahv_ag+alv_ag+uvg_bu_ag+ktg_ag+fak_ag+bvg_ag;
+  return {monat,id:staff.id,brutto,koord,ahv_an,alv_an,uvg_nbu_an,bvg_an,ktg_an,totalAn,netto,ahv_ag,alv_ag,uvg_bu_ag,ktg_ag,fak_ag,bvg_ag,totalAg};
+}
+function lohnzettelPDF(lohn,staff){
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF('p','mm','a4');const W=210;
+  // Header
+  doc.setFillColor(240,112,0);doc.rect(0,0,W,28,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(255,255,255);
+  doc.text('SVENCYCLES GmbH',14,14);
+  doc.setFontSize(9);doc.setFont('helvetica','normal');
+  doc.text(D.einstellungen.strasse+' | '+D.einstellungen.plz+' '+D.einstellungen.ort,14,22);
+  doc.text(D.einstellungen.mwstNr,W-14,14,{align:'right'});
+  // Title
+  doc.setFontSize(16);doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);
+  doc.text('Lohnabrechnung '+lohn.monat,14,42);
+  // Mitarbeiter
+  doc.setFontSize(10);doc.setFont('helvetica','normal');
+  doc.text(staff.name,14,52);
+  doc.text(staff.strasse||'',14,57);
+  doc.text((staff.plz||'')+' '+(staff.ort||''),14,62);
+  doc.setFontSize(9);doc.setTextColor(100);
+  doc.text('AHV-Nr: '+(staff.ahvNr||'-'),W-14,52,{align:'right'});
+  doc.text('Eintritt: '+(staff.eintritt||'-'),W-14,57,{align:'right'});
+  doc.text('Pensum: '+(staff.pensum||100)+'%',W-14,62,{align:'right'});
+  // Tabelle Abzüge AN
+  let y=80;
+  doc.setFillColor(240,112,0);doc.rect(14,y,W-28,8,'F');
+  doc.setFontSize(10);doc.setTextColor(255,255,255);
+  doc.text('Position',16,y+6);doc.text('Satz',110,y+6);doc.text('Betrag CHF',W-18,y+6,{align:'right'});
+  y+=12;doc.setTextColor(30,30,30);
+  doc.setFont('helvetica','bold');
+  doc.text('Bruttolohn',14,y);doc.text(fmt(lohn.brutto),W-18,y,{align:'right'});y+=8;
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(180,40,40);
+  doc.text('AHV/IV/EO Arbeitnehmer',16,y);doc.text((D.einstellungen.ahv_an*100).toFixed(2)+'%',110,y);doc.text('-'+fmt(lohn.ahv_an),W-18,y,{align:'right'});y+=6;
+  doc.text('ALV Arbeitnehmer',16,y);doc.text((D.einstellungen.alv_an*100).toFixed(2)+'%',110,y);doc.text('-'+fmt(lohn.alv_an),W-18,y,{align:'right'});y+=6;
+  doc.text('UVG NBU',16,y);doc.text((D.einstellungen.uvg_nbu_an*100).toFixed(2)+'%',110,y);doc.text('-'+fmt(lohn.uvg_nbu_an),W-18,y,{align:'right'});y+=6;
+  doc.text('BVG (Pensionskasse)',16,y);doc.text((staff.bvg?.altersgutschritt||7)+'% auf koord. Lohn',110,y);doc.text('-'+fmt(lohn.bvg_an),W-18,y,{align:'right'});y+=6;
+  doc.text('KTG',16,y);doc.text((D.einstellungen.ktg_an*100).toFixed(2)+'%',110,y);doc.text('-'+fmt(lohn.ktg_an),W-18,y,{align:'right'});y+=8;
+  doc.setDrawColor(150);doc.line(14,y-2,W-14,y-2);
+  doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);
+  doc.text('Total Abzüge',14,y);doc.text('-'+fmt(lohn.totalAn),W-18,y,{align:'right'});y+=10;
+  doc.setFontSize(13);doc.setFillColor(240,112,0);doc.setTextColor(255,255,255);
+  doc.rect(14,y-5,W-28,10,'F');
+  doc.text('NETTOLOHN',16,y+2);doc.text('CHF '+fmt(lohn.netto),W-18,y+2,{align:'right'});
+  // AG-Anteile
+  y+=18;doc.setFontSize(10);doc.setTextColor(100);
+  doc.setFont('helvetica','bold');doc.text('Arbeitgeberkosten:',14,y);y+=6;
+  doc.setFont('helvetica','normal');
+  doc.text('AHV/IV/EO Arbeitgeber '+(D.einstellungen.ahv_ag*100).toFixed(2)+'%',16,y);doc.text(fmt(lohn.ahv_ag),W-18,y,{align:'right'});y+=5;
+  doc.text('ALV Arbeitgeber '+(D.einstellungen.alv_ag*100).toFixed(2)+'%',16,y);doc.text(fmt(lohn.alv_ag),W-18,y,{align:'right'});y+=5;
+  doc.text('UVG BU '+(D.einstellungen.uvg_bu_ag*100).toFixed(2)+'%',16,y);doc.text(fmt(lohn.uvg_bu_ag),W-18,y,{align:'right'});y+=5;
+  doc.text('KTG AG '+(D.einstellungen.ktg_ag*100).toFixed(2)+'%',16,y);doc.text(fmt(lohn.ktg_ag),W-18,y,{align:'right'});y+=5;
+  doc.text('FAK '+(D.einstellungen.fak_ag*100).toFixed(2)+'%',16,y);doc.text(fmt(lohn.fak_ag),W-18,y,{align:'right'});y+=5;
+  doc.text('BVG AG',16,y);doc.text(fmt(lohn.bvg_ag),W-18,y,{align:'right'});y+=8;
+  doc.setFont('helvetica','bold');doc.setTextColor(30,30,30);
+  doc.text('Total Arbeitgeberkosten',14,y);doc.text('CHF '+fmt(lohn.totalAg),W-18,y,{align:'right'});
+  // Footer
+  doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(100);
+  doc.text('IBAN AN: '+(staff.iban||'-')+' | Bank: '+(staff.bank||'-'),14,280);
+  doc.text('AHV-Kasse: '+D.einstellungen.ahvKasse+' | BVG: '+D.einstellungen.bvgVersicherung,14,285);
+  doc.save('Lohn_'+staff.id+'_'+lohn.monat+'.pdf');
+}
+
+let personalTab='ueber';
 function renderPersonal(){
+  const tabs=[['ueber','👷 Mitarbeiter'],['lohn','💵 Lohnabrechnung'],['stunden','⏱ Arbeitsstunden']];
+  let h=`<h2>👷 Personal & Löhne</h2>
+  <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid #333;padding-bottom:0">
+    ${tabs.map(([k,l])=>`<button class="${personalTab===k?'btn-primary':'btn-secondary'}" style="padding:8px 14px" onclick="personalTab='${k}';navigate('personal')">${l}</button>`).join('')}
+  </div>`;
+  if(personalTab==='ueber')h+=renderPersonalUeber();
+  else if(personalTab==='lohn')h+=renderPersonalLohn();
+  else if(personalTab==='stunden')h+=renderPersonalStunden();
+  return h;
+}
+function renderPersonalLohn(){
+  const monat=document.getElementById('lohn-monat')?.value||new Date().toISOString().slice(0,7);
+  const sets=D.einstellungen;
+  const monthOpts=[];
+  for(let i=0;i<12;i++){const d=new Date();d.setMonth(d.getMonth()-i);monthOpts.push(d.toISOString().slice(0,7))}
+  let totalBrutto=0,totalNetto=0,totalAg=0;
+  let rows='';
+  D.staff.filter(s=>s.lohn&&s.lohn.brutto>0).forEach(s=>{
+    const l=lohnberechnung(s,monat);if(!l)return;
+    const saved=(D.loehne||[]).find(x=>x.id===s.id&&x.monat===monat);
+    totalBrutto+=l.brutto;totalNetto+=l.netto;totalAg+=l.totalAg;
+    rows+=`<tr><td><span style="color:${s.color}">${s.id}</span> ${s.name}</td><td style="text-align:right">${fmt(l.brutto)}</td><td style="text-align:right;color:var(--red)">-${fmt(l.totalAn)}</td><td style="text-align:right;font-weight:700;color:var(--green)">${fmt(l.netto)}</td><td style="text-align:right;color:var(--orange)">${fmt(l.totalAg)}</td><td>
+      <button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="lohnzettelPDF(lohnberechnung(D.staff.find(x=>x.id==='${s.id}'),'${monat}'),D.staff.find(x=>x.id==='${s.id}'))">📄 PDF</button>
+      ${saved?'<span class="badge badge-bezahlt">gebucht</span>':`<button class="btn-success" style="padding:3px 8px;font-size:11px" onclick="bookLohn('${s.id}','${monat}')">✓ Buchen</button>`}
+    </td></tr>`;
+  });
+  if(!rows)rows='<tr><td colspan="6" style="text-align:center;color:#999;padding:14px">Keine Mitarbeiter mit Lohn — bitte unter Mitarbeiter Lohn-Brutto erfassen</td></tr>';
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <label class="muted">Monat:</label>
+    <select id="lohn-monat" onchange="navigate('personal')" style="max-width:160px">
+      ${monthOpts.map(m=>`<option value="${m}" ${m===monat?'selected':''}>${m}</option>`).join('')}
+    </select>
+    <button class="btn-primary" onclick="bookLohnAlle('${monat}')">✓ Alle ${monat} buchen</button>
+    <button class="btn-secondary" onclick="exportLohnliste('${monat}')">📊 Lohnliste CSV</button>
+  </div>
+  <div class="tbl-wrap"><table><tr><th>Mitarbeiter</th><th style="text-align:right">Brutto</th><th style="text-align:right">Abzüge AN</th><th style="text-align:right">Netto</th><th style="text-align:right">Total AG</th><th></th></tr>${rows}
+    <tr style="font-weight:700;background:var(--bg3)"><td>Total ${monat}</td><td style="text-align:right">${fmt(totalBrutto)}</td><td></td><td style="text-align:right">${fmt(totalNetto)}</td><td style="text-align:right;color:var(--orange)">${fmt(totalAg)}</td><td></td></tr>
+  </table></div>
+  <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:14px;margin-top:14px">
+    <h4 style="color:var(--orange);margin-bottom:6px">Schweizer Sozialabzüge ${new Date().getFullYear()}</h4>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px;line-height:1.6">
+      <div><strong>AHV/IV/EO:</strong> ${(sets.ahv_an*100).toFixed(2)}% AN + ${(sets.ahv_ag*100).toFixed(2)}% AG</div>
+      <div><strong>ALV:</strong> ${(sets.alv_an*100).toFixed(2)}% AN + ${(sets.alv_ag*100).toFixed(2)}% AG</div>
+      <div><strong>UVG NBU:</strong> ${(sets.uvg_nbu_an*100).toFixed(2)}% AN</div>
+      <div><strong>UVG BU:</strong> ${(sets.uvg_bu_ag*100).toFixed(2)}% AG (Branche)</div>
+      <div><strong>KTG:</strong> ${(sets.ktg_an*100).toFixed(2)}% AN + ${(sets.ktg_ag*100).toFixed(2)}% AG</div>
+      <div><strong>FAK:</strong> ${(sets.fak_ag*100).toFixed(2)}% AG (Zürich)</div>
+      <div><strong>BVG Koordinationsabzug:</strong> CHF ${fmt(sets.bvg_koord)}/Mt.</div>
+      <div><strong>BVG-Versicherung:</strong> ${sets.bvgVersicherung}</div>
+    </div>
+    <p class="muted" style="margin-top:8px;font-size:11px">⚠️ AHV-Abrechnung vierteljährlich bei ${sets.ahvKasse} einreichen. Sätze in Einstellungen anpassbar.</p>
+  </div>`;
+}
+function bookLohn(sid,monat){
+  const s=D.staff.find(x=>x.id===sid);if(!s)return;
+  const l=lohnberechnung(s,monat);if(!l)return;
+  if(!D.loehne)D.loehne=[];
+  D.loehne=D.loehne.filter(x=>!(x.id===sid&&x.monat===monat));
+  D.loehne.push(l);
+  saveData();navigate('personal');
+}
+function bookLohnAlle(monat){
+  if(!confirm('Alle Mitarbeiter-Löhne für '+monat+' buchen?'))return;
+  if(!D.loehne)D.loehne=[];
+  let count=0;
+  D.staff.filter(s=>s.lohn&&s.lohn.brutto>0).forEach(s=>{
+    const l=lohnberechnung(s,monat);if(!l)return;
+    D.loehne=D.loehne.filter(x=>!(x.id===s.id&&x.monat===monat));
+    D.loehne.push(l);count++;
+  });
+  saveData();navigate('personal');
+  alert(count+' Lohnbuchungen für '+monat+' erstellt.');
+}
+function exportLohnliste(monat){
+  let csv='Name;AHV-Nr;Brutto;AHV_AN;ALV_AN;UVG_NBU_AN;BVG_AN;KTG_AN;Netto;AHV_AG;ALV_AG;UVG_BU_AG;KTG_AG;FAK_AG;BVG_AG;Total_AG\n';
+  D.staff.filter(s=>s.lohn&&s.lohn.brutto>0).forEach(s=>{
+    const l=lohnberechnung(s,monat);if(!l)return;
+    csv+=`${s.name};${s.ahvNr||''};${l.brutto.toFixed(2)};${l.ahv_an.toFixed(2)};${l.alv_an.toFixed(2)};${l.uvg_nbu_an.toFixed(2)};${l.bvg_an.toFixed(2)};${l.ktg_an.toFixed(2)};${l.netto.toFixed(2)};${l.ahv_ag.toFixed(2)};${l.alv_ag.toFixed(2)};${l.uvg_bu_ag.toFixed(2)};${l.ktg_ag.toFixed(2)};${l.fak_ag.toFixed(2)};${l.bvg_ag.toFixed(2)};${l.totalAg.toFixed(2)}\n`;
+  });
+  downloadFile('Lohnliste_'+monat+'.csv',csv,'text/csv');
+}
+function renderPersonalStunden(){
+  const monat=document.getElementById('std-monat')?.value||new Date().toISOString().slice(0,7);
+  const monthOpts=[];
+  for(let i=0;i<12;i++){const d=new Date();d.setMonth(d.getMonth()-i);monthOpts.push(d.toISOString().slice(0,7))}
+  let rows='';
+  D.staff.forEach(s=>{
+    let hours=0;
+    D.orders.forEach(o=>{(o.time||[]).forEach(t=>{if(t.mech===s.id&&t.date.startsWith(monat))hours+=t.h})});
+    const arbeitstage=22;const sollH=arbeitstage*8.4*(s.pensum||100)/100;
+    const diff=hours-sollH;
+    const pauseSec=(D.pauses||[]).filter(p=>p.mech===s.id&&p.date.startsWith(monat)).reduce((sum,p)=>sum+p.sec,0);
+    rows+=`<tr><td><span style="color:${s.color}">${s.id}</span> ${s.name}</td><td>${(s.pensum||100)}%</td><td style="text-align:right">${sollH.toFixed(1)}h</td><td style="text-align:right;font-weight:700">${hours.toFixed(2)}h</td><td style="text-align:right;color:${diff>=0?'var(--green)':'var(--red)'}">${diff>=0?'+':''}${diff.toFixed(2)}h</td><td style="text-align:right;color:var(--purple)">${(pauseSec/3600).toFixed(2)}h</td></tr>`;
+  });
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+    <label class="muted">Monat:</label>
+    <select id="std-monat" onchange="navigate('personal')" style="max-width:160px">
+      ${monthOpts.map(m=>`<option value="${m}" ${m===monat?'selected':''}>${m}</option>`).join('')}
+    </select>
+    <button class="btn-secondary" onclick="exportStundenrapport('${monat}')">📊 Stundenrapport CSV</button>
+  </div>
+  <div class="tbl-wrap"><table><tr><th>Mitarbeiter</th><th>Pensum</th><th style="text-align:right">Soll (22 AT)</th><th style="text-align:right">Ist (gebucht)</th><th style="text-align:right">Diff</th><th style="text-align:right">Pausen</th></tr>${rows}</table></div>
+  <p class="muted" style="margin-top:10px;font-size:11px">Soll-Stunden = 22 Arbeitstage × 8.4h × Pensum. Ist-Stunden aus Auftrags-Zeitbuchungen.</p>`;
+}
+function exportStundenrapport(monat){
+  let csv='Mitarbeiter;Pensum;Soll;Ist;Diff;Pausen\n';
+  D.staff.forEach(s=>{
+    let hours=0;
+    D.orders.forEach(o=>{(o.time||[]).forEach(t=>{if(t.mech===s.id&&t.date.startsWith(monat))hours+=t.h})});
+    const sollH=22*8.4*(s.pensum||100)/100;
+    const pauseSec=(D.pauses||[]).filter(p=>p.mech===s.id&&p.date.startsWith(monat)).reduce((sum,p)=>sum+p.sec,0);
+    csv+=`${s.name};${s.pensum||100}%;${sollH.toFixed(2)};${hours.toFixed(2)};${(hours-sollH).toFixed(2)};${(pauseSec/3600).toFixed(2)}\n`;
+  });
+  downloadFile('Stundenrapport_'+monat+'.csv',csv,'text/csv');
+}
+function renderPersonalUeber(){
   let cards=D.staff.map(s=>{
     const orders=D.orders.filter(o=>o.mech===s.id).length;
     const hours=D.orders.reduce((sum,o)=>sum+o.time.filter(t=>t.mech===s.id).reduce((h,t)=>h+t.h,0),0);
@@ -1416,6 +2307,22 @@ function editStaffModal(sid){
   <div class="form-row"><div><label>Stundenlohn CHF</label><input id="es-rate" type="number" value="${s.rate||0}"></div><div><label>Farbe</label><input id="es-color" type="color" value="${s.color||'#3b82f6'}"></div></div>
   <h4 style="margin:14px 0 6px;color:#f07000">Passwort</h4>
   <div class="form-row"><div><label>Neues Passwort (leer = unverändert)</label><input id="es-newpw" type="text" placeholder="z.B. 1234"></div><div style="align-self:end"><button class="btn-secondary" type="button" onclick="document.getElementById('es-newpw').value='1234'">Auf '1234' zurücksetzen</button></div></div>
+  <details style="margin:14px 0">
+    <summary style="cursor:pointer;color:var(--orange);font-weight:600">📋 Personal-Daten (Adresse, AHV, Eintritt)</summary>
+    <div style="padding:10px;background:#0e0e0e;border:1px solid #333;border-radius:6px;margin-top:6px">
+      <div class="form-row"><div><label>Strasse</label><input id="es-str" value="${s.strasse||''}"></div><div><label>PLZ / Ort</label><input id="es-plzort" value="${(s.plz||'')+' '+(s.ort||'')}"></div></div>
+      <div class="form-row"><div><label>AHV-Nr</label><input id="es-ahv" value="${s.ahvNr||''}" placeholder="756.1234.5678.97" style="font-family:monospace"></div><div><label>Geburtsdatum</label><input id="es-geb" type="date" value="${s.geburtsdatum||''}"></div></div>
+      <div class="form-row"><div><label>Eintrittsdatum</label><input id="es-ein" type="date" value="${s.eintritt||''}"></div><div><label>Pensum (%)</label><input id="es-pensum" type="number" min="0" max="100" value="${s.pensum||100}"></div></div>
+    </div>
+  </details>
+  <details style="margin:14px 0">
+    <summary style="cursor:pointer;color:var(--orange);font-weight:600">💵 Lohn-Daten (für Lohnabrechnung)</summary>
+    <div style="padding:10px;background:#0e0e0e;border:1px solid #333;border-radius:6px;margin-top:6px">
+      <div class="form-row"><div><label>Lohnart</label><select id="es-lohnart"><option value="monatlich" ${s.lohn?.lohnart==='monatlich'?'selected':''}>Monatlich (Festlohn)</option><option value="stündlich" ${s.lohn?.lohnart==='stündlich'?'selected':''}>Stündlich</option><option value="inhaber" ${s.lohn?.lohnart==='inhaber'?'selected':''}>Inhaber (kein Lohn)</option></select></div><div><label>Brutto CHF/Mt.</label><input id="es-brutto" type="number" step="0.01" value="${s.lohn?.brutto||0}"></div></div>
+      <div class="form-row"><div><label>Stundenlohn CHF</label><input id="es-stlohn" type="number" step="0.01" value="${s.lohn?.stundenlohn||0}"></div><div><label>BVG Altersgutschrift (%)</label><select id="es-bvg-as"><option value="7" ${s.bvg?.altersgutschritt==7?'selected':''}>7% (25-34 Jahre)</option><option value="10" ${s.bvg?.altersgutschritt==10?'selected':''}>10% (35-44 Jahre)</option><option value="15" ${s.bvg?.altersgutschritt==15?'selected':''}>15% (45-54 Jahre)</option><option value="18" ${s.bvg?.altersgutschritt==18?'selected':''}>18% (55-65 Jahre)</option></select></div></div>
+      <div class="form-row"><div><label>IBAN (Lohn-Auszahlung)</label><input id="es-iban" value="${s.iban||''}" style="font-family:monospace"></div><div><label>Bank</label><input id="es-bank" value="${s.bank||''}"></div></div>
+    </div>
+  </details>
   <h4 style="margin:14px 0 6px;color:#f07000">Berechtigungen</h4>
   <div style="margin-bottom:8px"><button class="btn-secondary" style="padding:4px 10px;font-size:11px" onclick="applyPresetToEdit('${s.id}')">Preset aus Rolle laden</button></div>
   <div id="es-perms" style="background:#0e0e0e;border:1px solid #333;border-radius:6px;padding:10px;max-height:240px;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:4px">${permCheckboxes('es',s.perm)}</div>
@@ -1435,6 +2342,10 @@ async function saveStaff(sid){
   if(newUser&&newUser!==(s.user||'').toLowerCase()&&D.staff.find(x=>x.id!==sid&&(x.user||'').toLowerCase()===newUser)){alert('Benutzername bereits vergeben');return}
   s.name=gv('es-name');s.user=newUser;s.role=gv('es-role');s.email=gv('es-email');s.tel=gv('es-tel');
   s.rate=parseFloat(gv('es-rate'))||0;s.color=gv('es-color');s.perm=readPerms('es');
+  // Personal-Daten
+  if(document.getElementById('es-str')){s.strasse=gv('es-str');const po=gv('es-plzort').split(' ');s.plz=po[0]||'';s.ort=po.slice(1).join(' ')||'';s.ahvNr=gv('es-ahv');s.geburtsdatum=gv('es-geb');s.eintritt=gv('es-ein');s.pensum=parseInt(gv('es-pensum'))||100}
+  // Lohn-Daten
+  if(document.getElementById('es-brutto')){if(!s.lohn)s.lohn={};s.lohn.lohnart=gv('es-lohnart');s.lohn.brutto=parseFloat(gv('es-brutto'))||0;s.lohn.stundenlohn=parseFloat(gv('es-stlohn'))||0;s.iban=gv('es-iban');s.bank=gv('es-bank');if(!s.bvg)s.bvg={};s.bvg.altersgutschritt=parseInt(gv('es-bvg-as'))||7;s.bvg.versicherung=D.einstellungen.bvgVersicherung}
   const newpw=gv('es-newpw');
   if(newpw){s.pw=await sha256(newpw)}
   // Wenn man sich selbst bearbeitet: aktuelle Permissions sofort übernehmen
@@ -1454,26 +2365,193 @@ function deleteStaff(sid){
 // ============================================================
 // IMPORT / EXPORT
 // ============================================================
+let ieTab='backup';
+let e3kImportType='customers';
+let e3kPreview=null;
 function renderImportExport(){
-  return `<h2>⬆️ Import / Export</h2>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+  const tabs=[['backup','💾 Backup'],['e3k','🔄 Europa3000 Import'],['csv','📊 CSV Exporte'],['bexio','📤 Bexio']];
+  let h=`<h2>⬆️ Import / Export</h2>
+  <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid #333">
+    ${tabs.map(([k,l])=>`<button class="${ieTab===k?'btn-primary':'btn-secondary'}" style="padding:8px 14px" onclick="ieTab='${k}';navigate('importexport')">${l}</button>`).join('')}
+  </div>`;
+  if(ieTab==='backup')h+=renderIeBackup();
+  else if(ieTab==='e3k')h+=renderIeEuropa3000();
+  else if(ieTab==='csv')h+=renderIeCsv();
+  else if(ieTab==='bexio')h+=renderBuchhBexio();
+  return h;
+}
+function renderIeBackup(){
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
   <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px">
-    <h3 style="color:var(--orange);margin-bottom:12px">Export</h3>
-    <button class="btn-primary mob-btn" onclick="exportBackup()">💾 Komplett-Backup JSON</button>
-    <button class="btn-secondary mob-btn" onclick="exportMwstCSV()">📊 MWST CSV</button>
-    <button class="btn-secondary mob-btn" onclick="exportCSV('customers')">👥 Kunden CSV</button>
-    <button class="btn-secondary mob-btn" onclick="exportCSV('parts')">📦 Lager CSV</button>
-    <button class="btn-secondary mob-btn" onclick="exportCSV('orders')">🔧 Aufträge CSV</button>
-    <button class="btn-secondary mob-btn" onclick="exportCSV('invoices')">📄 Rechnungen CSV</button>
+    <h3 style="color:var(--orange);margin-bottom:12px">💾 Komplett-Backup</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Alle Daten als JSON sichern. Empfehlung: täglich!</p>
+    <button class="btn-primary mob-btn" onclick="exportBackup()">💾 Backup als JSON laden</button>
   </div>
   <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px">
-    <h3 style="color:var(--orange);margin-bottom:12px">Import</h3>
-    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">JSON-Backup laden (überschreibt alle Daten!)</p>
+    <h3 style="color:var(--orange);margin-bottom:12px">📂 Backup wiederherstellen</h3>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px">⚠️ Überschreibt alle aktuellen Daten!</p>
     <input type="file" id="import-file" accept=".json" style="margin-bottom:12px">
     <button class="btn-primary mob-btn" onclick="importBackup()">📂 Backup importieren</button>
-    <hr style="border-color:#333;margin:16px 0">
-    <button class="btn-danger mob-btn" onclick="resetDemo()">🔄 Demo-Reset (alle Daten zurücksetzen)</button>
+    ${can('deleteData')?'<hr style="border-color:#333;margin:16px 0"><button class="btn-danger mob-btn" onclick="resetDemo()">🔄 Demo-Reset (alle Daten zurücksetzen)</button>':''}
   </div></div>`;
+}
+function renderIeCsv(){
+  return `<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;max-width:600px">
+    <h3 style="color:var(--orange);margin-bottom:12px">CSV Einzel-Exporte</h3>
+    <p class="muted" style="margin-bottom:14px;font-size:12px">Für Treuhänder, Excel-Auswertungen oder Migrations-Vorbereitung</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <button class="btn-secondary mob-btn" onclick="exportMwstCSV()">📊 MWST-Auszug</button>
+      <button class="btn-secondary mob-btn" onclick="exportCSV('customers')">👥 Kunden</button>
+      <button class="btn-secondary mob-btn" onclick="exportCSV('parts')">📦 Lager-Artikel</button>
+      <button class="btn-secondary mob-btn" onclick="exportCSV('orders')">🔧 Aufträge</button>
+      <button class="btn-secondary mob-btn" onclick="exportCSV('invoices')">📄 Rechnungen</button>
+      <button class="btn-secondary mob-btn" onclick="exportWareneingangCSV()">📥 Wareneingang</button>
+      <button class="btn-secondary mob-btn" onclick="exportLohnliste(new Date().toISOString().slice(0,7))">💵 Lohnliste (akt. Mt.)</button>
+      <button class="btn-secondary mob-btn" onclick="exportStundenrapport(new Date().toISOString().slice(0,7))">⏱ Stundenrapport</button>
+    </div>
+  </div>`;
+}
+
+// ========================== EUROPA3000 IMPORT ==========================
+function renderIeEuropa3000(){
+  let h=`<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:18px">
+    <h3 style="color:var(--orange);margin-bottom:6px">🔄 Daten von Europa3000 importieren</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:14px">Europa3000 → Extras → Daten exportieren → CSV. Encoding wird automatisch konvertiert (Windows-1252 → UTF-8). Trennzeichen: Semikolon.</p>
+
+    <div class="form-row" style="margin-bottom:12px">
+      <div><label>Was importieren?</label>
+        <select id="e3k-type" onchange="e3kImportType=this.value;e3kPreview=null;navigate('importexport')">
+          <option value="customers" ${e3kImportType==='customers'?'selected':''}>👥 Kunden (Adressliste)</option>
+          <option value="parts" ${e3kImportType==='parts'?'selected':''}>📦 Artikel (Artikelliste)</option>
+          <option value="invoices" ${e3kImportType==='invoices'?'selected':''}>📄 Rechnungen (Faktura)</option>
+        </select>
+      </div>
+      <div><label>CSV-Datei</label>
+        <input type="file" id="e3k-file" accept=".csv,.txt" onchange="e3kLoadFile()">
+      </div>
+    </div>
+
+    <div style="background:var(--bg);padding:10px;border-radius:6px;font-size:11px;line-height:1.5;margin-bottom:12px">
+      <strong style="color:var(--orange)">Erwartete Spalten:</strong><br>
+      ${e3kImportType==='customers'?'<code>KdNr; Name; Vorname; Strasse; PLZ; Ort; Tel; Handy; Email; Bemerkung</code>':''}
+      ${e3kImportType==='parts'?'<code>ArtNr; Bezeichnung; Gruppe; Bestand; MinBestand; EKPreis; VKPreis; Lieferant; EAN</code>':''}
+      ${e3kImportType==='invoices'?'<code>BelNr; Datum; KdNr; KdName; Netto; MWST; Brutto; Status</code>':''}
+      <br><span class="muted">Spalten-Namen müssen nicht exakt stimmen — Mapping wird automatisch erkannt.</span>
+    </div>
+  </div>`;
+
+  if(e3kPreview){
+    h+=`<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:18px;margin-top:14px">
+      <h3 style="color:var(--orange);margin-bottom:8px">Vorschau (${e3kPreview.rows.length} Datensätze gefunden)</h3>
+      ${e3kPreview.errors.length?`<div style="background:#3a0000;border:1px solid var(--red);border-radius:6px;padding:8px;margin-bottom:10px;font-size:12px">⚠️ ${e3kPreview.errors.length} Fehler — werden übersprungen</div>`:''}
+      ${e3kPreview.duplicates>0?`<div style="background:#3a3000;border:1px solid var(--yellow);border-radius:6px;padding:8px;margin-bottom:10px;font-size:12px">⚠️ ${e3kPreview.duplicates} Duplikate erkannt — werden übersprungen</div>`:''}
+      <div style="overflow-x:auto"><table style="width:100%;font-size:11px">
+        <tr>${e3kPreview.cols.map(c=>`<th>${c}</th>`).join('')}</tr>
+        ${e3kPreview.rows.slice(0,10).map(r=>`<tr>${e3kPreview.cols.map(c=>`<td>${r[c]||''}</td>`).join('')}</tr>`).join('')}
+      </table></div>
+      ${e3kPreview.rows.length>10?`<p class="muted" style="margin-top:6px">… und ${e3kPreview.rows.length-10} weitere Zeilen</p>`:''}
+      <div class="btns" style="margin-top:14px">
+        <button class="btn-secondary" onclick="e3kPreview=null;navigate('importexport')">Abbrechen</button>
+        <button class="btn-primary" onclick="e3kCommitImport()">✓ ${e3kPreview.toImport} Datensätze importieren</button>
+      </div>
+    </div>`;
+  }
+  return h;
+}
+function e3kLoadFile(){
+  const f=document.getElementById('e3k-file').files[0];if(!f)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    // Windows-1252 → UTF-8 Versuch
+    let text=e.target.result;
+    // Wenn Umlaute kaputt aussehen, neu lesen
+    if(/Ã|Ã©|Ã¤/.test(text)){
+      const r2=new FileReader();r2.onload=ev=>e3kParse(ev.target.result);r2.readAsText(f,'windows-1252');return;
+    }
+    e3kParse(text);
+  };
+  reader.readAsText(f,'utf-8');
+}
+function e3kParse(text){
+  // Detect Delimiter (Semicolon Default für CH, sonst Comma oder Tab)
+  const firstLine=text.split('\n')[0];
+  const delim=firstLine.includes(';')?';':firstLine.includes('\t')?'\t':',';
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2){alert('CSV leer oder ungültig');return}
+  const headers=lines[0].split(delim).map(h=>h.replace(/"/g,'').trim());
+  const data=lines.slice(1).map(l=>{
+    const vals=l.split(delim).map(v=>v.replace(/"/g,'').trim());
+    const obj={};headers.forEach((h,i)=>{obj[h]=vals[i]||''});
+    return obj;
+  });
+  // Mapping je nach Typ
+  const cols=e3kCols();
+  const rows=[];const errors=[];let duplicates=0;
+  data.forEach((d,i)=>{
+    const mapped=e3kMap(d);
+    if(!mapped){errors.push(`Zeile ${i+2}: Pflichtfelder fehlen`);return}
+    if(e3kIsDuplicate(mapped)){duplicates++;return}
+    rows.push(mapped);
+  });
+  e3kPreview={cols,rows,errors,duplicates,toImport:rows.length};
+  navigate('importexport');
+}
+function e3kCols(){
+  if(e3kImportType==='customers')return ['name','strasse','plz','ort','tel','email'];
+  if(e3kImportType==='parts')return ['sku','name','cat','stock','min','buy','sell','sup'];
+  if(e3kImportType==='invoices')return ['id','date','cid','customer','net','status'];
+}
+function e3kMap(d){
+  const get=(...keys)=>{for(const k of keys){const v=Object.keys(d).find(x=>x.toLowerCase().includes(k.toLowerCase()));if(v&&d[v])return d[v]}return''};
+  if(e3kImportType==='customers'){
+    const name=(get('Name')+' '+get('Vorname')).trim();
+    if(!name)return null;
+    return {name,strasse:get('Strasse','Adresse'),plz:get('PLZ'),ort:get('Ort'),tel:get('Handy','Tel','Telefon'),email:get('Email','Mail'),notizen:get('Bemerkung','Notiz')};
+  }
+  if(e3kImportType==='parts'){
+    const name=get('Bezeichnung','Name','Artikel');
+    const sku=get('ArtNr','Artikelnummer','SKU');
+    if(!name)return null;
+    const catRaw=(get('Gruppe','Kategorie','Kat')||'Sonstiges').toLowerCase();
+    const catMap={oel:'Verbrauch','öl':'Verbrauch',filter:'Filter',reifen:'Reifen',bremse:'Bremsen',motor:'Motor',elektrik:'Elektrik',auspuff:'Auspuff',lenker:'Lenker',zünd:'Zündung',service:'Service-Kit',zubehör:'Zubehör'};
+    let cat='Sonstiges';for(const k of Object.keys(catMap)){if(catRaw.includes(k)){cat=catMap[k];break}}
+    return {sku,name,cat,stock:parseInt(get('Bestand','Lager'))||0,min:parseInt(get('MinBestand','Minimum'))||0,buy:parseFloat((get('EKPreis','EK')||'0').replace(',','.'))||0,sell:parseFloat((get('VKPreis','VK','Preis')||'0').replace(',','.'))||0,sup:get('Lieferant','Lief'),ean:get('EAN','Barcode')};
+  }
+  if(e3kImportType==='invoices'){
+    const id=get('BelNr','RechnungsNr','Nr');
+    if(!id)return null;
+    const dateRaw=get('Datum','Date');
+    let date=new Date().toISOString().slice(0,10);
+    if(dateRaw){const m=dateRaw.match(/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/);if(m){const y=m[3].length===2?'20'+m[3]:m[3];date=`${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`}}
+    return {id:'IMP-'+id,date,cid:get('KdNr','KundenNr'),customer:get('KdName','Kunde','Name'),net:parseFloat((get('Netto','Net')||'0').replace(',','.'))||0,status:(get('Status')||'offen').toLowerCase()};
+  }
+}
+function e3kIsDuplicate(m){
+  if(e3kImportType==='customers')return D.customers.some(c=>c.name===m.name&&c.plz===m.plz);
+  if(e3kImportType==='parts')return D.parts.some(p=>p.sku===m.sku||p.name===m.name);
+  if(e3kImportType==='invoices')return D.invoices.some(i=>i.id===m.id);
+  return false;
+}
+function e3kCommitImport(){
+  const rows=e3kPreview.rows;let count=0;
+  rows.forEach(m=>{
+    if(e3kImportType==='customers'){
+      D.counters.customer++;
+      D.customers.push({id:'K'+String(D.counters.customer).padStart(3,'0'),name:m.name,tel:m.tel,email:m.email,strasse:m.strasse,plz:m.plz,ort:m.ort,notizen:m.notizen||'',bikes:[]});
+      count++;
+    } else if(e3kImportType==='parts'){
+      D.counters.part++;
+      D.parts.push({id:'P'+String(D.counters.part).padStart(3,'0'),name:m.name,sku:m.sku,ean:m.ean||'',cat:m.cat,stock:m.stock,min:m.min,buy:m.buy,sell:m.sell,sup:m.sup||''});
+      count++;
+    } else if(e3kImportType==='invoices'){
+      D.invoices.push({id:m.id,oid:'',cid:m.cid||'-',date:m.date,due:m.date,status:m.status,pos:[{desc:'Import von Europa3000',qty:1,unit:'Pos',prc:m.net}]});
+      count++;
+    }
+  });
+  saveData();
+  e3kPreview=null;
+  alert(count+' Datensätze importiert.');
+  navigate('importexport');
 }
 function exportBackup(){downloadFile('Svencycles_Backup_'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(D,null,2),'application/json')}
 function exportCSV(type){
@@ -1502,43 +2580,120 @@ function resetDemo(){if(!can('deleteData')){alert('Keine Berechtigung');return}i
 // ============================================================
 // EINSTELLUNGEN
 // ============================================================
+let einstTab='firma';
 function renderEinstellungen(){
+  const tabs=[['firma','🏢 Firmendaten'],['lohn','💵 Lohn-Sätze'],['mwst','📋 MWST'],['system','💾 System']];
+  let h=`<h2>⚙️ Einstellungen</h2>
+  <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid #333">
+    ${tabs.map(([k,l])=>`<button class="${einstTab===k?'btn-primary':'btn-secondary'}" style="padding:8px 14px" onclick="einstTab='${k}';navigate('einstellungen')">${l}</button>`).join('')}
+  </div>`;
+  if(einstTab==='firma')h+=renderEinstFirma();
+  else if(einstTab==='lohn')h+=renderEinstLohn();
+  else if(einstTab==='mwst')h+=renderEinstMwst();
+  else if(einstTab==='system')h+=renderEinstSystem();
+  return h;
+}
+function renderEinstFirma(){
+  const e=D.einstellungen;
+  return `<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;max-width:700px">
+    <h3 style="color:var(--orange);margin-bottom:12px">Firmendaten</h3>
+    <p class="muted" style="margin-bottom:14px;font-size:12px">Werden in Rechnungen, Offerten und Lohnzettel verwendet.</p>
+    <div class="form-row"><div><label>Firma</label><input id="ef-firma" value="${e.firma}"></div><div><label>Stundensatz CHF/h</label><input id="ef-stsatz" type="number" step="0.01" value="${e.stundensatz}"></div></div>
+    <div class="form-row"><div><label>Strasse</label><input id="ef-str" value="${e.strasse}"></div><div><label>PLZ</label><input id="ef-plz" value="${e.plz}"></div></div>
+    <div class="form-row"><div><label>Ort</label><input id="ef-ort" value="${e.ort}"></div><div><label>Telefon</label><input id="ef-tel" value="${e.tel}"></div></div>
+    <div class="form-row"><div><label>Email</label><input id="ef-email" value="${e.email}"></div><div><label>Web</label><input id="ef-web" value="${e.web}"></div></div>
+    <div class="form-row"><div><label>IBAN ⚠️</label><input id="ef-iban" value="${e.iban}" style="font-family:monospace"></div><div><label>MWST-Nr</label><input id="ef-mwstnr" value="${e.mwstNr}"></div></div>
+    <div class="form-row"><div><label>Standard-Zahlungsfrist (Tage)</label><input id="ef-zfrist" type="number" value="${e.zahlungsfrist}"></div></div>
+    <div class="btns"><button class="btn-primary" onclick="saveEinstFirma()">Speichern</button></div>
+    ${e.iban==='CH56 0483 5012 3456 7800 9'?'<div style="background:#3a3000;border:1px solid var(--yellow);border-radius:6px;padding:10px;margin-top:12px;font-size:12px">⚠️ <strong>Achtung:</strong> Die IBAN ist noch ein Platzhalter — bitte echte Geschäfts-IBAN eintragen, sonst funktionieren die QR-Rechnungen nicht!</div>':''}
+  </div>`;
+}
+function saveEinstFirma(){
+  const e=D.einstellungen;
+  e.firma=gv('ef-firma');e.strasse=gv('ef-str');e.plz=gv('ef-plz');e.ort=gv('ef-ort');
+  e.tel=gv('ef-tel');e.email=gv('ef-email');e.web=gv('ef-web');
+  e.iban=gv('ef-iban');e.mwstNr=gv('ef-mwstnr');
+  e.stundensatz=parseFloat(gv('ef-stsatz'))||125;
+  e.zahlungsfrist=parseInt(gv('ef-zfrist'))||30;
+  saveData();navigate('einstellungen');
+}
+function renderEinstLohn(){
+  const e=D.einstellungen;
+  return `<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;max-width:700px">
+    <h3 style="color:var(--orange);margin-bottom:12px">Schweizer Lohnabzüge ${new Date().getFullYear()}</h3>
+    <p class="muted" style="margin-bottom:14px;font-size:12px">Werden in der Lohnabrechnung angewendet. Sätze ändern sich teilweise jährlich!</p>
+    <h4 style="color:var(--orange);font-size:13px;margin:10px 0 6px">AHV / IV / EO</h4>
+    <div class="form-row"><div><label>AHV/IV/EO Arbeitnehmer (%)</label><input id="el-ahvAn" type="number" step="0.001" value="${(e.ahv_an*100).toFixed(2)}"></div><div><label>AHV/IV/EO Arbeitgeber (%)</label><input id="el-ahvAg" type="number" step="0.001" value="${(e.ahv_ag*100).toFixed(2)}"></div></div>
+    <h4 style="color:var(--orange);font-size:13px;margin:10px 0 6px">ALV (Arbeitslosenversicherung)</h4>
+    <div class="form-row"><div><label>ALV Arbeitnehmer (%)</label><input id="el-alvAn" type="number" step="0.001" value="${(e.alv_an*100).toFixed(2)}"></div><div><label>ALV Arbeitgeber (%)</label><input id="el-alvAg" type="number" step="0.001" value="${(e.alv_ag*100).toFixed(2)}"></div></div>
+    <h4 style="color:var(--orange);font-size:13px;margin:10px 0 6px">UVG (Unfall) + KTG (Krankentaggeld)</h4>
+    <div class="form-row"><div><label>UVG NBU Arbeitnehmer (%)</label><input id="el-uvgAn" type="number" step="0.001" value="${(e.uvg_nbu_an*100).toFixed(2)}"></div><div><label>UVG BU Arbeitgeber (%)</label><input id="el-uvgAg" type="number" step="0.001" value="${(e.uvg_bu_ag*100).toFixed(2)}"></div></div>
+    <div class="form-row"><div><label>KTG Arbeitnehmer (%)</label><input id="el-ktgAn" type="number" step="0.001" value="${(e.ktg_an*100).toFixed(2)}"></div><div><label>KTG Arbeitgeber (%)</label><input id="el-ktgAg" type="number" step="0.001" value="${(e.ktg_ag*100).toFixed(2)}"></div></div>
+    <h4 style="color:var(--orange);font-size:13px;margin:10px 0 6px">FAK + BVG</h4>
+    <div class="form-row"><div><label>FAK Arbeitgeber (%) — Kanton ZH 2.5</label><input id="el-fak" type="number" step="0.001" value="${(e.fak_ag*100).toFixed(2)}"></div><div><label>BVG Koordinationsabzug (CHF/Mt.)</label><input id="el-bvgKoord" type="number" value="${e.bvg_koord}"></div></div>
+    <div class="form-row"><div><label>AHV-Kasse</label><input id="el-ahvKasse" value="${e.ahvKasse}"></div><div><label>BVG-Versicherung</label><input id="el-bvgV" value="${e.bvgVersicherung}"></div></div>
+    <div class="btns"><button class="btn-primary" onclick="saveEinstLohn()">Speichern</button></div>
+    <div style="background:#0e0e0e;border:1px solid #333;border-radius:6px;padding:10px;margin-top:14px;font-size:11px;color:#999;line-height:1.6">
+      <strong style="color:var(--orange)">Hinweis BVG:</strong> Der Beitragssatz auf den koordinierten Lohn ist altersabhängig — pro Mitarbeiter im Profil setzen:<br>
+      • 25–34 Jahre: <strong>7%</strong><br>
+      • 35–44 Jahre: <strong>10%</strong><br>
+      • 45–54 Jahre: <strong>15%</strong><br>
+      • 55–65 Jahre: <strong>18%</strong>
+    </div>
+  </div>`;
+}
+function saveEinstLohn(){
+  const e=D.einstellungen;
+  e.ahv_an=parseFloat(gv('el-ahvAn'))/100;e.ahv_ag=parseFloat(gv('el-ahvAg'))/100;
+  e.alv_an=parseFloat(gv('el-alvAn'))/100;e.alv_ag=parseFloat(gv('el-alvAg'))/100;
+  e.uvg_nbu_an=parseFloat(gv('el-uvgAn'))/100;e.uvg_bu_ag=parseFloat(gv('el-uvgAg'))/100;
+  e.ktg_an=parseFloat(gv('el-ktgAn'))/100;e.ktg_ag=parseFloat(gv('el-ktgAg'))/100;
+  e.fak_ag=parseFloat(gv('el-fak'))/100;
+  e.bvg_koord=parseFloat(gv('el-bvgKoord'))||2575;
+  e.ahvKasse=gv('el-ahvKasse');e.bvgVersicherung=gv('el-bvgV');
+  saveData();navigate('einstellungen');
+}
+function renderEinstMwst(){
+  const e=D.einstellungen;
+  return `<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;max-width:700px">
+    <h3 style="color:var(--orange);margin-bottom:12px">MWST-Einstellungen</h3>
+    <div class="form-row"><div><label>MWST-Satz Standard (%)</label><input id="em-satz" type="number" step="0.001" value="${(e.mwstSatz*100).toFixed(1)}"></div><div><label>MWST-Modus</label><select id="em-modus"><option value="effektiv" ${e.mwstModus==='effektiv'?'selected':''}>Effektive Methode</option><option value="saldo" ${e.mwstModus==='saldo'?'selected':''}>Saldosteuersatz</option><option value="pauschal" ${e.mwstModus==='pauschal'?'selected':''}>Pauschalsteuersatz</option></select></div></div>
+    <div class="btns"><button class="btn-primary" onclick="saveEinstMwst()">Speichern</button></div>
+    <div style="background:#0e0e0e;border:1px solid #333;border-radius:6px;padding:10px;margin-top:14px;font-size:11px;line-height:1.6;color:#999">
+      <strong style="color:var(--orange)">CH-MWST 2026:</strong><br>
+      • Standard 8.1%, reduziert 2.6% (Lebensmittel), Sondersatz 3.8% (Beherbergung)<br>
+      • <strong>Effektiv:</strong> MWST genau abrechnen, Vorsteuer abziehbar<br>
+      • <strong>Saldosteuer:</strong> Vereinfacht, pauschaler %-Satz auf Umsatz, keine Vorsteuer<br>
+      • Saldosteuersatz Motorradwerkstatt: ca. 3.7-5.1% je nach Umsatz-Mix
+    </div>
+  </div>`;
+}
+function saveEinstMwst(){
+  const e=D.einstellungen;
+  e.mwstSatz=parseFloat(gv('em-satz'))/100;
+  e.mwstModus=gv('em-modus');
+  saveData();navigate('einstellungen');
+}
+function renderEinstSystem(){
   const size=new Blob([JSON.stringify(D)]).size;
-  return `<h2>⚙️ Einstellungen</h2>
-  <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;max-width:500px">
-  <h3 style="color:var(--orange);margin-bottom:12px">Firmendaten</h3>
-  <p style="font-size:12px;line-height:1.8">
-  <strong>Svencycles GmbH</strong><br>
-  Neunfornerstrasse 2, 8468 Waltalingen ZH<br>
-  Tel: 052 746 10 60<br>
-  Email: info@svencycles.ch<br>
-  Web: www.svencycles.ch<br>
-  MWST: CHE-361.121.290<br>
-  Stundensatz: CHF 125.–<br>
-  MWST-Satz: 8.1%
-  </p>
-  <hr style="border-color:#333;margin:16px 0">
-  <h3 style="color:var(--orange);margin-bottom:12px">System-Info</h3>
-  <p style="font-size:12px;line-height:1.8">
-  Version: 1.0.0<br>
-  Kunden: ${D.customers.length}<br>
-  Aufträge: ${D.orders.length}<br>
-  Lager-Artikel: ${D.parts.length}<br>
-  Rechnungen: ${D.invoices.length}<br>
-  Storage: ${(size/1024).toFixed(1)} KB
-  </p>
-  <hr style="border-color:#333;margin:16px 0">
-  <h3 style="color:var(--orange);margin-bottom:8px">Geplante Module (v2.1+)</h3>
-  <ul style="font-size:12px;line-height:1.8;color:var(--text2);margin-left:20px">
-    <li>🏠 Einlagerung / Reifenhotel (Winter-Bikes mit Standort + automatische Frühjahrs-Rechnung)</li>
-    <li>📅 MFK-Erinnerung (CH-pflicht alle 4/3/2 Jahre, Mail an Kunden)</li>
-    <li>📧 Kunden-Mail "Bike fertig zur Abholung" mit einem Klick</li>
-    <li>📱 WhatsApp-Integration (Twilio API)</li>
-    <li>☁️ Cloud-Backup automatisch nach Google Drive</li>
-    <li>🔄 Multi-User Live-Sync (Backend mit Node.js + PostgreSQL)</li>
-    <li>📊 Werkstatt-Auslastungs-Heatmap mit Saison-Vorhersage</li>
-    <li>🏢 Versicherungs-Schaden-Modul (direkt mit Versicherung abrechnen)</li>
-  </ul>
+  return `<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;max-width:700px">
+    <h3 style="color:var(--orange);margin-bottom:12px">System-Info</h3>
+    <p style="font-size:12px;line-height:1.8">
+    Version: <strong>2.0</strong><br>
+    Kunden: ${D.customers.length}<br>
+    Aufträge: ${D.orders.length}<br>
+    Lager-Artikel: ${D.parts.length}<br>
+    Rechnungen: ${D.invoices.length}<br>
+    Offerten: ${(D.offerten||[]).length}<br>
+    Aufnahmen: ${(D.rapports||[]).length}<br>
+    Termine: ${(D.termine||[]).length}<br>
+    Wareneingänge: ${(D.wareneingang||[]).length}<br>
+    Eingangsrechnungen: ${(D.eingaenge||[]).length}<br>
+    Fixkosten-Posten: ${(D.fixkosten||[]).length}<br>
+    Lohnbuchungen: ${(D.loehne||[]).length}<br>
+    Mitarbeiter: ${D.staff.length}<br>
+    Storage: ${(size/1024).toFixed(1)} KB
+    </p>
   </div>`;
 }
 
