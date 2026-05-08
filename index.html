@@ -112,11 +112,11 @@ tr:hover td{background:var(--bg2)}
 <details style="margin-top:16px;color:#666;font-size:11px;max-width:320px">
 <summary style="cursor:pointer">Demo-Zugänge anzeigen</summary>
 <div style="margin-top:8px;line-height:1.6">
-sven / 1234 — Admin (alles)<br>
-lisa / 1234 — Chef-Mechanikerin<br>
-marco / 1234 — Mechaniker (nur Handy)<br>
-cornel / 1234 — Disponent<br>
-traber / 1234 — Buchhaltung
+ivo / 1234 — Admin / Entwickler (alles)<br>
+sven / 1234 — Eigentümer-Mechaniker<br>
+rico / 1234 — Stv. Mechaniker (nur Handy)<br>
+cornel / 1234 — Disposition<br>
+monika / 1234 — Buchhaltung
 </div>
 </details>
 </div>
@@ -179,14 +179,14 @@ const DEMO_DATA = {
     {id:'K005',name:'Markus Zimmerli',tel:'078 555 77 88',email:'m.zimmerli@bluewin.ch',strasse:'Industriestrasse 5',plz:'8245',ort:'Feuerthalen',bikes:[{model:'HD Softail Slim 2021',kz:'SH 2345 E',vin:'1HD1BW918MB555666',km:12000,col:'Deadwood Green'}]}
   ],
   orders: [
-    {id:'A2026001',cid:'K001',bike:0,status:'in-arbeit',prio:'normal',created:'2026-04-20',mech:'MB',desc:'Jahresservice 10\'000km',parts:[{pid:'P001',qty:4,prc:15.90},{pid:'P002',qty:1,prc:24.50}],time:[{date:'2026-04-21',h:1.5,desc:'Ölwechsel + Filter',mech:'MB'}],notes:'Kunde holt ab Freitag',invoiced:false},
-    {id:'A2026002',cid:'K002',bike:0,status:'fertig',prio:'normal',created:'2026-04-15',mech:'LK',desc:'Bremsbeläge vorne + hinten',parts:[{pid:'P005',qty:2,prc:89.00},{pid:'P006',qty:2,prc:95.00}],time:[{date:'2026-04-16',h:2,desc:'Bremsen v+h gewechselt',mech:'LK'},{date:'2026-04-16',h:0.5,desc:'Probefahrt + Einbremsen',mech:'LK'}],notes:'',invoiced:false},
-    {id:'A2026003',cid:'K003',bike:0,status:'offen',prio:'hoch',created:'2026-05-05',mech:'MB',desc:'Motorstörung — Check Engine Lampe',parts:[],time:[],notes:'Kunde meldet unrunden Leerlauf',invoiced:false},
-    {id:'A2026004',cid:'K002',bike:1,status:'abgerechnet',prio:'normal',created:'2026-03-10',mech:'MB',desc:'Reifen vorne + hinten',parts:[{pid:'P004',qty:2,prc:189.00}],time:[{date:'2026-03-11',h:1.5,desc:'Reifenwechsel komplett',mech:'MB'}],notes:'',invoiced:true},
-    {id:'A2026005',cid:'K004',bike:0,status:'in-arbeit',prio:'normal',created:'2026-05-01',mech:'LK',desc:'Inspektion 30\'000km',parts:[{pid:'P001',qty:4,prc:15.90},{pid:'P002',qty:1,prc:24.50},{pid:'P003',qty:1,prc:18.90}],time:[{date:'2026-05-02',h:2,desc:'Inspektion begonnen',mech:'LK'}],notes:'Ventile einstellen',invoiced:false},
-    {id:'A2026006',cid:'K005',bike:0,status:'offen',prio:'normal',created:'2026-05-06',mech:'MB',desc:'Auspuff-Umbau Vance & Hines',parts:[],time:[],notes:'Teile bestellt, Lieferung KW20',invoiced:false},
-    {id:'A2026007',cid:'K001',bike:0,status:'abgerechnet',prio:'normal',created:'2026-02-05',mech:'LK',desc:'Batterie-Wechsel',parts:[{pid:'P008',qty:1,prc:145.00}],time:[{date:'2026-02-06',h:0.5,desc:'Batterie getauscht',mech:'LK'}],notes:'',invoiced:true},
-    {id:'A2026008',cid:'K004',bike:0,status:'fertig',prio:'hoch',created:'2026-04-28',mech:'MB',desc:'Kupplung rutscht — Lamellen ersetzen',parts:[{pid:'P009',qty:1,prc:220.00}],time:[{date:'2026-04-29',h:3,desc:'Kupplung zerlegt + Lamellen ersetzt',mech:'MB'},{date:'2026-04-30',h:1,desc:'Zusammenbau + Probefahrt',mech:'MB'}],notes:'',invoiced:false}
+    {id:'A2026001',cid:'K001',bike:0,status:'in-arbeit',prio:'normal',created:'2026-04-20',mech:'RT',desc:'Jahresservice 10\'000km',parts:[{pid:'P001',qty:4,prc:15.90},{pid:'P002',qty:1,prc:24.50}],time:[{date:'2026-04-21',h:1.5,desc:'Ölwechsel + Filter',mech:'RT'}],notes:'Kunde holt ab Freitag',invoiced:false},
+    {id:'A2026002',cid:'K002',bike:0,status:'fertig',prio:'normal',created:'2026-04-15',mech:'ST',desc:'Bremsbeläge vorne + hinten',parts:[{pid:'P005',qty:2,prc:89.00},{pid:'P006',qty:2,prc:95.00}],time:[{date:'2026-04-16',h:2,desc:'Bremsen v+h gewechselt',mech:'ST'},{date:'2026-04-16',h:0.5,desc:'Probefahrt + Einbremsen',mech:'ST'}],notes:'',invoiced:false},
+    {id:'A2026003',cid:'K003',bike:0,status:'offen',prio:'hoch',created:'2026-05-05',mech:'RT',desc:'Motorstörung — Check Engine Lampe',parts:[],time:[],notes:'Kunde meldet unrunden Leerlauf',invoiced:false},
+    {id:'A2026004',cid:'K002',bike:1,status:'abgerechnet',prio:'normal',created:'2026-03-10',mech:'RT',desc:'Reifen vorne + hinten',parts:[{pid:'P004',qty:2,prc:189.00}],time:[{date:'2026-03-11',h:1.5,desc:'Reifenwechsel komplett',mech:'RT'}],notes:'',invoiced:true},
+    {id:'A2026005',cid:'K004',bike:0,status:'in-arbeit',prio:'normal',created:'2026-05-01',mech:'ST',desc:'Inspektion 30\'000km',parts:[{pid:'P001',qty:4,prc:15.90},{pid:'P002',qty:1,prc:24.50},{pid:'P003',qty:1,prc:18.90}],time:[{date:'2026-05-02',h:2,desc:'Inspektion begonnen',mech:'ST'}],notes:'Ventile einstellen',invoiced:false},
+    {id:'A2026006',cid:'K005',bike:0,status:'offen',prio:'normal',created:'2026-05-06',mech:'RT',desc:'Auspuff-Umbau Vance & Hines',parts:[],time:[],notes:'Teile bestellt, Lieferung KW20',invoiced:false},
+    {id:'A2026007',cid:'K001',bike:0,status:'abgerechnet',prio:'normal',created:'2026-02-05',mech:'ST',desc:'Batterie-Wechsel',parts:[{pid:'P008',qty:1,prc:145.00}],time:[{date:'2026-02-06',h:0.5,desc:'Batterie getauscht',mech:'ST'}],notes:'',invoiced:true},
+    {id:'A2026008',cid:'K004',bike:0,status:'fertig',prio:'hoch',created:'2026-04-28',mech:'RT',desc:'Kupplung rutscht — Lamellen ersetzen',parts:[{pid:'P009',qty:1,prc:220.00}],time:[{date:'2026-04-29',h:3,desc:'Kupplung zerlegt + Lamellen ersetzt',mech:'RT'},{date:'2026-04-30',h:1,desc:'Zusammenbau + Probefahrt',mech:'RT'}],notes:'',invoiced:false}
   ],
   parts: [
     {id:'P001',name:'Motoröl HD 20W-50 1L',sku:'MO-20W50-1L',cat:'Verbrauch',stock:18,min:10,buy:9.50,sell:15.90,sup:'Harley-Davidson'},
@@ -215,11 +215,11 @@ const DEMO_DATA = {
     {id:'RG2026004',oid:'',cid:'K005',date:'2026-05-02',due:'2026-06-02',status:'offen',pos:[{desc:'Beratung Umbau-Projekt',qty:1,unit:'Std',prc:125.00},{desc:'Konfigurations-Zeichnung',qty:1,unit:'Stk',prc:80.00}]}
   ],
   staff: [
-    {id:'ST',name:'Sven Traber',user:'sven',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'admin',email:'sven@svencycles.ch',tel:'052 746 10 60',rate:0,color:'#f07000',ahvNr:'756.1234.5678.97',geburtsdatum:'1975-06-12',eintritt:'2010-01-01',pensum:100,lohn:{brutto:0,stundenlohn:0,lohnart:'inhaber'},iban:'CH56 0483 5012 3456 7800 9',bank:'Credit Suisse',bvg:{versicherung:'Helvetia',altersgutschritt:18},strasse:'Neunfornerstrasse 2',plz:'8468',ort:'Waltalingen',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:true,disposition:true,personal:true,einstellungen:true,importexport:true,aufnahme:true,offerte:true,wareneingang:true,saison:true,createInvoice:true,viewPrices:true,viewMargin:true,manageStaff:true,exportData:true,deleteData:true}},
-    {id:'LK',name:'Lisa Keller',user:'lisa',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'chef',email:'lisa@svencycles.ch',tel:'079 222 33 44',rate:48,color:'#22c55e',ahvNr:'756.2345.6789.01',geburtsdatum:'1985-03-22',eintritt:'2018-04-01',pensum:100,lohn:{brutto:5800,stundenlohn:48,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'Raiffeisenbank',bvg:{versicherung:'Helvetia',altersgutschritt:10},strasse:'Bachstrasse 4',plz:'8408',ort:'Winterthur',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:false,disposition:true,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:true,wareneingang:true,saison:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
-    {id:'MB',name:'Marco Bieri',user:'marco',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'mechaniker',email:'marco@svencycles.ch',tel:'078 666 77 88',rate:42,color:'#3b82f6',ahvNr:'756.3456.7890.12',geburtsdatum:'1992-09-14',eintritt:'2022-01-01',pensum:100,lohn:{brutto:5000,stundenlohn:42,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'PostFinance',bvg:{versicherung:'Helvetia',altersgutschritt:7},strasse:'Musterstrasse 1',plz:'8400',ort:'Winterthur',perm:{dashboard:false,auftraege:false,kunden:false,lager:false,rechnungen:false,buchhaltung:false,disposition:false,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:false,wareneingang:false,saison:false,createInvoice:false,viewPrices:false,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
+    {id:'IE',name:'Ivo Eichenberger',user:'ivo',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'admin',email:'ivo.eichenberger@gmail.com',tel:'079 100 00 01',rate:0,color:'#f07000',ahvNr:'756.0001.0001.01',geburtsdatum:'1972-03-15',eintritt:'2024-01-01',pensum:100,lohn:{brutto:0,stundenlohn:0,lohnart:'inhaber'},iban:'CH00 0000 0000 0000 0000 0',bank:'',bvg:{versicherung:'Helvetia',altersgutschritt:18},strasse:'',plz:'',ort:'',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:true,disposition:true,personal:true,einstellungen:true,importexport:true,aufnahme:true,offerte:true,wareneingang:true,saison:true,createInvoice:true,viewPrices:true,viewMargin:true,manageStaff:true,exportData:true,deleteData:true}},
+    {id:'ST',name:'Sven Traber',user:'sven',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'chef',email:'sven@svencycles.ch',tel:'079 200 00 01',rate:0,color:'#22c55e',ahvNr:'756.1234.5678.97',geburtsdatum:'1975-06-12',eintritt:'2010-01-01',pensum:100,lohn:{brutto:0,stundenlohn:0,lohnart:'inhaber'},iban:'CH56 0483 5012 3456 7800 9',bank:'Credit Suisse',bvg:{versicherung:'Helvetia',altersgutschritt:18},strasse:'Neunfornerstrasse 2',plz:'8468',ort:'Waltalingen',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:true,disposition:true,personal:true,einstellungen:true,importexport:true,aufnahme:true,offerte:true,wareneingang:true,saison:true,createInvoice:true,viewPrices:true,viewMargin:true,manageStaff:true,exportData:true,deleteData:true}},
+    {id:'RT',name:'Rico Traber',user:'rico',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'mechaniker',email:'rico@svencycles.ch',tel:'079 300 00 01',rate:45,color:'#3b82f6',ahvNr:'756.2222.3333.44',geburtsdatum:'1988-04-22',eintritt:'2015-06-01',pensum:100,lohn:{brutto:5400,stundenlohn:45,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'PostFinance',bvg:{versicherung:'Helvetia',altersgutschritt:10},strasse:'Neunfornerstrasse 5',plz:'8468',ort:'Waltalingen',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:false,buchhaltung:false,disposition:true,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:false,wareneingang:true,saison:true,createInvoice:false,viewPrices:true,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
     {id:'CS',name:'Cornel Sonderer',user:'cornel',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'disponent',email:'cornel@svencycles.ch',tel:'079 333 44 55',rate:55,color:'#a855f7',ahvNr:'756.4567.8901.23',geburtsdatum:'1980-11-05',eintritt:'2020-08-01',pensum:80,lohn:{brutto:5200,stundenlohn:55,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'ZKB',bvg:{versicherung:'Helvetia',altersgutschritt:15},strasse:'Seestrasse 22',plz:'8200',ort:'Schaffhausen',perm:{dashboard:true,auftraege:true,kunden:true,lager:true,rechnungen:true,buchhaltung:false,disposition:true,personal:false,einstellungen:false,importexport:false,aufnahme:true,offerte:true,wareneingang:true,saison:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:false,deleteData:false}},
-    {id:'FT',name:'Frau Traber',user:'traber',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'buchhaltung',email:'buchhaltung@svencycles.ch',tel:'052 746 10 61',rate:0,color:'#eab308',ahvNr:'756.5678.9012.34',geburtsdatum:'1978-04-18',eintritt:'2010-01-01',pensum:40,lohn:{brutto:2500,stundenlohn:0,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'Credit Suisse',bvg:{versicherung:'Helvetia',altersgutschritt:15},strasse:'Neunfornerstrasse 2',plz:'8468',ort:'Waltalingen',perm:{dashboard:true,auftraege:false,kunden:true,lager:false,rechnungen:true,buchhaltung:true,disposition:false,personal:false,einstellungen:false,importexport:true,aufnahme:false,offerte:false,wareneingang:false,saison:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:true,deleteData:false}}
+    {id:'MW',name:'Monika Wacher-Traber',user:'monika',pw:'03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4',role:'buchhaltung',email:'monika@svencycles.ch',tel:'079 444 55 66',rate:0,color:'#eab308',ahvNr:'756.5555.6666.77',geburtsdatum:'1978-09-30',eintritt:'2010-01-01',pensum:40,lohn:{brutto:2800,stundenlohn:0,lohnart:'monatlich'},iban:'CH00 0000 0000 0000 0000 0',bank:'Credit Suisse',bvg:{versicherung:'Helvetia',altersgutschritt:15},strasse:'Neunfornerstrasse 2',plz:'8468',ort:'Waltalingen',perm:{dashboard:true,auftraege:false,kunden:true,lager:false,rechnungen:true,buchhaltung:true,disposition:false,personal:false,einstellungen:false,importexport:true,aufnahme:false,offerte:false,wareneingang:false,saison:true,createInvoice:true,viewPrices:true,viewMargin:false,manageStaff:false,exportData:true,deleteData:false}}
   ],
   fixkosten: [
     {id:'FK001',name:'Werkstatt-Miete',kat:'Gebäude',konto:'6000',betrag:2800,faelligkeit:1,zahlungsart:'Dauerauftrag',sup:'Vermieter Müller AG',aktiv:true},
@@ -315,7 +315,19 @@ function migrate(){
     // Falls user fehlt: aus name generieren (Vorname kleingeschrieben)
     if(!s.user&&s.name){s.user=s.name.split(' ')[0].toLowerCase()}
   });
-  // Demo-User aus DEMO_DATA mergen falls fehlen (Cornel, Frau Traber)
+  // Alte Demo-User entfernen (LK Lisa, MB Marco, FT Frau Traber)
+  const obsoleteIds=['LK','MB','FT'];
+  D.staff=D.staff.filter(s=>!obsoleteIds.includes(s.id));
+  // mech-Referenzen in Aufträgen + Pausen migrieren
+  const mechMap={MB:'RT',LK:'ST',FT:'MW'};
+  D.orders.forEach(o=>{
+    if(mechMap[o.mech])o.mech=mechMap[o.mech];
+    (o.time||[]).forEach(t=>{if(mechMap[t.mech])t.mech=mechMap[t.mech]});
+  });
+  (D.pauses||[]).forEach(p=>{if(mechMap[p.mech])p.mech=mechMap[p.mech]});
+  (D.termine||[]).forEach(t=>{if(mechMap[t.mech])t.mech=mechMap[t.mech]});
+  (D.ferien||[]).forEach(f=>{if(mechMap[f.mech])f.mech=mechMap[f.mech]});
+  // Demo-User aus DEMO_DATA mergen falls fehlen
   DEMO_DATA.staff.forEach(ds=>{
     if(!D.staff.find(s=>s.id===ds.id))D.staff.push(JSON.parse(JSON.stringify(ds)));
   });
@@ -682,6 +694,7 @@ function openOfferte(oid){
     <button class="btn-danger" onclick="deleteOfferte('${oid}')">Löschen</button>
     <button class="btn-secondary" onclick="closeModal()">Schliessen</button>
     <button class="btn-secondary" onclick="generateOfferteFDF('${oid}')">📄 PDF</button>
+    ${c?.tel?`<button class="btn-success" onclick="waOfferte('${oid}')">💬 WhatsApp</button>`:''}
     ${of.status!=='angenommen'?`<button class="btn-success" onclick="acceptOfferte('${oid}')">✓ Angenommen → Auftrag</button>`:''}
   </div>`);
 }
@@ -998,6 +1011,11 @@ function openCustomer(id){
   let ordersHtml=D.orders.filter(o=>o.cid===id).map(o=>`<tr><td>${o.id}</td><td>${o.desc}</td><td>${statusBadge(o.status)}</td><td>${o.created}</td></tr>`).join('');
   showModal(`<h3>${c.name}</h3>
   <div class="form-row"><div><label>Telefon</label><input id="ec-tel" value="${c.tel}"></div><div><label>Email</label><input id="ec-email" value="${c.email}"></div></div>
+  <div style="display:flex;gap:6px;margin-bottom:10px">
+    ${c.tel?`<button class="btn-success" style="padding:5px 12px;font-size:12px" onclick="waCustom('${id}')">💬 WhatsApp</button>`:''}
+    ${c.tel?`<button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="window.location.href='tel:${c.tel.replace(/\\s/g,'')}'">📞 Anrufen</button>`:''}
+    ${c.email?`<button class="btn-secondary" style="padding:5px 12px;font-size:12px" onclick="window.location.href='mailto:${c.email}'">📧 Mail</button>`:''}
+  </div>
   <div class="form-row"><div><label>Strasse</label><input id="ec-str" value="${c.strasse}"></div><div><label>PLZ</label><input id="ec-plz" value="${c.plz}"></div></div>
   <div class="form-row"><div><label>Ort</label><input id="ec-ort" value="${c.ort}"></div></div>
   <div class="form-row full"><div><label>Notizen / Kunden-Hinweise</label><textarea id="ec-notes" placeholder="z.B. HOG-Mitglied, Stammkunde, bevorzugt Termin am Mittwoch...">${c.notizen||''}</textarea></div></div>
@@ -1373,7 +1391,8 @@ function renderMfk(){
         const sev=x.diff<0?'var(--red)':x.diff<30?'var(--orange)':'#eab308';
         const lbl=x.diff<0?`${-x.diff} Tg überfällig`:`in ${x.diff} Tg`;
         return `<tr><td><span style="color:${sev}">⚠️ ${lbl}</span></td><td>${x.c.name}</td><td>${x.b.model}</td><td>${x.b.kz}</td><td>${x.b.erstzulassung||'-'}</td><td>${x.b.letzteMfk||'noch keine'}</td><td>${x.faellig}</td><td>
-          <button class="btn-primary" style="padding:3px 8px;font-size:11px" onclick="mailMfk('${x.c.id}',${x.bi})">📧 Mail an Kunde</button>
+          <button class="btn-primary" style="padding:3px 8px;font-size:11px" onclick="mailMfk('${x.c.id}',${x.bi})">📧 Mail</button>
+          ${x.c.tel?`<button class="btn-success" style="padding:3px 8px;font-size:11px" onclick="waMfk('${x.c.id}',${x.bi})">💬 WhatsApp</button>`:''}
         </td></tr>`;
       }).join('')}
     </table></div>`;
@@ -1405,8 +1424,9 @@ function renderKundenMail(){
     <div class="tbl-wrap"><table>
       <tr><th>Auftrag</th><th>Kunde</th><th>Bike</th><th>Beschrieb</th><th>Total</th><th></th></tr>
       ${fertig.map(o=>{const c=getCustomer(o.cid);const bike=c?.bikes[o.bike||0];return `<tr><td>${o.id}</td><td>${c?c.name:'-'}</td><td>${bike?bike.model:'-'}</td><td>${o.desc}</td><td>CHF ${fmt(orderTotal(o))}</td><td>
-        <button class="btn-primary" style="padding:3px 8px;font-size:11px" onclick="mailFertig('${o.id}')">📧 Bike fertig</button>
-        ${c?.tel?`<button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="window.location.href='tel:${c.tel.replace(/\\s/g,'')}'">📞 Anrufen</button>`:''}
+        <button class="btn-primary" style="padding:3px 8px;font-size:11px" onclick="mailFertig('${o.id}')">📧 Mail</button>
+        ${c?.tel?`<button class="btn-success" style="padding:3px 8px;font-size:11px" onclick="waBikefertig('${o.id}')">💬 WhatsApp</button>`:''}
+        ${c?.tel?`<button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="window.location.href='tel:${c.tel.replace(/\\s/g,'')}'">📞 Tel</button>`:''}
       </td></tr>`}).join('')}
     </table></div>`;
   } else {
@@ -1416,7 +1436,10 @@ function renderKundenMail(){
     h+=`<h4 style="margin:14px 0 6px;color:#999;font-size:13px">In Arbeit (${infertig.length}) — bei Verzögerung benachrichtigen</h4>
     <div class="tbl-wrap"><table>
       <tr><th>Auftrag</th><th>Kunde</th><th>Beschrieb</th><th></th></tr>
-      ${infertig.map(o=>{const c=getCustomer(o.cid);return `<tr><td>${o.id}</td><td>${c?c.name:'-'}</td><td>${o.desc}</td><td><button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="mailVerzoegerung('${o.id}')">📧 Verzögerung mitteilen</button></td></tr>`}).join('')}
+      ${infertig.map(o=>{const c=getCustomer(o.cid);return `<tr><td>${o.id}</td><td>${c?c.name:'-'}</td><td>${o.desc}</td><td>
+        <button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="mailVerzoegerung('${o.id}')">📧 Mail</button>
+        ${c?.tel?`<button class="btn-success" style="padding:3px 8px;font-size:11px" onclick="waVerzoegerung('${o.id}')">💬 WhatsApp</button>`:''}
+      </td></tr>`}).join('')}
     </table></div>`;
   }
   h+=`</div>`;
@@ -2096,6 +2119,71 @@ function exportBexioArtikel(){
   downloadFile('Bexio_Artikel_'+new Date().toISOString().slice(0,10)+'.csv',csv,'text/csv');
 }
 function dToCh(d){if(!d)return '';const [y,m,da]=d.split('-');return `${da}.${m}.${y}`}
+// ============================================================
+// WHATSAPP CLICK-TO-CHAT
+// ============================================================
+function phoneToWa(phone){
+  if(!phone)return '';
+  let p=phone.replace(/[\s\-\(\)\.]/g,'');
+  if(p.startsWith('00'))p='+'+p.substring(2);
+  if(p.startsWith('0'))p='+41'+p.substring(1);
+  if(!p.startsWith('+'))p='+41'+p;
+  return p.replace(/^\+/,'');
+}
+function waLink(phone,text){
+  const num=phoneToWa(phone);
+  if(!num)return null;
+  return `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+}
+function openWa(phone,text){
+  const link=waLink(phone,text);
+  if(!link){alert('Keine gültige Telefonnummer');return}
+  window.open(link,'_blank');
+}
+function waBikefertig(oid){
+  const o=getOrder(oid);if(!o)return;
+  const c=getCustomer(o.cid);if(!c)return;
+  const bike=c.bikes[o.bike||0];
+  const total=orderTotal(o);
+  const e=D.einstellungen||{};
+  const text=`Hoi ${c.name.split(' ')[0]} 👋\n\nDein ${bike?bike.model:'Bike'} ist fertig 🏍️ — wir haben ${o.desc.toLowerCase()} erledigt.\n\nDu kannst es ab sofort abholen.\n⏰ ${e.oeffnungszeiten||'Mo-Fr 8-12 / 13-18 Uhr · Sa 9-12 Uhr'}\n💰 Rechnungsbetrag: CHF ${fmt(total)}\n\nGruss Sven 🛠️`;
+  o.kundeBenachrichtigt=new Date().toISOString();
+  saveData();
+  openWa(c.tel,text);
+}
+function waMfk(cid,bi){
+  const c=getCustomer(cid);if(!c)return;
+  const b=c.bikes[bi];if(!b)return;
+  const faellig=calcMfkFaellig(b);
+  const text=`Hoi ${c.name.split(' ')[0]} 👋\n\nKurze Erinnerung: Die MFK für deinen ${b.model} (${b.kz}) ist ${faellig?'fällig per '+faellig:'demnächst fällig'}.\n\nGerne organisieren wir das für dich. Melde dich kurz! 📞 052 746 10 60\n\nGruss Svencycles`;
+  openWa(c.tel,text);
+}
+function waVerzoegerung(oid){
+  const o=getOrder(oid);if(!o)return;
+  const c=getCustomer(o.cid);if(!c)return;
+  const text=`Hoi ${c.name.split(' ')[0]} 👋\n\nKurzer Status zu deinem ${o.desc}:\n\n[bitte hier ergänzen — z.B. "Teil ist verzögert, neue Lieferung KW 32"]\n\nIch melde mich sofort wenn dein Bike abholbereit ist 🏍️\n\nGruss Sven`;
+  openWa(c.tel,text);
+}
+function waOfferte(oid){
+  const of=D.offerten?.find(x=>x.id===oid);if(!of)return;
+  const c=getCustomer(of.cid);if(!c)return;
+  const tot=of.pos.reduce((s,p)=>s+p.qty*p.prc,0);
+  const text=`Hoi ${c.name.split(' ')[0]} 👋\n\nIch hab dir die Offerte ${of.id} für deinen ${of.bikeModel||'Auftrag'} fertiggestellt.\n\n💰 Total: CHF ${fmt(tot*1.081)} (inkl. MWST)\n📅 Gültig bis ${of.gueltig}\n\nDie detaillierte PDF schicke ich dir per Mail. Bitte melde dich kurz ob ok 👍\n\nGruss Sven`;
+  openWa(c.tel,text);
+}
+function waCustom(cid){
+  const c=getCustomer(cid);if(!c)return;
+  showModal(`<h3>💬 WhatsApp an ${c.name}</h3>
+  <p class="muted" style="font-size:12px">Tel: ${c.tel} → ${phoneToWa(c.tel)}</p>
+  <textarea id="wa-text" style="min-height:140px" placeholder="Nachricht eingeben...">Hoi ${c.name.split(' ')[0]} 👋
+
+</textarea>
+  <div class="btns">
+    <button class="btn-secondary" onclick="closeModal()">Abbrechen</button>
+    <button class="btn-success" onclick="openWa('${c.tel}',gv('wa-text'));closeModal()">💬 WhatsApp öffnen</button>
+  </div>`);
+  setTimeout(()=>{const ta=document.getElementById('wa-text');if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}},100);
+}
 
 // ============================================================
 // PERSONAL
