@@ -234,6 +234,7 @@ const DEMO_DATA = {
   eingaenge: [],
   buchungen: [],
   loehne: [],
+  ferien: [],
   wareneingang: [],
   einlagerungen: [],
   pauses: [],
@@ -246,7 +247,7 @@ const DEMO_DATA = {
     ahv_an:0.053, ahv_ag:0.053, alv_an:0.011, alv_ag:0.011, uvg_nbu_an:0.013, uvg_bu_ag:0.012, ktg_an:0.005, ktg_ag:0.005, fak_ag:0.025,
     bvg_koord:2575, ahvKasse:'SVA Zürich', bvgVersicherung:'Helvetia'
   },
-  counters:{order:8,invoice:4,customer:5,part:18,rapport:0,offerte:0,termin:0,we:0,einlagerung:0,eingang:0,lohn:0}
+  counters:{order:8,invoice:4,customer:5,part:18,rapport:0,offerte:0,termin:0,we:0,einlagerung:0,eingang:0,lohn:0,ferien:0}
 };
 
 let D;
@@ -258,7 +259,7 @@ function loadData(){
 function saveData(){localStorage.setItem('svc_data',JSON.stringify(D))}
 function migrate(){
   // Fehlende Top-Level Felder aus DEMO_DATA ergänzen
-  ['einstellungen','fixkosten','eingaenge','buchungen','loehne','wareneingang','einlagerungen','pauses','rapports','offerten','termine'].forEach(k=>{
+  ['einstellungen','fixkosten','eingaenge','buchungen','loehne','ferien','wareneingang','einlagerungen','pauses','rapports','offerten','termine'].forEach(k=>{
     if(D[k]===undefined)D[k]=Array.isArray(DEMO_DATA[k])?[]:JSON.parse(JSON.stringify(DEMO_DATA[k]||{}));
   });
   // einstellungen Sub-Felder ergänzen
@@ -266,15 +267,30 @@ function migrate(){
   // counters ergänzen
   if(!D.counters)D.counters={};
   Object.keys(DEMO_DATA.counters).forEach(k=>{if(D.counters[k]===undefined)D.counters[k]=DEMO_DATA.counters[k]});
-  // Mitarbeiter: fehlende Felder ergänzen (perm, lohn, bvg, Adressdaten)
+  // Mitarbeiter: fehlende Felder pro staff aus passendem DEMO_DATA-Eintrag mergen
+  // KRITISCH: das fügt fehlende user/pw Felder hinzu für Login!
   D.staff.forEach(s=>{
+    const demo=DEMO_DATA.staff.find(x=>x.id===s.id);
+    if(demo){
+      Object.keys(demo).forEach(k=>{
+        if(s[k]===undefined||s[k]===null||s[k]===''){
+          s[k]=typeof demo[k]==='object'?JSON.parse(JSON.stringify(demo[k])):demo[k];
+        }
+      });
+      // Berechtigungen mergen (fehlende Keys ergänzen, vorhandene nicht überschreiben)
+      if(demo.perm){
+        if(!s.perm)s.perm={};
+        Object.keys(demo.perm).forEach(k=>{if(s.perm[k]===undefined)s.perm[k]=demo.perm[k]});
+      }
+    }
+    // Defaults falls weder vorhanden noch in DEMO_DATA
     if(!s.perm)s.perm={};
-    // Berechtigungen aus Preset für deren Rolle
-    const preset=(typeof PERM_PRESETS!=='undefined'?PERM_PRESETS[s.role]:null)||{};
-    Object.keys(preset).forEach(k=>{if(s.perm[k]===undefined)s.perm[k]=!!preset[k]});
     if(!s.lohn)s.lohn={brutto:0,stundenlohn:s.rate||0,lohnart:s.role==='admin'?'inhaber':'monatlich'};
     if(!s.bvg)s.bvg={versicherung:'Helvetia',altersgutschritt:10};
     if(s.pensum===undefined)s.pensum=100;
+    if(s.ferienAnspruch===undefined)s.ferienAnspruch=25; // 5 Wochen Standard CH
+    // Falls user fehlt: aus name generieren (Vorname kleingeschrieben)
+    if(!s.user&&s.name){s.user=s.name.split(' ')[0].toLowerCase()}
   });
   // Demo-User aus DEMO_DATA mergen falls fehlen (Cornel, Frau Traber)
   DEMO_DATA.staff.forEach(ds=>{
@@ -2181,7 +2197,7 @@ function lohnzettelPDF(lohn,staff){
 
 let personalTab='ueber';
 function renderPersonal(){
-  const tabs=[['ueber','👷 Mitarbeiter'],['lohn','💵 Lohnabrechnung'],['stunden','⏱ Arbeitsstunden']];
+  const tabs=[['ueber','👷 Mitarbeiter'],['lohn','💵 Lohnabrechnung'],['stunden','⏱ Arbeitsstunden'],['ferien','🏖️ Ferien']];
   let h=`<h2>👷 Personal & Löhne</h2>
   <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid #333;padding-bottom:0">
     ${tabs.map(([k,l])=>`<button class="${personalTab===k?'btn-primary':'btn-secondary'}" style="padding:8px 14px" onclick="personalTab='${k}';navigate('personal')">${l}</button>`).join('')}
@@ -2189,7 +2205,176 @@ function renderPersonal(){
   if(personalTab==='ueber')h+=renderPersonalUeber();
   else if(personalTab==='lohn')h+=renderPersonalLohn();
   else if(personalTab==='stunden')h+=renderPersonalStunden();
+  else if(personalTab==='ferien')h+=renderPersonalFerien();
   return h;
+}
+// ============================================================
+// FERIENVERWALTUNG
+// ============================================================
+function workdaysBetween(from,to){
+  if(!from||!to)return 0;
+  const d1=new Date(from),d2=new Date(to);
+  if(d2<d1)return 0;
+  let count=0;
+  for(let d=new Date(d1);d<=d2;d.setDate(d.getDate()+1)){
+    const wd=d.getDay();
+    if(wd!==0&&wd!==6)count++; // Sa+So überspringen
+  }
+  return count;
+}
+function ferienSaldo(staffId,year){
+  const s=D.staff.find(x=>x.id===staffId);if(!s)return null;
+  const anspruch=s.ferienAnspruch||25;
+  // Pensum-anteilig
+  const anspruchEff=Math.round(anspruch*(s.pensum||100)/100*10)/10;
+  const fList=(D.ferien||[]).filter(f=>f.mech===staffId&&(f.von||'').startsWith(year));
+  const genommen=fList.filter(f=>f.status==='genehmigt'&&f.bis<new Date().toISOString().slice(0,10)).reduce((sum,f)=>sum+(f.tage||0),0);
+  const geplant=fList.filter(f=>f.status==='genehmigt'&&f.bis>=new Date().toISOString().slice(0,10)).reduce((sum,f)=>sum+(f.tage||0),0);
+  const beantragt=fList.filter(f=>f.status==='beantragt').reduce((sum,f)=>sum+(f.tage||0),0);
+  return {anspruch:anspruchEff,genommen,geplant,beantragt,saldo:anspruchEff-genommen-geplant};
+}
+function renderPersonalFerien(){
+  if(!D.ferien)D.ferien=[];
+  const year=document.getElementById('fer-year')?.value||String(new Date().getFullYear());
+  const yearOpts=[];
+  const cy=new Date().getFullYear();
+  for(let y=cy-1;y<=cy+1;y++)yearOpts.push(String(y));
+
+  // KPIs pro Mitarbeiter
+  let kpiCards='';
+  D.staff.filter(s=>s.role!=='admin'&&s.role!=='buchhaltung').forEach(s=>{
+    const sal=ferienSaldo(s.id,year);if(!sal)return;
+    const pct=sal.saldo<0?'var(--red)':sal.saldo<5?'var(--orange)':'var(--green)';
+    kpiCards+=`<div class="kpi" style="border:2px solid ${s.color}">
+      <div class="val" style="color:${pct}">${sal.saldo.toFixed(1)} Tg</div>
+      <div class="lbl"><strong>${s.name}</strong><br>
+        <span style="font-size:10px">Anspruch: ${sal.anspruch} · Genommen: ${sal.genommen} · Geplant: ${sal.geplant}${sal.beantragt>0?` · <span style="color:var(--orange)">${sal.beantragt} offen</span>`:''}</span>
+      </div>
+    </div>`;
+  });
+
+  // Ferien-Liste
+  const fList=(D.ferien||[]).filter(f=>(f.von||'').startsWith(year)).sort((a,b)=>(a.von||'').localeCompare(b.von||''));
+  const heute=new Date().toISOString().slice(0,10);
+  const aktuell=fList.filter(f=>f.status==='genehmigt'&&f.von<=heute&&f.bis>=heute);
+  const beantragt=fList.filter(f=>f.status==='beantragt');
+
+  let rows=fList.map(f=>{
+    const s=D.staff.find(x=>x.id===f.mech);
+    const stClass=f.status==='genehmigt'?'fertig':f.status==='abgelehnt'?'überfällig':f.status==='beantragt'?'in-arbeit':'offen';
+    const isPast=f.bis<heute;
+    return `<tr style="${isPast&&f.status==='genehmigt'?'opacity:.6':''}">
+      <td>${f.id}</td>
+      <td><span style="color:${s?s.color:'#fff'}">${s?s.name:f.mech}</span></td>
+      <td>${f.von||'-'}</td>
+      <td>${f.bis||'-'}</td>
+      <td style="text-align:right">${f.tage||0}</td>
+      <td>${f.grund||'-'}</td>
+      <td><span class="badge badge-${stClass}">${f.status}</span></td>
+      <td>${f.genehmigtVon||'-'}</td>
+      <td>
+        ${f.status==='beantragt'&&can('manageStaff')?`<button class="btn-success" style="padding:3px 8px;font-size:11px" onclick="ferienGenehmigen('${f.id}')">✓</button>
+        <button class="btn-danger" style="padding:3px 8px;font-size:11px" onclick="ferienAblehnen('${f.id}')">✗</button>`:''}
+        <button class="btn-secondary" style="padding:3px 8px;font-size:11px" onclick="editFerienModal('${f.id}')">✎</button>
+        <button class="btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteFerien('${f.id}')">×</button>
+      </td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="9" style="text-align:center;color:#999;padding:14px">Keine Ferieneinträge in '+year+'</td></tr>';
+
+  return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+    <label class="muted">Jahr:</label>
+    <select id="fer-year" onchange="navigate('personal')" style="max-width:120px">${yearOpts.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select>
+    <button class="btn-primary" onclick="newFerienModal()">+ Ferienantrag</button>
+    <button class="btn-secondary" onclick="exportFerienCSV('${year}')">📊 CSV Export</button>
+  </div>
+
+  <div class="kpi-row" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">${kpiCards}</div>
+
+  ${aktuell.length?`<div style="background:#1a3000;border:1px solid var(--green);border-radius:10px;padding:12px;margin-bottom:14px"><strong style="color:var(--green)">🏖️ Aktuell in den Ferien:</strong> ${aktuell.map(f=>{const s=D.staff.find(x=>x.id===f.mech);return (s?s.name:f.mech)+' (bis '+f.bis+')'}).join(', ')}</div>`:''}
+
+  ${beantragt.length>0&&can('manageStaff')?`<div style="background:#3a3000;border:1px solid var(--yellow);border-radius:10px;padding:12px;margin-bottom:14px"><strong style="color:var(--yellow)">⏳ ${beantragt.length} offene Ferienanträge</strong> warten auf Genehmigung</div>`:''}
+
+  <h3 style="color:var(--orange);margin:14px 0 8px">Ferien-Übersicht ${year}</h3>
+  <div class="tbl-wrap"><table>
+    <tr><th>Nr</th><th>Mitarbeiter</th><th>Von</th><th>Bis</th><th style="text-align:right">Tage</th><th>Grund</th><th>Status</th><th>Genehmigt</th><th></th></tr>
+    ${rows}
+  </table></div>
+
+  <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:14px;margin-top:14px;font-size:12px">
+    <strong style="color:var(--orange)">📋 Ferien-Spielregeln (CH-Standard):</strong>
+    <ul style="margin-left:20px;margin-top:6px;line-height:1.7">
+      <li>Mindestanspruch: 4 Wochen / 20 Tage (Erwachsene), 5 Wochen / 25 Tage (U20 + Lehrlinge)</li>
+      <li>Wir geben standardmäßig <strong>5 Wochen / 25 Tage</strong> bei 100% Pensum</li>
+      <li>Pensum-anteilig: 80% → 20 Tage, 50% → 12.5 Tage</li>
+      <li>Saldo wird zum Jahresende ausbezahlt oder ins nächste Jahr übertragen (max. 5 Tage)</li>
+    </ul>
+  </div>`;
+}
+function newFerienModal(){
+  let staffOpts=D.staff.filter(s=>s.role!=='admin'&&s.role!=='buchhaltung').map(s=>`<option value="${s.id}" ${currentUser&&currentUser.id===s.id?'selected':''}>${s.name}</option>`).join('');
+  const today=new Date().toISOString().slice(0,10);
+  const tomorrow=new Date(Date.now()+86400000).toISOString().slice(0,10);
+  showModal(`<h3>🏖️ Neuer Ferienantrag</h3>
+    <div class="form-row"><div><label>Mitarbeiter</label><select id="nf2-mech">${staffOpts}</select></div><div><label>Grund / Anlass</label><select id="nf2-grund"><option>Ferien</option><option>Krankheit</option><option>Militär</option><option>Schule/Weiterbildung</option><option>Unbezahlt</option><option>Anderes</option></select></div></div>
+    <div class="form-row"><div><label>Von</label><input id="nf2-von" type="date" value="${tomorrow}" onchange="updateNfTage()"></div><div><label>Bis</label><input id="nf2-bis" type="date" value="${tomorrow}" onchange="updateNfTage()"></div></div>
+    <div class="form-row"><div><label>Tage (Werktage)</label><input id="nf2-tage" type="number" step="0.5" value="1"></div><div><label>Status</label><select id="nf2-status"><option value="beantragt">Beantragt (warten auf Genehmigung)</option><option value="genehmigt" ${can('manageStaff')?'':'disabled'}>Direkt genehmigt</option></select></div></div>
+    <div class="form-row full"><div><label>Notiz</label><input id="nf2-notiz" placeholder="z.B. Familienferien Tessin"></div></div>
+    <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveNewFerien()">✓ Antrag erstellen</button></div>`);
+  setTimeout(updateNfTage,50);
+}
+function updateNfTage(){
+  const von=gv('nf2-von'),bis=gv('nf2-bis');
+  const t=workdaysBetween(von,bis);
+  const inp=document.getElementById('nf2-tage');if(inp)inp.value=t;
+}
+function saveNewFerien(){
+  if(!D.ferien)D.ferien=[];
+  D.counters.ferien=(D.counters.ferien||0)+1;
+  const id='F'+new Date().getFullYear()+String(D.counters.ferien).padStart(3,'0');
+  const status=gv('nf2-status');
+  D.ferien.push({id,mech:gv('nf2-mech'),von:gv('nf2-von'),bis:gv('nf2-bis'),tage:parseFloat(gv('nf2-tage'))||0,grund:gv('nf2-grund'),notiz:gv('nf2-notiz'),status,erstellt:new Date().toISOString().slice(0,10),genehmigtVon:status==='genehmigt'?currentUser?.id:''});
+  saveData();closeModal();navigate('personal');
+}
+function editFerienModal(fid){
+  const f=D.ferien.find(x=>x.id===fid);if(!f)return;
+  let staffOpts=D.staff.map(s=>`<option value="${s.id}" ${s.id===f.mech?'selected':''}>${s.name}</option>`).join('');
+  showModal(`<h3>Ferieneintrag ${fid}</h3>
+    <div class="form-row"><div><label>Mitarbeiter</label><select id="ef2-mech">${staffOpts}</select></div><div><label>Grund</label><select id="ef2-grund"><option ${f.grund==='Ferien'?'selected':''}>Ferien</option><option ${f.grund==='Krankheit'?'selected':''}>Krankheit</option><option ${f.grund==='Militär'?'selected':''}>Militär</option><option ${f.grund==='Schule/Weiterbildung'?'selected':''}>Schule/Weiterbildung</option><option ${f.grund==='Unbezahlt'?'selected':''}>Unbezahlt</option><option ${f.grund==='Anderes'?'selected':''}>Anderes</option></select></div></div>
+    <div class="form-row"><div><label>Von</label><input id="ef2-von" type="date" value="${f.von||''}"></div><div><label>Bis</label><input id="ef2-bis" type="date" value="${f.bis||''}"></div></div>
+    <div class="form-row"><div><label>Tage</label><input id="ef2-tage" type="number" step="0.5" value="${f.tage||0}"></div><div><label>Status</label><select id="ef2-status"><option ${f.status==='beantragt'?'selected':''}>beantragt</option><option ${f.status==='genehmigt'?'selected':''}>genehmigt</option><option ${f.status==='abgelehnt'?'selected':''}>abgelehnt</option></select></div></div>
+    <div class="form-row full"><div><label>Notiz</label><input id="ef2-notiz" value="${f.notiz||''}"></div></div>
+    <div class="btns"><button class="btn-danger" onclick="deleteFerien('${fid}')">Löschen</button><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveFerien('${fid}')">Speichern</button></div>`);
+}
+function saveFerien(fid){
+  const f=D.ferien.find(x=>x.id===fid);if(!f)return;
+  f.mech=gv('ef2-mech');f.von=gv('ef2-von');f.bis=gv('ef2-bis');f.tage=parseFloat(gv('ef2-tage'))||0;
+  f.grund=gv('ef2-grund');f.notiz=gv('ef2-notiz');f.status=gv('ef2-status');
+  if(f.status==='genehmigt'&&!f.genehmigtVon)f.genehmigtVon=currentUser?.id||'';
+  saveData();closeModal();navigate('personal');
+}
+function ferienGenehmigen(fid){
+  const f=D.ferien.find(x=>x.id===fid);if(!f)return;
+  f.status='genehmigt';f.genehmigtVon=currentUser?.id||'';
+  saveData();navigate('personal');
+}
+function ferienAblehnen(fid){
+  const f=D.ferien.find(x=>x.id===fid);if(!f)return;
+  if(!confirm('Ferienantrag ablehnen?'))return;
+  f.status='abgelehnt';f.genehmigtVon=currentUser?.id||'';
+  saveData();navigate('personal');
+}
+function deleteFerien(fid){
+  if(!confirm('Eintrag löschen?'))return;
+  D.ferien=D.ferien.filter(x=>x.id!==fid);
+  saveData();closeModal();navigate('personal');
+}
+function exportFerienCSV(year){
+  let csv='Nr;Mitarbeiter;Von;Bis;Tage;Grund;Status;Genehmigt von\n';
+  (D.ferien||[]).filter(f=>(f.von||'').startsWith(year)).forEach(f=>{
+    const s=D.staff.find(x=>x.id===f.mech);
+    csv+=`${f.id};${s?s.name:f.mech};${f.von};${f.bis};${f.tage};${f.grund};${f.status};${f.genehmigtVon||''}\n`;
+  });
+  downloadFile('Ferien_'+year+'.csv',csv,'text/csv');
 }
 function renderPersonalLohn(){
   const monat=document.getElementById('lohn-monat')?.value||new Date().toISOString().slice(0,7);
@@ -2303,7 +2488,7 @@ function renderPersonalUeber(){
     const isMe=currentUser&&currentUser.id===s.id;
     return `<div style="background:var(--bg2);border:2px solid ${s.color};border-radius:12px;padding:20px;flex:1;min-width:280px;cursor:${can('manageStaff')?'pointer':'default'}" ${can('manageStaff')?`onclick="editStaffModal('${s.id}')"`:''}>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="width:40px;height:40px;border-radius:50%;background:${s.color};display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff">${s.id}</div><div style="flex:1"><strong>${s.name}</strong>${isMe?' <span style="color:#22c55e;font-size:11px">(Sie)</span>':''}<br><span style="font-size:11px;color:var(--text2)">${roleLabel(s.role)}</span></div></div>
-    <div style="font-size:12px;color:var(--text2);line-height:1.6">👤 ${s.user||'-'}<br>📧 ${s.email}<br>📞 ${s.tel}<br>💵 CHF ${s.rate>0?fmt(s.rate):'—'}/h<br>🔧 ${orders} Aufträge · ${hours}h</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6">👤 ${s.user||'-'}<br>📧 ${s.email}<br>📞 ${s.tel}<br>💵 CHF ${s.rate>0?fmt(s.rate):'—'}/h<br>🔧 ${orders} Aufträge · ${hours}h${(()=>{const sal=ferienSaldo(s.id,String(new Date().getFullYear()));return sal?`<br>🏖️ Ferien-Saldo: <strong style="color:${sal.saldo<0?'var(--red)':sal.saldo<5?'var(--orange)':'var(--green)'}">${sal.saldo.toFixed(1)} Tg</strong>`:''})()}</div>
     ${can('manageStaff')?'<div style="text-align:right;margin-top:10px;font-size:11px;color:#f07000">Klicken zum Bearbeiten →</div>':''}</div>`;
   }).join('');
   return `<h2>👷 Personal</h2>
@@ -2361,6 +2546,7 @@ function editStaffModal(sid){
       <div class="form-row"><div><label>Strasse</label><input id="es-str" value="${s.strasse||''}"></div><div><label>PLZ / Ort</label><input id="es-plzort" value="${(s.plz||'')+' '+(s.ort||'')}"></div></div>
       <div class="form-row"><div><label>AHV-Nr</label><input id="es-ahv" value="${s.ahvNr||''}" placeholder="756.1234.5678.97" style="font-family:monospace"></div><div><label>Geburtsdatum</label><input id="es-geb" type="date" value="${s.geburtsdatum||''}"></div></div>
       <div class="form-row"><div><label>Eintrittsdatum</label><input id="es-ein" type="date" value="${s.eintritt||''}"></div><div><label>Pensum (%)</label><input id="es-pensum" type="number" min="0" max="100" value="${s.pensum||100}"></div></div>
+      <div class="form-row"><div><label>Ferienanspruch (Tage/Jahr bei 100%)</label><input id="es-ferien" type="number" min="0" max="40" value="${s.ferienAnspruch||25}"></div></div>
     </div>
   </details>
   <details style="margin:14px 0">
@@ -2391,7 +2577,7 @@ async function saveStaff(sid){
   s.name=gv('es-name');s.user=newUser;s.role=gv('es-role');s.email=gv('es-email');s.tel=gv('es-tel');
   s.rate=parseFloat(gv('es-rate'))||0;s.color=gv('es-color');s.perm=readPerms('es');
   // Personal-Daten
-  if(document.getElementById('es-str')){s.strasse=gv('es-str');const po=gv('es-plzort').split(' ');s.plz=po[0]||'';s.ort=po.slice(1).join(' ')||'';s.ahvNr=gv('es-ahv');s.geburtsdatum=gv('es-geb');s.eintritt=gv('es-ein');s.pensum=parseInt(gv('es-pensum'))||100}
+  if(document.getElementById('es-str')){s.strasse=gv('es-str');const po=gv('es-plzort').split(' ');s.plz=po[0]||'';s.ort=po.slice(1).join(' ')||'';s.ahvNr=gv('es-ahv');s.geburtsdatum=gv('es-geb');s.eintritt=gv('es-ein');s.pensum=parseInt(gv('es-pensum'))||100;s.ferienAnspruch=parseInt(gv('es-ferien'))||25}
   // Lohn-Daten
   if(document.getElementById('es-brutto')){if(!s.lohn)s.lohn={};s.lohn.lohnart=gv('es-lohnart');s.lohn.brutto=parseFloat(gv('es-brutto'))||0;s.lohn.stundenlohn=parseFloat(gv('es-stlohn'))||0;s.iban=gv('es-iban');s.bank=gv('es-bank');if(!s.bvg)s.bvg={};s.bvg.altersgutschritt=parseInt(gv('es-bvg-as'))||7;s.bvg.versicherung=D.einstellungen.bvgVersicherung}
   const newpw=gv('es-newpw');
