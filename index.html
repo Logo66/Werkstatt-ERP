@@ -270,6 +270,9 @@ const DEMO_DATA = {
   counters:{order:8,invoice:4,customer:5,part:18,rapport:0,offerte:0,termin:0,we:0,einlagerung:0,eingang:0,lohn:0,ferien:0}
 };
 
+let catColors={};
+function rebuildCatColors(){catColors={};(D?.einstellungen?.lagerKategorien||[]).forEach(c=>{catColors[c.name]=c.color})}
+function getCatNames(){return (D?.einstellungen?.lagerKategorien||[]).map(c=>c.name)}
 let D;
 function loadData(){
   const s=localStorage.getItem('svc_data');
@@ -800,9 +803,6 @@ function orderTotal(o){
 }
 function invoiceTotal(inv){return inv.pos.reduce((s,p)=>s+p.qty*p.prc,0)}
 function invoiceTotalBrutto(inv){const n=invoiceTotal(inv);return n*(1+0.081)}
-let catColors={};
-function rebuildCatColors(){catColors={};(D.einstellungen?.lagerKategorien||[]).forEach(c=>{catColors[c.name]=c.color})}
-function getCatNames(){return (D.einstellungen?.lagerKategorien||[]).map(c=>c.name)}
 
 // ============================================================
 // DASHBOARD
