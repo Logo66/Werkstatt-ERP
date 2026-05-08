@@ -1226,7 +1226,7 @@ function deletePart(pid){if(!confirm('Artikel löschen?'))return;D.parts=D.parts
 // ============================================================
 let saisonTab='einlag';
 function renderSaison(){
-  const tabs=[['einlag','🏠 Einlagerung / Reifenhotel'],['mfk','📅 MFK-Erinnerung'],['mail','📧 Kunden-Mail']];
+  const tabs=[['einlag','🏠 Einlagerung / Reifenhotel'],['mfk','📅 MFK-Erinnerung'],['mail','📧 Kunden-Mail'],['wa','💬 WhatsApp']];
   let h=`<h2>🏠 Saison & Erinnerungen</h2>
   <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid #333">
     ${tabs.map(([k,l])=>`<button class="${saisonTab===k?'btn-primary':'btn-secondary'}" style="padding:8px 14px" onclick="saisonTab='${k}';navigate('saison')">${l}</button>`).join('')}
@@ -1234,7 +1234,91 @@ function renderSaison(){
   if(saisonTab==='einlag')h+=renderEinlagerung();
   else if(saisonTab==='mfk')h+=renderMfk();
   else if(saisonTab==='mail')h+=renderKundenMail();
+  else if(saisonTab==='wa')h+=renderWhatsApp();
   return h;
+}
+function renderWhatsApp(){
+  const fertig=D.orders.filter(o=>o.status==='fertig'&&!o.kundeBenachrichtigt);
+  const inArbeit=D.orders.filter(o=>o.status==='in-arbeit');
+  const heuteTermine=(D.termine||[]).filter(t=>t.date===new Date().toISOString().slice(0,10));
+  let h=`<div style="background:#0a3a1a;border:1px solid #22c55e;border-radius:10px;padding:14px;margin-bottom:14px">
+    <strong style="color:#22c55e">💬 WhatsApp Click-to-Chat</strong>
+    <p style="font-size:12px;margin-top:6px;color:#ccc">Buttons öffnen WhatsApp Web/App mit fertiger Nachricht. Du klickst nur noch auf "Senden". Kostenlos, kein API-Key, kein Account nötig.</p>
+  </div>`;
+
+  // Bikes bereit zur Abholung
+  if(fertig.length){
+    h+=`<h3 style="color:var(--orange);margin:14px 0 8px;font-size:15px">🏍️ Bereit zur Abholung (${fertig.length})</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>Auftrag</th><th>Kunde</th><th>Telefon</th><th>Bike</th><th>Total</th><th></th></tr>
+      ${fertig.map(o=>{const c=getCustomer(o.cid);const bike=c?.bikes[o.bike||0];return `<tr><td>${o.id}</td><td>${c?c.name:'-'}</td><td>${c?.tel||'-'}</td><td>${bike?bike.model:'-'}</td><td>CHF ${fmt(orderTotal(o))}</td><td>
+        ${c?.tel?`<button class="btn-success" style="padding:4px 10px;font-size:12px" onclick="waBikefertig('${o.id}')">💬 Bike fertig senden</button>`:'<span class="muted">keine Tel</span>'}
+      </td></tr>`}).join('')}
+    </table></div>`;
+  }
+
+  // Aufträge in Arbeit
+  if(inArbeit.length){
+    h+=`<h3 style="color:var(--orange);margin:14px 0 8px;font-size:15px">⚙ In Arbeit — Status-Update senden (${inArbeit.length})</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>Auftrag</th><th>Kunde</th><th>Beschrieb</th><th></th></tr>
+      ${inArbeit.map(o=>{const c=getCustomer(o.cid);return `<tr><td>${o.id}</td><td>${c?c.name:'-'}</td><td>${o.desc}</td><td>
+        ${c?.tel?`<button class="btn-secondary" style="padding:4px 10px;font-size:12px" onclick="waVerzoegerung('${o.id}')">💬 Verzögerung</button>`:''}
+      </td></tr>`}).join('')}
+    </table></div>`;
+  }
+
+  // Termine heute
+  if(heuteTermine.length){
+    h+=`<h3 style="color:var(--orange);margin:14px 0 8px;font-size:15px">📅 Termine heute — Erinnerung senden</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>Zeit</th><th>Kunde</th><th>Auftrag</th><th></th></tr>
+      ${heuteTermine.map(t=>{const o=getOrder(t.oid);const c=o?getCustomer(o.cid):null;return `<tr><td>${t.start}</td><td>${c?c.name:'-'}</td><td>${o?o.desc:'-'}</td><td>
+        ${c?.tel?`<button class="btn-secondary" style="padding:4px 10px;font-size:12px" onclick="waTerminErinnerung('${t.id}')">💬 Termin-Erinnerung</button>`:''}
+      </td></tr>`}).join('')}
+    </table></div>`;
+  }
+
+  // Alle Kunden mit Tel-Nr
+  const cWithTel=D.customers.filter(c=>c.tel);
+  h+=`<h3 style="color:var(--orange);margin:14px 0 8px;font-size:15px">👥 Alle Kunden — freie Nachricht (${cWithTel.length})</h3>
+  <div class="search-bar">
+    <input id="wa-search" placeholder="Kunde suchen..." oninput="filterWaCust(this.value)">
+  </div>
+  <div class="tbl-wrap" style="max-height:500px;overflow-y:auto"><table id="wa-cust-tbl">
+    <tr><th>Name</th><th>Telefon</th><th>WhatsApp-Format</th><th></th></tr>
+    ${cWithTel.map(c=>`<tr><td>${c.name}</td><td>${c.tel}</td><td style="font-family:monospace;font-size:11px">+${phoneToWa(c.tel)}</td><td>
+      <button class="btn-success" style="padding:4px 10px;font-size:12px" onclick="waCustom('${c.id}')">💬 Nachricht schreiben</button>
+    </td></tr>`).join('')}
+  </table></div>
+
+  <div style="background:#1a1a1a;border:1px solid #333;border-radius:10px;padding:14px;margin-top:14px;font-size:12px;line-height:1.7">
+    <strong style="color:var(--orange)">📋 Was die Templates schicken:</strong>
+    <ul style="margin-left:20px;margin-top:6px">
+      <li><strong>Bike fertig:</strong> Begrüssung + Bike-Modell + erledigte Arbeit + Öffnungszeiten + Total CHF</li>
+      <li><strong>Verzögerung:</strong> Status-Update mit Platzhalter zum Anpassen</li>
+      <li><strong>Termin-Erinnerung:</strong> Datum + Uhrzeit + Auftragsbeschrieb</li>
+      <li><strong>MFK-Erinnerung:</strong> Bike + KZ + Fälligkeitsdatum (im MFK-Tab)</li>
+      <li><strong>Offerte:</strong> Offert-Nr + Total + Gültigkeit (im Offerten-Modal)</li>
+      <li><strong>Freie Nachricht:</strong> Editor mit Kunden-Begrüssung vorbereitet</li>
+    </ul>
+    <p style="margin-top:8px"><strong style="color:var(--orange)">💡 Tipp:</strong> Funktioniert nur wenn der Kunde WhatsApp installiert hat (was 95% der Schweizer haben). Die Telefonnummer wird automatisch zu +41-Format konvertiert.</p>
+  </div>`;
+  return h;
+}
+function filterWaCust(q){
+  q=q.toLowerCase();
+  const tb=document.getElementById('wa-cust-tbl');if(!tb)return;
+  Array.from(tb.querySelectorAll('tr')).slice(1).forEach(tr=>{
+    tr.style.display=tr.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+function waTerminErinnerung(tid){
+  const t=(D.termine||[]).find(x=>x.id===tid);if(!t)return;
+  const o=getOrder(t.oid);if(!o)return;
+  const c=getCustomer(o.cid);if(!c)return;
+  const text=`Hoi ${c.name.split(' ')[0]} 👋\n\nKurze Erinnerung an deinen Termin heute um ${t.start} Uhr 🕒\n\n🔧 ${o.desc}\n\nBis gleich!\nGruss Sven`;
+  openWa(c.tel,text);
 }
 
 // ----- EINLAGERUNG / REIFENHOTEL -----
