@@ -245,7 +245,27 @@ const DEMO_DATA = {
     firma:'Svencycles GmbH', strasse:'Neunfornerstrasse 2', plz:'8468', ort:'Waltalingen', tel:'052 746 10 60', email:'info@svencycles.ch', web:'www.svencycles.ch',
     iban:'CH56 0483 5012 3456 7800 9', mwstNr:'CHE-361.121.290 MWST', stundensatz:125, mwstSatz:0.081, mwstModus:'effektiv', zahlungsfrist:30,
     ahv_an:0.053, ahv_ag:0.053, alv_an:0.011, alv_ag:0.011, uvg_nbu_an:0.013, uvg_bu_ag:0.012, ktg_an:0.005, ktg_ag:0.005, fak_ag:0.025,
-    bvg_koord:2575, ahvKasse:'SVA Zürich', bvgVersicherung:'Helvetia'
+    bvg_koord:2575, ahvKasse:'SVA Zürich', bvgVersicherung:'Helvetia',
+    // Werkstatt
+    logoUrl:'https://www.svencycles.ch/project/public/images/svencycles-logo.png',
+    oeffnungszeiten:'Mo-Fr 8-12 / 13-18 Uhr · Sa 9-12 Uhr · So geschlossen',
+    einlagerungTarif:350,
+    arbeitstageMonat:22, sollStundenTag:8.4,
+    // Listen (editierbar in Einstellungen)
+    lagerKategorien:[
+      {name:'Verbrauch',color:'#f07000'},{name:'Filter',color:'#3b82f6'},{name:'Reifen',color:'#22c55e'},
+      {name:'Bremsen',color:'#ef4444'},{name:'Motor',color:'#a855f7'},{name:'Elektrik',color:'#eab308'},
+      {name:'Auspuff',color:'#64748b'},{name:'Lenker',color:'#06b6d4'},{name:'Zündung',color:'#f97316'},
+      {name:'Service-Kit',color:'#ec4899'},{name:'Zubehör',color:'#14b8a6'},{name:'Sonstiges',color:'#6b7280'}
+    ],
+    pauseGruende:[
+      {k:'kunde',l:'👤 Kundengespräch'},{k:'tel',l:'📞 Telefon'},{k:'teile',l:'📦 Teile holen'},
+      {k:'wc',l:'🚻 WC'},{k:'mittag',l:'🍴 Mittag'},{k:'sonst',l:'❓ Anderes'}
+    ],
+    schadensPresets:['Kratzer Tank','Kratzer Verkleidung','Beule','Auspuff verbeult','Spiegel beschädigt','Lenkergriff verschlissen','Sitz verschlissen','Reifenprofil tief'],
+    uebergabeChecks:['Probefahrt durchgeführt, alles OK','Werkzeug aufgeräumt, kein Teil vergessen','Bike sauber, geputzt','Kunde informiert (Telefon/SMS)','Schlüssel + Papiere bereitgelegt','Foto NACH Reparatur gemacht'],
+    ferienGruende:['Ferien','Krankheit','Militär','Schule/Weiterbildung','Unbezahlt','Anderes'],
+    zahlungsarten:['Dauerauftrag','eBill','Rechnung','Kreditkarte','Jahresrechnung','Bar']
   },
   counters:{order:8,invoice:4,customer:5,part:18,rapport:0,offerte:0,termin:0,we:0,einlagerung:0,eingang:0,lohn:0,ferien:0}
 };
@@ -296,9 +316,11 @@ function migrate(){
   DEMO_DATA.staff.forEach(ds=>{
     if(!D.staff.find(s=>s.id===ds.id))D.staff.push(JSON.parse(JSON.stringify(ds)));
   });
+  rebuildCatColors();
   saveData();
 }
 loadData();
+rebuildCatColors();
 
 // ============================================================
 // AUTH
@@ -778,7 +800,9 @@ function orderTotal(o){
 }
 function invoiceTotal(inv){return inv.pos.reduce((s,p)=>s+p.qty*p.prc,0)}
 function invoiceTotalBrutto(inv){const n=invoiceTotal(inv);return n*(1+0.081)}
-const catColors={Verbrauch:'#f07000',Filter:'#3b82f6',Reifen:'#22c55e',Bremsen:'#ef4444',Motor:'#a855f7',Elektrik:'#eab308',Auspuff:'#64748b',Lenker:'#06b6d4','Zündung':'#f97316','Service-Kit':'#ec4899','Zubehör':'#14b8a6'};
+let catColors={};
+function rebuildCatColors(){catColors={};(D.einstellungen?.lagerKategorien||[]).forEach(c=>{catColors[c.name]=c.color})}
+function getCatNames(){return (D.einstellungen?.lagerKategorien||[]).map(c=>c.name)}
 
 // ============================================================
 // DASHBOARD
@@ -1032,7 +1056,7 @@ function deleteBike(cid,bi){
 // ============================================================
 function renderLager(){
   const totalVal=D.parts.reduce((s,p)=>s+p.stock*p.buy,0);
-  const cats=['','Verbrauch','Filter','Reifen','Bremsen','Motor','Elektrik','Auspuff','Lenker','Zündung','Service-Kit','Zubehör'];
+  const cats=['',...getCatNames()];
   let catOpts=cats.map(c=>`<option value="${c}">${c||'Alle Kategorien'}</option>`).join('');
   return `<h2>📦 Lager / Ersatzteile</h2>
   <div class="search-bar"><input placeholder="Suche..." id="lag-search" oninput="filterLager()"><select id="lag-cat" onchange="filterLager()">${catOpts}</select><button class="btn-primary" onclick="newPartModal()">+ Neuer Artikel</button><button class="btn-secondary" onclick="startWareneingangScan()">📷 Wareneingang scannen</button><button class="btn-secondary" onclick="printAllQrLabels()">🖨 Alle QR-Etiketten</button><span style="margin-left:auto;font-size:12px;color:var(--text2)">Lagerwert: <strong style="color:var(--orange)">CHF ${fmt(totalVal)}</strong></span></div>
@@ -1144,8 +1168,7 @@ function printAllQrLabels(){
   next();
 }
 function newPartModal(){
-  const cats=['Verbrauch','Filter','Reifen','Bremsen','Motor','Elektrik','Auspuff','Lenker','Zündung','Service-Kit','Zubehör'];
-  let catOpts=cats.map(c=>`<option>${c}</option>`).join('');
+  let catOpts=getCatNames().map(c=>`<option>${c}</option>`).join('');
   showModal(`<h3>Neuer Artikel</h3>
   <div class="form-row"><div><label>Bezeichnung</label><input id="np-name"></div><div><label>SKU</label><input id="np-sku"></div></div>
   <div class="form-row"><div><label>Kategorie</label><select id="np-cat">${catOpts}</select></div><div><label>Lieferant</label><input id="np-sup"></div></div>
@@ -1161,8 +1184,7 @@ function saveNewPart(){
 }
 function editPartModal(pid){
   const p=getPart(pid);if(!p)return;
-  const cats=['Verbrauch','Filter','Reifen','Bremsen','Motor','Elektrik','Auspuff','Lenker','Zündung','Service-Kit','Zubehör'];
-  let catOpts=cats.map(c=>`<option ${c===p.cat?'selected':''}>${c}</option>`).join('');
+  let catOpts=getCatNames().map(c=>`<option ${c===p.cat?'selected':''}>${c}</option>`).join('');
   showModal(`<h3>Artikel bearbeiten</h3>
   <div class="form-row"><div><label>Bezeichnung</label><input id="ep-name" value="${p.name}"></div><div><label>SKU (intern)</label><input id="ep-sku" value="${p.sku}"></div></div>
   <div class="form-row"><div><label>EAN / Barcode</label><input id="ep-ean" value="${p.ean||''}" placeholder="z.B. 4006501234567"></div><div><label>Lieferanten-Art.-Nr</label><input id="ep-supart" value="${p.supArtNr||''}" placeholder="z.B. CC-85095"></div></div>
@@ -1241,7 +1263,7 @@ function newEinlagerungModal(){
   showModal(`<h3>Neue Einlagerung</h3>
   <div class="form-row"><div><label>Typ</label><select id="ne-typ"><option value="bike">🏍️ Bike</option><option value="reifen">🛞 Reifensatz</option></select></div><div><label>Kunde</label><select id="ne-cid">${custOpts}</select></div></div>
   <div class="form-row full"><div><label>Beschrieb (Modell / Reifen-Spezifikation)</label><input id="ne-desc" placeholder="z.B. HD Sportster 2020 oder Michelin 180/65 Sommer"></div></div>
-  <div class="form-row"><div><label>Standort</label><input id="ne-stand" placeholder="z.B. Halle B, Regal 3"></div><div><label>Tarif CHF (Saison)</label><input id="ne-tarif" type="number" step="0.01" value="350"></div></div>
+  <div class="form-row"><div><label>Standort</label><input id="ne-stand" placeholder="z.B. Halle B, Regal 3"></div><div><label>Tarif CHF (Saison)</label><input id="ne-tarif" type="number" step="0.01" value="${D.einstellungen?.einlagerungTarif||350}"></div></div>
   <div class="form-row"><div><label>Eingelagert am</label><input id="ne-von" type="date" value="${new Date().toISOString().slice(0,10)}"></div><div><label>Geplant bis</label><input id="ne-bis" type="date" value="${(new Date(Date.now()+180*86400000)).toISOString().slice(0,10)}"></div></div>
   <div class="form-row full"><div><label>Notizen</label><textarea id="ne-notes" placeholder="Zustand bei Einlagerung, KM-Stand, etc."></textarea></div></div>
   <div class="btns"><button class="btn-secondary" onclick="closeModal()">Abbrechen</button><button class="btn-primary" onclick="saveEinlagerung()">✓ Einlagern</button></div>`);
@@ -1406,7 +1428,8 @@ function mailFertig(oid){
   const bike=c.bikes[o.bike||0];
   const total=orderTotal(o);
   const subject=`Ihr Bike ist fertig zur Abholung — ${bike?bike.model:'Auftrag '+o.id}`;
-  const body=`Hoi ${c.name.split(' ')[0]}\n\nDein ${bike?bike.model:'Bike'} ist fertig — wir haben ${o.desc.toLowerCase()} erledigt.\n\nDu kannst es ab sofort abholen.\nÖffnungszeiten: Mo-Fr 8-12 / 13-18 Uhr, Sa 9-12 Uhr.\n\nRechnungsbetrag: CHF ${fmt(total)}\n\nMelde dich kurz wenn du kommst, dann ist alles bereit.\n\nGruss\nSven\n\n---\nSvencycles GmbH\nNeunfornerstrasse 2 · 8468 Waltalingen\nTel 052 746 10 60`;
+  const e=D.einstellungen||{};
+  const body=`Hoi ${c.name.split(' ')[0]}\n\nDein ${bike?bike.model:'Bike'} ist fertig — wir haben ${o.desc.toLowerCase()} erledigt.\n\nDu kannst es ab sofort abholen.\nÖffnungszeiten: ${e.oeffnungszeiten||'Mo-Fr 8-12 / 13-18 Uhr · Sa 9-12 Uhr'}\n\nRechnungsbetrag: CHF ${fmt(total)}\n\nMelde dich kurz wenn du kommst, dann ist alles bereit.\n\nGruss Sven\n\n---\n${e.firma||'Svencycles GmbH'}\n${e.strasse||'Neunfornerstrasse 2'} · ${e.plz||'8468'} ${e.ort||'Waltalingen'}\nTel ${e.tel||'052 746 10 60'}`;
   o.kundeBenachrichtigt=new Date().toISOString();
   saveData();
   window.location.href=`mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
@@ -1565,8 +1588,7 @@ function onWareneingang(text){
   },300);
 }
 function showNewPartFromCodeModal(code){
-  const cats=['Verbrauch','Filter','Reifen','Bremsen','Motor','Elektrik','Auspuff','Lenker','Zündung','Service-Kit','Zubehör'];
-  let catOpts=cats.map(c=>`<option>${c}</option>`).join('');
+  let catOpts=getCatNames().map(c=>`<option>${c}</option>`).join('');
   showModal(`<h3>Neuer Artikel aus Scan</h3>
   <p style="color:#f07000;font-size:12px;margin-bottom:8px">Lieferanten-Code: <strong>${code}</strong></p>
   <div class="form-row"><div><label>Bezeichnung</label><input id="snp-name"></div><div><label>SKU (intern)</label><input id="snp-sku" value="${code}"></div></div>
@@ -2315,7 +2337,7 @@ function newFerienModal(){
   const today=new Date().toISOString().slice(0,10);
   const tomorrow=new Date(Date.now()+86400000).toISOString().slice(0,10);
   showModal(`<h3>🏖️ Neuer Ferienantrag</h3>
-    <div class="form-row"><div><label>Mitarbeiter</label><select id="nf2-mech">${staffOpts}</select></div><div><label>Grund / Anlass</label><select id="nf2-grund"><option>Ferien</option><option>Krankheit</option><option>Militär</option><option>Schule/Weiterbildung</option><option>Unbezahlt</option><option>Anderes</option></select></div></div>
+    <div class="form-row"><div><label>Mitarbeiter</label><select id="nf2-mech">${staffOpts}</select></div><div><label>Grund / Anlass</label><select id="nf2-grund">${(D.einstellungen?.ferienGruende||['Ferien']).map(g=>`<option>${g}</option>`).join('')}</select></div></div>
     <div class="form-row"><div><label>Von</label><input id="nf2-von" type="date" value="${tomorrow}" onchange="updateNfTage()"></div><div><label>Bis</label><input id="nf2-bis" type="date" value="${tomorrow}" onchange="updateNfTage()"></div></div>
     <div class="form-row"><div><label>Tage (Werktage)</label><input id="nf2-tage" type="number" step="0.5" value="1"></div><div><label>Status</label><select id="nf2-status"><option value="beantragt">Beantragt (warten auf Genehmigung)</option><option value="genehmigt" ${can('manageStaff')?'':'disabled'}>Direkt genehmigt</option></select></div></div>
     <div class="form-row full"><div><label>Notiz</label><input id="nf2-notiz" placeholder="z.B. Familienferien Tessin"></div></div>
@@ -2339,7 +2361,7 @@ function editFerienModal(fid){
   const f=D.ferien.find(x=>x.id===fid);if(!f)return;
   let staffOpts=D.staff.map(s=>`<option value="${s.id}" ${s.id===f.mech?'selected':''}>${s.name}</option>`).join('');
   showModal(`<h3>Ferieneintrag ${fid}</h3>
-    <div class="form-row"><div><label>Mitarbeiter</label><select id="ef2-mech">${staffOpts}</select></div><div><label>Grund</label><select id="ef2-grund"><option ${f.grund==='Ferien'?'selected':''}>Ferien</option><option ${f.grund==='Krankheit'?'selected':''}>Krankheit</option><option ${f.grund==='Militär'?'selected':''}>Militär</option><option ${f.grund==='Schule/Weiterbildung'?'selected':''}>Schule/Weiterbildung</option><option ${f.grund==='Unbezahlt'?'selected':''}>Unbezahlt</option><option ${f.grund==='Anderes'?'selected':''}>Anderes</option></select></div></div>
+    <div class="form-row"><div><label>Mitarbeiter</label><select id="ef2-mech">${staffOpts}</select></div><div><label>Grund</label><select id="ef2-grund">${(D.einstellungen?.ferienGruende||['Ferien']).map(g=>`<option ${f.grund===g?'selected':''}>${g}</option>`).join('')}</select></div></div>
     <div class="form-row"><div><label>Von</label><input id="ef2-von" type="date" value="${f.von||''}"></div><div><label>Bis</label><input id="ef2-bis" type="date" value="${f.bis||''}"></div></div>
     <div class="form-row"><div><label>Tage</label><input id="ef2-tage" type="number" step="0.5" value="${f.tage||0}"></div><div><label>Status</label><select id="ef2-status"><option ${f.status==='beantragt'?'selected':''}>beantragt</option><option ${f.status==='genehmigt'?'selected':''}>genehmigt</option><option ${f.status==='abgelehnt'?'selected':''}>abgelehnt</option></select></div></div>
     <div class="form-row full"><div><label>Notiz</label><input id="ef2-notiz" value="${f.notiz||''}"></div></div>
@@ -2816,16 +2838,99 @@ function resetDemo(){if(!can('deleteData')){alert('Keine Berechtigung');return}i
 // ============================================================
 let einstTab='firma';
 function renderEinstellungen(){
-  const tabs=[['firma','🏢 Firmendaten'],['lohn','💵 Lohn-Sätze'],['mwst','📋 MWST'],['system','💾 System']];
+  const tabs=[['firma','🏢 Firmendaten'],['werkst','🔧 Werkstatt'],['lohn','💵 Lohn-Sätze'],['mwst','📋 MWST'],['listen','📋 Listen & Vorlagen'],['system','💾 System']];
   let h=`<h2>⚙️ Einstellungen</h2>
   <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;border-bottom:1px solid #333">
     ${tabs.map(([k,l])=>`<button class="${einstTab===k?'btn-primary':'btn-secondary'}" style="padding:8px 14px" onclick="einstTab='${k}';navigate('einstellungen')">${l}</button>`).join('')}
   </div>`;
   if(einstTab==='firma')h+=renderEinstFirma();
+  else if(einstTab==='werkst')h+=renderEinstWerkstatt();
   else if(einstTab==='lohn')h+=renderEinstLohn();
   else if(einstTab==='mwst')h+=renderEinstMwst();
+  else if(einstTab==='listen')h+=renderEinstListen();
   else if(einstTab==='system')h+=renderEinstSystem();
   return h;
+}
+function renderEinstWerkstatt(){
+  const e=D.einstellungen;
+  return `<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;max-width:700px">
+    <h3 style="color:var(--orange);margin-bottom:12px">🔧 Werkstatt-Einstellungen</h3>
+    <div class="form-row full"><div><label>Logo-URL</label><input id="ew-logo" value="${e.logoUrl||''}"></div></div>
+    <div class="form-row full"><div><label>Öffnungszeiten (für Kunden-Mail)</label><textarea id="ew-oz" style="min-height:60px">${e.oeffnungszeiten||''}</textarea></div></div>
+    <div class="form-row"><div><label>Standard-Tarif Einlagerung CHF/Saison</label><input id="ew-elTarif" type="number" step="0.01" value="${e.einlagerungTarif||350}"></div><div><label>Stundensatz Werkstatt CHF/h</label><input id="ew-stSatz" type="number" step="0.01" value="${e.stundensatz||125}"></div></div>
+    <h4 style="color:var(--orange);font-size:13px;margin:14px 0 6px">Arbeitszeit-Berechnung (für Stundenrapport)</h4>
+    <div class="form-row"><div><label>Arbeitstage pro Monat</label><input id="ew-atMonat" type="number" min="1" max="31" value="${e.arbeitstageMonat||22}"></div><div><label>Soll-Stunden pro Tag (100% Pensum)</label><input id="ew-sollH" type="number" step="0.1" value="${e.sollStundenTag||8.4}"></div></div>
+    <div class="btns"><button class="btn-primary" onclick="saveEinstWerkstatt()">Speichern</button></div>
+  </div>`;
+}
+function saveEinstWerkstatt(){
+  const e=D.einstellungen;
+  e.logoUrl=gv('ew-logo');e.oeffnungszeiten=gv('ew-oz');
+  e.einlagerungTarif=parseFloat(gv('ew-elTarif'))||350;
+  e.stundensatz=parseFloat(gv('ew-stSatz'))||125;
+  e.arbeitstageMonat=parseInt(gv('ew-atMonat'))||22;
+  e.sollStundenTag=parseFloat(gv('ew-sollH'))||8.4;
+  saveData();
+  // Logo im Header live aktualisieren
+  document.querySelectorAll('img[alt="Svencycles"]').forEach(img=>img.src=e.logoUrl);
+  navigate('einstellungen');
+}
+function renderEinstListen(){
+  const e=D.einstellungen;
+  let katRows=(e.lagerKategorien||[]).map((k,i)=>`
+    <tr><td><input value="${k.name}" oninput="(D.einstellungen.lagerKategorien[${i}]).name=this.value;saveData();rebuildCatColors()"></td>
+    <td><input type="color" value="${k.color}" oninput="(D.einstellungen.lagerKategorien[${i}]).color=this.value;saveData();rebuildCatColors()" style="width:60px;height:30px;padding:0;min-height:30px"></td>
+    <td><button class="btn-danger" style="padding:3px 8px;font-size:11px" onclick="if(confirm('Kategorie löschen?')){D.einstellungen.lagerKategorien.splice(${i},1);saveData();rebuildCatColors();navigate('einstellungen')}">×</button></td></tr>`).join('');
+  let pauseRows=(e.pauseGruende||[]).map((p,i)=>`
+    <tr><td><input value="${p.k||''}" oninput="(D.einstellungen.pauseGruende[${i}]).k=this.value;saveData()" placeholder="key"></td>
+    <td><input value="${p.l||''}" oninput="(D.einstellungen.pauseGruende[${i}]).l=this.value;saveData()" placeholder="Anzeige (mit Emoji)"></td>
+    <td><button class="btn-danger" style="padding:3px 8px;font-size:11px" onclick="if(confirm('Grund löschen?')){D.einstellungen.pauseGruende.splice(${i},1);saveData();navigate('einstellungen')}">×</button></td></tr>`).join('');
+  return `<div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;margin-bottom:14px">
+    <h3 style="color:var(--orange);margin-bottom:8px">📦 Lager-Kategorien</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">Werden in Lager + Aufträgen + Wareneingang verwendet.</p>
+    <table style="width:100%"><tr><th>Name</th><th>Farbe</th><th></th></tr>${katRows}</table>
+    <button class="btn-secondary" style="margin-top:8px" onclick="D.einstellungen.lagerKategorien.push({name:'Neue Kategorie',color:'#999'});saveData();rebuildCatColors();navigate('einstellungen')">+ Kategorie</button>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;margin-bottom:14px">
+    <h3 style="color:var(--orange);margin-bottom:8px">⏸ Pause-Gründe (Mobile-App)</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">Mechaniker wählt beim Pause-Start einen dieser Gründe.</p>
+    <table style="width:100%"><tr><th>Key</th><th>Anzeige</th><th></th></tr>${pauseRows}</table>
+    <button class="btn-secondary" style="margin-top:8px" onclick="D.einstellungen.pauseGruende.push({k:'neu',l:'❓ Neuer Grund'});saveData();navigate('einstellungen')">+ Pause-Grund</button>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;margin-bottom:14px">
+    <h3 style="color:var(--orange);margin-bottom:8px">📝 Schadens-Checkliste (Mobile-Aufnahme)</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">Vorgegebene Schadens-Punkte bei Bike-Annahme. Eine Zeile = ein Eintrag.</p>
+    <textarea id="el-schaden" style="min-height:140px;font-family:monospace;font-size:13px">${(e.schadensPresets||[]).join('\n')}</textarea>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;margin-bottom:14px">
+    <h3 style="color:var(--orange);margin-bottom:8px">✓ Übergabe-Checkliste (Mobile + PC)</h3>
+    <p class="muted" style="font-size:12px;margin-bottom:10px">Beim Status-Wechsel auf "fertig" werden diese Punkte geprüft. Eine Zeile = ein Eintrag.</p>
+    <textarea id="el-uebergabe" style="min-height:140px;font-family:monospace;font-size:13px">${(e.uebergabeChecks||[]).join('\n')}</textarea>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;margin-bottom:14px">
+    <h3 style="color:var(--orange);margin-bottom:8px">🏖️ Ferien-Gründe</h3>
+    <textarea id="el-ferien" style="min-height:120px;font-family:monospace;font-size:13px">${(e.ferienGruende||[]).join('\n')}</textarea>
+  </div>
+
+  <div style="background:var(--bg2);border:1px solid #333;border-radius:10px;padding:20px;margin-bottom:14px">
+    <h3 style="color:var(--orange);margin-bottom:8px">💳 Zahlungsarten (Fixkosten + Eingangsrechnungen)</h3>
+    <textarea id="el-zahlart" style="min-height:120px;font-family:monospace;font-size:13px">${(e.zahlungsarten||[]).join('\n')}</textarea>
+  </div>
+
+  <div class="btns"><button class="btn-primary" onclick="saveEinstListen()">Alle Listen speichern</button></div>`;
+}
+function saveEinstListen(){
+  const e=D.einstellungen;
+  const split=v=>v.split('\n').map(l=>l.trim()).filter(Boolean);
+  e.schadensPresets=split(gv('el-schaden'));
+  e.uebergabeChecks=split(gv('el-uebergabe'));
+  e.ferienGruende=split(gv('el-ferien'));
+  e.zahlungsarten=split(gv('el-zahlart'));
+  saveData();navigate('einstellungen');
 }
 function renderEinstFirma(){
   const e=D.einstellungen;
@@ -2936,14 +3041,11 @@ function renderEinstSystem(){
 // ============================================================
 let mobileTimer=null,mobileSeconds=0,mobileOrderId=null;
 let mobilePauseStart=null,mobilePauseSeconds=0,mobilePauseReason=null,mobilePauses=[];
-const PAUSE_REASONS=[
-  {k:'kunde',l:'👤 Kundengespräch',c:'#3b82f6'},
-  {k:'tel',l:'📞 Telefon',c:'#06b6d4'},
-  {k:'teile',l:'📦 Teile holen',c:'#a855f7'},
-  {k:'wc',l:'🚻 WC',c:'#64748b'},
-  {k:'mittag',l:'🍴 Mittag',c:'#eab308'},
-  {k:'sonst',l:'❓ Anderes',c:'#999'}
-];
+function getPauseReasons(){
+  // Aus Einstellungen laden mit Fallback-Farben
+  const colors=['#3b82f6','#06b6d4','#a855f7','#64748b','#eab308','#999','#22c55e','#f97316'];
+  return (D.einstellungen?.pauseGruende||[]).map((p,i)=>({k:p.k||p.l,l:p.l,c:p.c||colors[i%colors.length]}));
+}
 function renderMobile(){
   const mc=document.getElementById('mob-content');
   if(mobileOrderId){renderMobileOrder(mobileOrderId);return}
@@ -2966,7 +3068,7 @@ function renderMobileOrder(oid){
   let timeRows=o.time.filter(t=>t.mech===currentUser.id).map(t=>`<div style="font-size:12px;padding:6px 0;border-bottom:1px solid #222">${t.date} — ${t.h}h — ${t.desc}</div>`).join('');
   const todayPauses=mobilePauses.filter(p=>p.oid===oid);
   const totalPauseS=todayPauses.reduce((s,p)=>s+p.sec,0);
-  let pauseRows=todayPauses.map(p=>{const r=PAUSE_REASONS.find(x=>x.k===p.reason)||{l:p.reason,c:'#999'};return `<div style="font-size:11px;padding:4px 0;color:${r.c}">${r.l} — ${fmtTime(p.sec)}</div>`}).join('');
+  let pauseRows=todayPauses.map(p=>{const r=getPauseReasons().find(x=>x.k===p.reason)||{l:p.reason,c:'#999'};return `<div style="font-size:11px;padding:4px 0;color:${r.c}">${r.l} — ${fmtTime(p.sec)}</div>`}).join('');
   const isPausing=mobilePauseStart!==null;
   const mc=document.getElementById('mob-content');
   mc.innerHTML=`
@@ -2978,7 +3080,7 @@ function renderMobileOrder(oid){
     <button class="btn-success mob-btn" style="flex:1" onclick="setMobStatus('${oid}','fertig')">✓ Fertig</button>
   </div>
   <div style="background:${isPausing?'#a855f7':'#1a1a1a'};border-radius:12px;padding:16px;margin-bottom:16px;text-align:center">
-    <div style="font-size:11px;color:${isPausing?'#fff':'#999'};text-transform:uppercase;letter-spacing:1px">${isPausing?'⏸ '+(PAUSE_REASONS.find(r=>r.k===mobilePauseReason)?.l||'Pause'):'Arbeitszeit'}</div>
+    <div style="font-size:11px;color:${isPausing?'#fff':'#999'};text-transform:uppercase;letter-spacing:1px">${isPausing?'⏸ '+(getPauseReasons().find(r=>r.k===mobilePauseReason)?.l||'Pause'):'Arbeitszeit'}</div>
     <div style="font-size:42px;font-family:'Barlow Condensed';color:#fff;font-weight:700" id="timer-disp">${isPausing?fmtTime(Math.floor((Date.now()-mobilePauseStart)/1000)):fmtTime(mobileSeconds)}</div>
     ${totalPauseS>0?`<div style="font-size:11px;color:#999">Pausen heute: ${fmtTime(totalPauseS)}</div>`:''}
   </div>
@@ -2991,7 +3093,7 @@ function renderMobileOrder(oid){
     ${mobileTimer?`
       <div style="font-size:11px;color:#999;text-align:center;margin-bottom:6px">Pause starten:</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px">
-        ${PAUSE_REASONS.map(r=>`<button class="mob-btn" style="background:${r.c};color:#fff;font-size:13px;padding:10px;margin:0" onclick="startPause('${oid}','${r.k}')">${r.l}</button>`).join('')}
+        ${getPauseReasons().map(r=>`<button class="mob-btn" style="background:${r.c};color:#fff;font-size:13px;padding:10px;margin:0" onclick="startPause('${oid}','${r.k}')">${r.l}</button>`).join('')}
       </div>
     `:''}
   `}
