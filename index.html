@@ -250,8 +250,38 @@ const DEMO_DATA = {
 };
 
 let D;
-function loadData(){const s=localStorage.getItem('svc_data');D=s?JSON.parse(s):JSON.parse(JSON.stringify(DEMO_DATA))}
+function loadData(){
+  const s=localStorage.getItem('svc_data');
+  D=s?JSON.parse(s):JSON.parse(JSON.stringify(DEMO_DATA));
+  migrate();
+}
 function saveData(){localStorage.setItem('svc_data',JSON.stringify(D))}
+function migrate(){
+  // Fehlende Top-Level Felder aus DEMO_DATA ergänzen
+  ['einstellungen','fixkosten','eingaenge','buchungen','loehne','wareneingang','einlagerungen','pauses','rapports','offerten','termine'].forEach(k=>{
+    if(D[k]===undefined)D[k]=Array.isArray(DEMO_DATA[k])?[]:JSON.parse(JSON.stringify(DEMO_DATA[k]||{}));
+  });
+  // einstellungen Sub-Felder ergänzen
+  if(DEMO_DATA.einstellungen){Object.keys(DEMO_DATA.einstellungen).forEach(k=>{if(D.einstellungen[k]===undefined)D.einstellungen[k]=DEMO_DATA.einstellungen[k]})}
+  // counters ergänzen
+  if(!D.counters)D.counters={};
+  Object.keys(DEMO_DATA.counters).forEach(k=>{if(D.counters[k]===undefined)D.counters[k]=DEMO_DATA.counters[k]});
+  // Mitarbeiter: fehlende Felder ergänzen (perm, lohn, bvg, Adressdaten)
+  D.staff.forEach(s=>{
+    if(!s.perm)s.perm={};
+    // Berechtigungen aus Preset für deren Rolle
+    const preset=(typeof PERM_PRESETS!=='undefined'?PERM_PRESETS[s.role]:null)||{};
+    Object.keys(preset).forEach(k=>{if(s.perm[k]===undefined)s.perm[k]=!!preset[k]});
+    if(!s.lohn)s.lohn={brutto:0,stundenlohn:s.rate||0,lohnart:s.role==='admin'?'inhaber':'monatlich'};
+    if(!s.bvg)s.bvg={versicherung:'Helvetia',altersgutschritt:10};
+    if(s.pensum===undefined)s.pensum=100;
+  });
+  // Demo-User aus DEMO_DATA mergen falls fehlen (Cornel, Frau Traber)
+  DEMO_DATA.staff.forEach(ds=>{
+    if(!D.staff.find(s=>s.id===ds.id))D.staff.push(JSON.parse(JSON.stringify(ds)));
+  });
+  saveData();
+}
 loadData();
 
 // ============================================================
@@ -1052,30 +1082,48 @@ function printAllQrLabels(){
   if(!confirm(`QR-Etiketten für alle ${D.parts.length} Artikel als PDF generieren?`))return;
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF('p','mm','a4');
-  const w=210,h=297,m=10;
-  const cols=4,rows=8;
-  const cw=(w-2*m)/cols, ch=(h-2*m)/rows;
+  // Layout: 3 Spalten × 6 Reihen = 18 Etiketten pro A4-Seite
+  // Jede Karte: 60mm x 40mm — QR 26mm zentriert oben + 2 Zeilen Text unten
+  const w=210, h=297, mL=10, mT=15;
+  const cols=3, rows=6;
+  const perPage=cols*rows;
+  const cardW=(w-2*mL)/cols;  // ~63mm
+  const cardH=(h-2*mT)/rows;  // ~44mm
+  const qrSize=26;             // QR 26x26 mm
+  const qrPad=2;               // Padding
   let idx=0;
   const qrDiv=document.getElementById('qr-container');
   function next(){
     if(idx>=D.parts.length){doc.save('Svencycles_QR_Etiketten.pdf');return}
-    const p=D.parts[idx];const col=idx%cols, row=Math.floor((idx%(cols*rows))/cols);
-    if(idx>0&&idx%(cols*rows)===0)doc.addPage();
+    const p=D.parts[idx];
+    const onPage=idx%perPage;
+    const col=onPage%cols;
+    const row=Math.floor(onPage/cols);
+    if(idx>0&&onPage===0)doc.addPage();
     qrDiv.innerHTML='';
     new QRCode(qrDiv,{text:'SVC:'+p.id,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
     setTimeout(()=>{
       const cv=qrDiv.querySelector('canvas');
       if(cv){
         const img=cv.toDataURL();
-        const x=m+col*cw, y=m+row*ch;
-        doc.addImage(img,'PNG',x+4,y+2,cw-8,cw-8);
-        doc.setFontSize(7);
-        doc.text(p.name.substring(0,28),x+cw/2,y+ch-6,{align:'center'});
-        doc.setFontSize(6);
-        doc.text(p.sku,x+cw/2,y+ch-2,{align:'center'});
+        const x0=mL+col*cardW;
+        const y0=mT+row*cardH;
+        // Rahmen für besseres Ausschneiden
+        doc.setDrawColor(220);doc.setLineWidth(0.2);
+        doc.rect(x0+1, y0+1, cardW-2, cardH-2);
+        // QR zentriert oben
+        const qrX=x0+(cardW-qrSize)/2;
+        const qrY=y0+qrPad+1;
+        doc.addImage(img,'PNG',qrX,qrY,qrSize,qrSize);
+        // Text unter QR — mit Wrap
+        doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(0);
+        const nameLines=doc.splitTextToSize(p.name,cardW-4);
+        doc.text(nameLines.slice(0,1),x0+cardW/2,qrY+qrSize+3,{align:'center'});
+        doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(100);
+        doc.text(p.sku,x0+cardW/2,qrY+qrSize+7,{align:'center'});
       }
       idx++;next();
-    },80);
+    },60);
   }
   next();
 }
